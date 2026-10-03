@@ -13,6 +13,10 @@ function menu_principal(): array {
         $m[] = ['clave' => 'seccion:' . $k, 'url' => 'seccion.php?s=' . $k, 'texto' => $s['nombre'],
                 'icono' => $s['icono'], 'color' => $s['color']];
     }
+    // Finanzas vive dentro (3/10/2026): entre Trabajo y Agenda, solo para administradores.
+    if (es_admin() && FINANZAS_URL !== '') {
+        $m[] = ['clave' => 'finanzas', 'url' => 'finanzas.php', 'texto' => 'Finanzas', 'icono' => 'cartera', 'color' => '#405189'];
+    }
     $m[] = ['clave' => 'agenda', 'url' => 'vencimientos.php', 'texto' => 'Agenda', 'icono' => 'agenda'];
     $m[] = ['clave' => 'personas', 'url' => 'personas.php', 'texto' => 'Personas', 'icono' => 'persona'];
     return $m;
@@ -60,9 +64,6 @@ function cabecera(string $titulo, string $activa = ''): void {
       <?php endforeach; ?>
       <?php if (es_admin()): ?>
         <div class="menu-separador"></div>
-        <?php if (FINANZAS_URL !== ''): ?>
-          <a href="<?= e(url('finanzas.php')) ?>" class="<?= $activa === 'finanzas' ? 'activo' : '' ?>" style="--c:#405189"><?= icono('cartera') ?><span>Finanzas</span></a>
-        <?php endif; ?>
         <a href="<?= e(url('ajustes.php')) ?>" class="<?= $activa === 'ajustes' ? 'activo' : '' ?>"><?= icono('ajustes') ?><span>Ajustes</span></a>
       <?php endif; ?>
     </nav>

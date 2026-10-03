@@ -186,21 +186,22 @@ $r = pedir('elemento.php', ['id' => (string)$id['empleo']]);
 pinta_bien('con clave, enseña el líquido del año leído de finanzas', $r, '5.700,00');
 pinta_bien('y avisa de la nómina que falta', $r, 'Falta grabar la nómina de septiembre 2026');
 pinta_bien('y del mes en que cambia el cuadre con el banco', $r, 'La diferencia con el banco cambia en agosto 2026');
-file_put_contents($cache . '/finanzas-resumen.json', json_encode(['t' => time(), 'leido_en' => '2026-10-03 08:00:00', 'datos' => [
-    'pendientes' => 7, 'actualizado' => '2026-10-01',
-    'saldos' => [['cuenta' => 'Mediolanum', 'saldo' => 1234.5, 'banco' => 'Mediolanum', 'cuadra' => true, 'activa' => true, 'ultimo_movimiento' => '2026-09-30'],
-                 ['cuenta' => 'Vieja', 'saldo' => 10, 'banco' => 'X', 'cuadra' => null, 'activa' => false, 'ultimo_movimiento' => '']],
-    'comprobaciones' => ['atraso' => ['estado' => 'aviso', 'titulo' => 'Revolut lleva 20 días sin importar', 'detalle' => 'Último: 13/09']],
-    'gasto' => ['ultimo_completo' => '2026-09', 'meses' => [['mes' => '2026-08', 'gasto' => 1000, 'ingreso' => 2500],
-        ['mes' => '2026-09', 'gasto' => 1500, 'ingreso' => 2600], ['mes' => '2026-10', 'gasto' => 100, 'ingreso' => 0]],
-        'categorias' => [['categoria' => 'Supermercado', 'mes' => 420.3, 'media' => 380]]]]]));
+// Finanzas: el panel de finanzas montado dentro. En las pruebas no hay red: se
+// comprueba que, si finanzas no contesta, se monta la última copia y se dice.
+file_put_contents($cache . '/finanzas-panel.json', json_encode(['t' => time(), 'leido_en' => '2026-10-03 08:00:00', 'datos' => [
+    'version' => 'abc123', 'pendientes' => 7,
+    'html' => '<div class="wrap"><div class="topbar"><nav class="tabs" id="year-tabs"></nav></div>'
+            . '<div id="acciones-finanzas"><a href="https://ejemplo.test/admin/finanzas-entrar.php?a=importador.php">Importar</a></div></div>',
+    'datos' => ['movimientos' => [['concepto' => 'Cierra </script> aquí']]],
+    'avisos' => [['estado' => 'aviso', 'titulo' => 'Revolut lleva 20 días sin importar', 'detalle' => 'Último: 13/09']]]]));
 $r = pedir('finanzas.php');
-pinta_bien('Finanzas: la liquidez suma solo las cuentas activas', $r, '1.234,50');
-pinta_bien('y el gasto del último mes completo frente a la media', $r, 'media 1.000,00');
+pinta_bien('Finanzas: monta el panel de finanzas (sus pestañas)', $r, 'id="year-tabs"');
+pinta_bien('con los estilos y el JS de la carpeta de finanzas (mismo dominio)', $r, '/finanzas-personales/assets/panel.js?v=abc123');
+comprueba('y sus datos, sin que un concepto pueda cerrar el script', str_contains($r['html'], '"concepto":"Cierra ') && !str_contains($r['html'], 'Cierra </script>'));
 pinta_bien('y lo que hay que mirar', $r, 'Revolut lleva 20 días sin importar');
-pinta_bien('y las categorías', $r, 'Supermercado');
 pinta_bien('y los botones a finanzas van por el pase', $r, 'finanzas-entrar.php?a=importador.php');
-@unlink($cache . '/finanzas-resumen.json');
+pinta_bien('si finanzas no contesta, lo dice y enseña la última copia', $r, 'Enseño la última copia');
+@unlink($cache . '/finanzas-panel.json');
 putenv('SC_CACHE');
 putenv('SC_FINANZAS_CLAVE');
 pinta_bien('sin clave de finanzas, la página lo explica', pedir('finanzas.php'), 'Falta la clave de finanzas');

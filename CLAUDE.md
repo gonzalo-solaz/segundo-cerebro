@@ -390,3 +390,17 @@ valor de mercado, capital pendiente) vive en finanzas, que lee estas fichas con 
   acogida «Sí» en los colegios 22 y 23. Finanzas lee todo esto por la acción `fichas` y ya no
   lo guarda (ver su CLAUDE.md, «Origen único»). **Si cambia la cuota de la hipoteca, se cambia
   aquí (ficha 33)**; el capital pendiente, en finanzas. No repetir.
+
+**Finanzas vive dentro: el mismo panel (3/10/2026, petición de Gonzalo: «esperaba que
+finanzas ya viviera dentro y tener el mismo panel»).** «Finanzas» va en el menú lateral
+entre Trabajo y Agenda (solo admin). `finanzas.php` monta EL panel de finanzas, no una
+copia: pide a su API la acción `panel` (marcado, datos, versión, avisos; siempre fresco,
+con la última copia en `private/cache/finanzas-panel.json` si finanzas no contesta) y
+carga sus estáticos de `/finanzas-personales/assets/` (`panel.css`, `panel.js`,
+`chart.umd.min.js`; mismo dominio, así que la CSP `'self'` los admite). El panel se
+cambia en finanzas-personales y se ve igual en los dos sitios. El tema lo pone el botón
+de aquí (el panel repinta los gráficos al cambiar `data-theme`). Decidido con Gonzalo:
+un solo código del panel (no fusionar repos: las funciones chocan); las pantallas de
+acción (importar, revisar, movimiento, nómina…) siguen en finanzas, abiertas por el pase,
+y se irán pasando aquí una a una sobre su API; la dirección vieja de finanzas redirige
+aquí (su login `?local=1` es el plan B). La página resumen anterior se ha retirado.

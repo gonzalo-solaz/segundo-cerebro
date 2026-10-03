@@ -25,19 +25,19 @@ function finanzas_ruta_cache(string $accion): string {
 
 // POST a la API de finanzas. Devuelve el JSON decodificado o lanza
 // RuntimeException con un texto que se puede enseñar (nunca la clave).
-function finanzas_pedir(array $campos): array {
+function finanzas_pedir(array $campos, int $segundos = 8): array {
     $url = rtrim(FINANZAS_URL, '/') . '/api.php';
     $cuerpo = http_build_query(['clave' => FINANZAS_API_CLAVE] + $campos);
     $codigo = 0;
     if (function_exists('curl_init')) {
         $c = curl_init($url);
         curl_setopt_array($c, [CURLOPT_POST => true, CURLOPT_POSTFIELDS => $cuerpo, CURLOPT_RETURNTRANSFER => true,
-                               CURLOPT_CONNECTTIMEOUT => 4, CURLOPT_TIMEOUT => 8]);
+                               CURLOPT_CONNECTTIMEOUT => 4, CURLOPT_TIMEOUT => $segundos]);
         $txt = curl_exec($c);
         $codigo = (int)curl_getinfo($c, CURLINFO_HTTP_CODE);
         curl_close($c);
     } else {
-        $ctx = stream_context_create(['http' => ['method' => 'POST', 'timeout' => 8, 'ignore_errors' => true,
+        $ctx = stream_context_create(['http' => ['method' => 'POST', 'timeout' => $segundos, 'ignore_errors' => true,
             'header' => "Content-Type: application/x-www-form-urlencoded\r\n", 'content' => $cuerpo]]);
         $txt = @file_get_contents($url, false, $ctx);
         if (preg_match('#^HTTP/\S+ (\d{3})#', $http_response_header[0] ?? '', $m)) $codigo = (int)$m[1];
@@ -84,9 +84,32 @@ function finanzas_nominas(bool $forzar = false): array {
     return ['anios' => $r['datos']['anios'] ?? [], 'leido_en' => $r['leido_en'], 'error' => $r['error']];
 }
 
-/** Saldos, salud, pendientes y gasto por mes y categoría (acción resumen, para finanzas.php). */
-function finanzas_resumen(bool $forzar = false): array {
-    return finanzas_leer('resumen', $forzar);
+/**
+ * El panel de finanzas entero (acción «panel»), para la sección Finanzas:
+ * SIEMPRE fresco (acabas de importar un extracto y vuelves), con la última
+ * copia solo si finanzas no contesta. Más plazo: lleva todos los movimientos.
+ */
+function finanzas_panel(): array {
+    if (!finanzas_configurada()) {
+        return ['datos' => [], 'leido_en' => null, 'error' => 'Falta la clave de finanzas (secreto FINANZAS_API_CLAVE).'];
+    }
+    $ruta = finanzas_ruta_cache('panel');
+    try {
+        $datos = finanzas_pedir(['accion' => 'panel'], 25);
+        unset($datos['ok']);
+        if (!is_dir(dirname($ruta))) @mkdir(dirname($ruta), 0750, true);
+        @file_put_contents($ruta, json_encode(['t' => time(), 'leido_en' => ahora(), 'datos' => $datos], JSON_UNESCAPED_UNICODE), LOCK_EX);
+        return ['datos' => $datos, 'leido_en' => ahora(), 'error' => null];
+    } catch (RuntimeException $ex) {
+        $copia = is_file($ruta) ? json_array((string)@file_get_contents($ruta)) : [];
+        return ['datos' => $copia['datos'] ?? [], 'leido_en' => $copia['leido_en'] ?? null, 'error' => $ex->getMessage()];
+    }
+}
+
+// Ruta (sin dominio) de los estáticos de finanzas: mismo dominio, así que la
+// política de seguridad de aquí ('self') los admite. «/finanzas-personales/».
+function finanzas_ruta_estaticos(): string {
+    return rtrim((string)parse_url(FINANZAS_URL, PHP_URL_PATH), '/') . '/assets/';
 }
 
 function mes_es(string $mes): string {
