@@ -287,3 +287,13 @@ internet 44,90 € (tarifa actual), gas 66,58 € (media de 7 facturas ene-jul 2
 75,69 € (media de 8, ene-ago). Son estimaciones: los de gas y luz hay que recalcularlos
 cuando haya más facturas (el gas de marzo incluye 44,23 € de inspección puntual). El gas
 de enero (160,55 €) está bien: IVA 21 % sobre 132,69 € = 27,86 €.
+
+**Vivienda: equipamiento dentro de la casa (3/10/2026, petición de Gonzalo):** el tipo
+`vivienda/equipo` pasa a llamarse «Equipamiento o material» y se enlaza a la vivienda (como
+los contratos); la ficha de la casa los lista en su tarjeta «Equipamiento y materiales»,
+aparte de «Contratos y seguros», y `resumen_enlazados()` ya solo cuenta contratos. Con UNA
+sola vivienda activa, `seccion.php?s=vivienda` redirige a su ficha; con dos o más sale el
+listado (`&lista=1` lo fuerza; el migajas de la ficha lo usa). Los contactos de confianza y
+«Otra vivienda» se añaden desde la tarjeta de contactos de la ficha. Grabado en producción:
+Velux (id 8) enlazado a la casa y «Homestone gris» (id 10, modelo 42HO-38 (07-60), la única
+fila de «Materiales utilizados en casa» en Notion, con la página en blanco). No repetir.
