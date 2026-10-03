@@ -52,10 +52,24 @@ cabecera_pagina('Personas', 'La familia. Cada uno tiene sus documentos, su salud
             </div>
           </div>
           <p class="tenue"><?= (int)$p['n_elementos'] ?> cosas a su nombre<?= $p['usuario_nombre'] ? ' · tiene acceso' : '' ?></p>
+          <?php
+            $suyas = elementos_de_persona($pdo, (int)$p['id']);
+            $tiene = [];
+            foreach ($suyas as $el) $tiene[$el['seccion'] . '/' . $el['tipo']] = true;
+          ?>
+          <?php if ($suyas): ?>
+            <div class="enlaces-persona">
+              <?php foreach ($suyas as $el): ?>
+                <a class="enlace-tenue" href="<?= e(url('elemento.php?id=' . $el['id'])) ?>"><?= icono('check', 'ico ico-mini') ?><?= e($el['nombre']) ?></a>
+              <?php endforeach; ?>
+            </div>
+          <?php endif; ?>
           <?php if ($p['activa']): ?>
             <div class="enlaces-persona">
               <?php foreach (['documentos' => 'dni', 'salud' => 'ficha'] as $s => $t): ?>
-                <a class="enlace-tenue" href="<?= e(url('elemento-editar.php?s=' . $s . '&t=' . $t . '&persona=' . $p['id'])) ?>"><?= icono('mas', 'ico ico-mini') ?><?= e(tipo_def($s, $t)['nombre']) ?></a>
+                <?php if (empty($tiene[$s . '/' . $t])): ?>
+                  <a class="enlace-tenue" href="<?= e(url('elemento-editar.php?s=' . $s . '&t=' . $t . '&persona=' . $p['id'])) ?>"><?= icono('mas', 'ico ico-mini') ?><?= e(tipo_def($s, $t)['nombre']) ?></a>
+                <?php endif; ?>
               <?php endforeach; ?>
             </div>
           <?php endif; ?>
