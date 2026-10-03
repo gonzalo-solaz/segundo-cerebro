@@ -316,6 +316,20 @@ trae kilómetros en 2025-12 ni 2026-09, y `km` queda en 219.263 (mayo 2025). Es 
 
 **Mini Cooper S JCW (2005) traído de Notion (3/10/2026, petición de Gonzalo):** vehículos, id 24, a nombre de Gonzalo (persona 1), 23 apuntes de historial (compra 1.800 € el 29/12/2025, transporte 1.100 € y las compras de piezas hasta el 27/05/2026). **Importado de Alemania y SIN matricular en España**: la ficha no tiene matrícula ni fecha de matriculación a propósito (el campo `matricula` no es obligatorio); cuando se matricule, rellenarlos y añadir la ITV. Notion dice que todo funciona excepto el motor. No repetir. Script en `private/importar-notion/mini-notion.py`. Sin traer: Allroad C5 0913CMM, Polo y los 'coches de interés'.
 
+**Control de peso (3/10/2026, petición de Gonzalo: «peso con IMC, registro, evolución y pautas»):** tipo
+`salud/peso` (uno por persona: altura, sexo, actividad, peso objetivo, «revisar el objetivo el» con aviso, y
+`plan` plegado) y página `peso.php` (botón «Peso y pautas» en Salud y «Evolución y pautas» en la ficha). **Los
+pesajes son apuntes del historial** (tipos `Peso` kg, `Cintura` cm, `Grasa corporal` %; la unidad la pone
+`registros.unidades` de la sección): sin tabla nueva, así la API, el borrado y la actividad son los de siempre.
+Desde la página, repetir el día SUSTITUYE la medida (por la API no: `mediciones_peso()` se queda con la última).
+Todo el cálculo vive en `includes/peso.php` (IMC OMS, tendencia con media exponencial por días, ritmo = regresión
+de 4 semanas, llegada al objetivo, Mifflin-St Jeor con suelo de 1.500/1.200 kcal, cintura OMS y cintura/altura
+NICE); las referencias están en su cabecera. La gráfica es SVG pintado en PHP (la CSP no deja librerías). En
+menores no se juzga el IMC ni se dan calorías (percentiles del pediatra). Las pautas generales están escritas en
+`peso.php`; las personales, en `plan`. API: acción `peso` (`php remoto.php peso <id>`). La edad sale de
+`personas.fecha_nacimiento`: si falta, no hay calorías. **Aún sin datos en producción**: no se ha creado el
+control de nadie (no inventar altura ni peso; preguntar).
+
 **Graduación de gafas (3/10/2026, petición de Gonzalo):** tipo `salud/gafas` (una ficha por graduación: esfera, cilindro, eje y adición de cada ojo, DIP, fecha y «próxima revisión» con aviso) para comparar graduaciones y saber si toca cambiar de gafas. Origen: Notion, Personal > Gafas (2024 y 2026, sin día exacto). No inventar fechas ni valores que Notion no da.
 
 **Notas cortas, detalle en campos plegados (3/10/2026, queja de Gonzalo: «tanta información amontonada no la veo útil»).** Las notas de los coches (hasta 3.400 caracteres) mezclaban origen, equipamiento, recambios y papeles. Ahora `vehiculo` tiene tres campos `aparte` con `lista` (tarjetas plegadas pintadas como lista por `lista_campo()`: una línea = un punto, «Grupo:» abre un grupo, «Etiqueta: valor» pone la etiqueta en negrita): `equipamiento` (lo que lleva: motor, caja, ruedas y neumáticos, batería, extras), `recambios` (mantenimiento: aceite, filtros, frenos, plan de mantenimiento, defectos a vigilar; **no** componentes) y `origen` (procedencia, compra, papeles, seguros anteriores). `notas` queda para lo breve y accionable (avería pendiente, baja temporal, importado sin matricular); si pasan de 500 caracteres, la ficha las pliega sola. **Al traer un vehículo de Notion, repartir así, no volcarlo todo en `notas`.** Repartidos en producción los 7 vehículos (ids 11, 13, 15, 17, 18, 19, 24), ya en formato lista; no repetir. Copia de las notas originales en `private/importar-notion/copia-notas/` y script en `repartir-notas-vehiculos.py` (gitignored). Las compras que ya constan en el historial se quitaron de las notas del Mini; el resto del texto se movió tal cual.

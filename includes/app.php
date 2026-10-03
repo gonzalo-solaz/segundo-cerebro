@@ -12,6 +12,7 @@ require_once __DIR__ . '/vencimientos.php';
 require_once __DIR__ . '/registros.php';
 require_once __DIR__ . '/comunidad.php';
 require_once __DIR__ . '/finanzas.php';
+require_once __DIR__ . '/peso.php';
 require_once __DIR__ . '/documentos.php';
 require_once __DIR__ . '/avisos.php';
 require_once __DIR__ . '/iconos.php';

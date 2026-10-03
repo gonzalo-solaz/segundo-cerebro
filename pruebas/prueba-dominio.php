@@ -126,6 +126,39 @@ comprueba('borrar quita sus avisos y documentos', (int)$pdo->query('SELECT COUNT
     && documentos_de($pdo, $id['dni']) === []);
 comprueba('y el archivo del disco', !is_file($ruta));
 
+echo "\nControl de peso\n";
+comprueba('IMC de 85,5 kg y 180 cm = 26,4 (sobrepeso)', imc(85.5, 180) === 26.4 && categoria_imc(26.4)[0] === 'Sobrepeso');
+comprueba('los cortes del IMC son los de la OMS', categoria_imc(18.4)[0] === 'Bajo peso' && categoria_imc(24.9)[0] === 'Peso normal'
+    && categoria_imc(30)[0] === 'Obesidad grado I' && categoria_imc(40)[0] === 'Obesidad grado III');
+comprueba('peso sano para 180 cm: 59,9-80,7 kg', rango_peso_sano(180) === [59.9, 80.7]);
+comprueba('la altura en metros también vale', altura_cm('1.78') === 178.0 && altura_cm(178) === 178.0 && altura_cm(5) === null);
+$an = analisis_peso($pdo, elemento($pdo, $id['peso']));
+comprueba('último peso e IMC', $an['actual'] === 85.5 && $an['imc'] === 26.4, var_export([$an['actual'], $an['imc']], true));
+comprueba('ritmo de las últimas 4 semanas: −0,66 kg/semana', $an['ritmo'] === -0.66 && $an['ritmo_dias'] === 28, var_export($an['ritmo'], true));
+comprueba('cambio en 30 días contra el pesaje del 1/9: −2,5 kg', $an['cambios'][30]['kg'] === -2.5 && $an['cambios'][30]['desde'] === '2026-09-01');
+comprueba('le faltan 5,5 kg y llegaría el 29/11', $an['falta'] === 5.5 && $an['llegada'] === '2026-11-29', var_export([$an['falta'], $an['llegada']], true));
+comprueba('calorías (Mifflin-St Jeor, 46 años, actividad ligera)', $an['calorias']['basal'] === 1760 && $an['calorias']['mantener'] === 2410
+    && $an['calorias']['adelgazar'] === 1910 && $an['calorias']['proteina'] === [96, 128], json_encode($an['calorias']));
+comprueba('cintura de 101 cm en hombre: riesgo aumentado; cintura/altura 0,56', $an['riesgo_cintura'] === 'aumentado' && $an['ica'] === 0.56);
+comprueba('el consejo del ritmo dice que va bien', (bool)array_filter($an['consejos'], static fn($c) => $c[0] === 'ok' && str_contains($c[1], 'Buen ritmo')));
+comprueba('la tendencia suaviza: queda por encima del último pesaje', end($an['tendencia']) > 85.5);
+guardar_medicion($pdo, $id['peso'], ['fecha' => '2026-10-02', 'peso' => '85,3'], null);
+$med = mediciones_peso($pdo, $id['peso']);
+comprueba('repetir el día corrige el peso sin tocar la cintura', $med['2026-10-02']['peso'] === 85.3 && $med['2026-10-02']['cintura'] === 101.0
+    && (int)$pdo->query("SELECT COUNT(*) FROM registros WHERE tipo = 'Peso' AND fecha = '2026-10-02'")->fetchColumn() === 1);
+$e = lanza(static fn() => guardar_medicion($pdo, $id['peso'], ['peso' => '8'], null));
+comprueba('un peso imposible se rechaza', $e instanceof ErrorValidacion);
+$e = lanza(static fn() => guardar_medicion($pdo, $id['peso'], ['fecha' => '2026-12-01', 'peso' => '80'], null));
+comprueba('y una fecha futura', $e instanceof ErrorValidacion);
+$e = lanza(static fn() => guardar_medicion($pdo, $id['furgo'], ['peso' => '80'], null));
+comprueba('solo se apunta en un control de peso', $e instanceof ErrorValidacion);
+comprueba('el apunte «Peso» lleva kg aunque no se diga', (string)$pdo->query("SELECT unidad FROM registros WHERE tipo = 'Peso' LIMIT 1")->fetchColumn() === 'kg');
+comprueba('kpi de salud: el último peso', kpi_seccion($pdo, 'salud') === 'Gonzalo: 85,3 kg', (string)kpi_seccion($pdo, 'salud'));
+$hijo = guardar_elemento($pdo, 'salud', 'peso', ['persona_id' => $id['leo'], 'datos' => ['altura' => '130', 'sexo' => 'Hombre']], null, null);
+guardar_medicion($pdo, $hijo, ['fecha' => '2026-10-01', 'peso' => '30'], null);
+$an = analisis_peso($pdo, elemento($pdo, $hijo));
+comprueba('en un menor no se dan calorías ni se juzga el IMC', $an['menor'] && $an['calorias'] === null && count($an['consejos']) === 1 && str_contains($an['consejos'][0][1], 'percentiles'));
+
 echo "\nContratos enlazados a una vivienda\n";
 $sum = static fn(int $enlace) => ['nombre' => 'Luz', 'enlace_id' => $enlace, 'datos' => ['categoria' => 'Luz', 'coste' => '60', 'periodicidad' => 'Mensual']];
 guardar_elemento($pdo, 'contratos', 'suministro', $sum($id['casa']), $id['luz'], $id['admin']);

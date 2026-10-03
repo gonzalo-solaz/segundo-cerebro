@@ -23,6 +23,8 @@
 //                                          {"concepto":"Obra fuga","categoria":"Piscina","zona":"comun","total":2735.10,"extraordinaria":true}]}
 //            zona comun|escalera → la parte se calcula con los coeficientes de la ficha; o "parte" a mano
 //      php remoto.php comunidad <id>                Números del análisis (por año, categoría y recibo)
+//      php remoto.php peso <id>                     Control de peso: IMC, ritmo, objetivo, calorías y consejos
+//            Un pesaje: registro {"elemento_id":30,"fecha":"2026-10-03","tipo":"Peso","valor":82.4}  (Cintura en cm, Grasa corporal en %)
 //      php remoto.php documento <archivo.pdf> elemento=<id> [titulo="..."]
 //      php remoto.php actividad
 //
@@ -131,7 +133,8 @@ switch ($accion) {
     case 'ficha':
         mostrar(llamar('ficha', ['id' => (int)($pos[0] ?? 0)]));
     case 'comunidad':
-        mostrar(llamar('comunidad', ['id' => (int)($pos[0] ?? 0)]));
+    case 'peso':
+        mostrar(llamar($accion, ['id' => (int)($pos[0] ?? 0)]));
     case 'hecho':
         mostrar(llamar('hecho', ['id' => (int)($pos[0] ?? 0)]));
     case 'elemento':

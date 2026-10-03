@@ -74,7 +74,7 @@ function nominas_de_ejemplo(): array {
 
 function sembrar(PDO $pdo): array {
     $id = [];
-    $id['yo']   = guardar_persona($pdo, ['nombre' => 'Gonzalo Prueba', 'relacion' => 'Yo']);
+    $id['yo']   = guardar_persona($pdo, ['nombre' => 'Gonzalo Prueba', 'relacion' => 'Yo', 'fecha_nacimiento' => '1980-06-15']);
     $id['ana']  = guardar_persona($pdo, ['nombre' => 'Ana Prueba', 'relacion' => 'Pareja']);
     $id['leo']  = guardar_persona($pdo, ['nombre' => 'Leo Prueba', 'relacion' => 'Hijo', 'fecha_nacimiento' => '2018-05-10']);
 
@@ -131,6 +131,13 @@ function sembrar(PDO $pdo): array {
         ['concepto' => 'Mantenimiento piscina', 'categoria' => 'Piscina', 'zona' => 'escalera', 'total' => '290,40'],
         ['concepto' => 'Obra fuga de la piscina', 'categoria' => 'Piscina', 'zona' => 'comun', 'total' => '2.735,10', 'extraordinaria' => true],
     ], $id['admin']);
+    // Control de peso: 2 meses bajando ~0,66 kg por semana, con la cintura dos veces.
+    $id['peso'] = $g('salud', 'peso', ['persona_id' => $id['yo'], 'datos' => ['altura' => '180', 'sexo' => 'Hombre',
+        'actividad' => 'Ligera (1-3 días por semana)', 'peso_objetivo' => '80']]);
+    foreach ([['2026-08-01', '90'], ['2026-08-15', '89'], ['2026-09-01', '88', '104'], ['2026-09-12', '87,4'],
+              ['2026-09-20', '86,6'], ['2026-09-27', '86'], ['2026-10-02', '85,5', '101']] as $m) {
+        guardar_medicion($pdo, $id['peso'], ['fecha' => $m[0], 'peso' => $m[1], 'cintura' => $m[2] ?? ''], $id['admin']);
+    }
     $id['documento'] = guardar_documento_bytes($pdo, $id['dni'], 'DNI escaneado', 'dni.pdf', "%PDF-1.4\n% prueba\n", $id['admin']);
     return $id;
 }

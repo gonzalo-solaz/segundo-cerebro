@@ -60,6 +60,13 @@ function opciones_repetir(): array {
             48 => 'Cada 4 años', 60 => 'Cada 5 años', 120 => 'Cada 10 años'];
 }
 
+// Factor por el que se multiplica el metabolismo basal para el gasto diario.
+function niveles_actividad(): array {
+    return ['Sedentaria (casi sin ejercicio)' => 1.2, 'Ligera (1-3 días por semana)' => 1.375,
+            'Moderada (3-5 días por semana)' => 1.55, 'Alta (6-7 días por semana)' => 1.725,
+            'Muy alta (trabajo físico o dos sesiones al día)' => 1.9];
+}
+
 function texto_repetir(int $meses): string {
     return opciones_repetir()[$meses] ?? "Cada $meses meses";
 }
@@ -211,6 +218,27 @@ function secciones(): array {
                             'vence' => 'Revisar la vista', 'aviso' => 30],
                     ],
                 ],
+                // Los pesajes son apuntes del historial (tipos Peso, Cintura y
+                // Grasa corporal); peso.php saca de ellos el IMC, la evolución y
+                // las pautas. Altura, sexo y actividad son para esos cálculos.
+                'peso' => [
+                    'nombre' => 'Control de peso', 'ejemplo' => 'Peso', 'persona' => 'obligatoria',
+                    'persona_etiqueta' => 'De quién es', 'nombre_auto' => 'Peso de {persona}',
+                    'campos' => [
+                        'altura' => ['etiqueta' => 'Altura', 'tipo' => 'numero', 'unidad' => 'cm', 'resumen' => true,
+                            'ayuda' => 'Para el IMC. En centímetros: 178.'],
+                        'sexo' => ['etiqueta' => 'Sexo', 'tipo' => 'opcion', 'opciones' => ['Hombre', 'Mujer'],
+                            'ayuda' => 'Cambia el gasto de calorías y los límites sanos de la cintura.'],
+                        'actividad' => ['etiqueta' => 'Actividad física habitual', 'tipo' => 'opcion',
+                            'opciones' => array_keys(niveles_actividad())],
+                        'peso_objetivo' => ['etiqueta' => 'Peso objetivo', 'tipo' => 'numero', 'unidad' => 'kg', 'resumen' => true],
+                        'fecha_objetivo' => ['etiqueta' => 'Revisar el objetivo el', 'tipo' => 'fecha',
+                            'vence' => 'Revisar el objetivo de peso', 'aviso' => 7,
+                            'ayuda' => 'Un punto de control (dentro de 3 meses, por ejemplo) para ver cómo va y ajustar.'],
+                        'plan' => ['etiqueta' => 'Plan y pautas personales', 'tipo' => 'area', 'aparte' => true,
+                            'ayuda' => 'Lo acordado con el médico o el nutricionista, y lo que Claude ponga al día en cada revisión.'],
+                    ],
+                ],
                 'tratamiento' => [
                     'nombre' => 'Tratamiento o medicación', 'ejemplo' => 'Ibuprofeno 600', 'persona' => 'obligatoria',
                     'persona_etiqueta' => 'Para quién',
@@ -239,8 +267,10 @@ function secciones(): array {
                 ['Revisión médica anual', 12, 30], ['Dentista', 12, 21], ['Oftalmólogo', 24, 30],
                 ['Analítica', 12, 21], ['Vacuna de la gripe', 12, 21],
             ],
-            'registros' => ['tipos' => ['Consulta', 'Analítica', 'Prueba', 'Medición', 'Vacuna', 'Urgencia', 'Otro'],
-                            'valor' => 'Medida', 'unidad' => ''],
+            'registros' => ['tipos' => ['Consulta', 'Analítica', 'Prueba', 'Medición', 'Peso', 'Cintura', 'Grasa corporal',
+                                        'Vacuna', 'Urgencia', 'Otro'],
+                            'valor' => 'Medida', 'unidad' => '',
+                            'unidades' => ['Peso' => 'kg', 'Cintura' => 'cm', 'Grasa corporal' => '%']],
         ],
 
         // -------------------------------------------------------------
@@ -409,6 +439,7 @@ function secciones(): array {
             'registros' => ['tipos' => ['Tutoría', 'Notas', 'Incidencia', 'Logro', 'Otro'],
                             'valor' => 'Nota', 'unidad' => ''],
         ],
+
         // -------------------------------------------------------------
         // Los NÚMEROS de las nóminas viven en finanzas (recibo a recibo y
         // cuadrados con el banco); aquí, la empresa, el contrato, el convenio

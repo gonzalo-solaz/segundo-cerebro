@@ -42,6 +42,7 @@ La vía es `php remoto.php <acción>` (habla con la API del servidor; ver la cab
    - Permiso de circulación / ficha técnica → `vehiculos/vehiculo` (matrícula, bastidor, fecha de matriculación).
    - Informe médico, analítica → historial (`registro`) de la ficha médica de esa persona; el PDF, como `documento` de esa ficha.
    - Receta → `salud/tratamiento` con `receta_hasta`.
+   - Pesaje («peso 84,2», foto de la báscula) → `registro` del `salud/peso` de esa persona con `tipo: "Peso"` y `valor` en kg (la unidad se pone sola; `Cintura` en cm y `Grasa corporal` en %). Un apunte por tipo y día.
    - DNI/pasaporte/carnet → `documentos`, con su titular.
    - Factura de una reparación → `registro` del elemento con `coste`, y el PDF adjunto.
 5. **Graba**: escribe el JSON en un archivo temporal del scratchpad y usa `php remoto.php elemento|vencimiento|registro <archivo.json>`. Las fechas, en `AAAA-MM-DD`; los importes, como números JSON.
@@ -75,6 +76,15 @@ Cuando Gonzalo deje una liquidación nueva en `facturas/comunidad/` (o la pase p
 7. **Coste de la ficha**: si el trimestre fue normal (sin obras) y el recibo cambió, actualiza `coste` (cuenta en el gasto fijo mensual).
 8. **Análisis**: `php remoto.php comunidad <id>` da los números. Reescribe `datos.analisis` de la ficha (`elemento` con `id`) en 10-15 líneas: lo pagado en el año y lo que se estima para el año entero; las 3 partidas que más cuestan; qué ha cambiado respecto al trimestre anterior (la tabla recibo a recibo); y las preguntas abiertas para la junta. Conserva lo que siga valiendo, quita lo resuelto y no inventes precios de mercado: si citas uno, que venga de una fuente abierta en esa misma sesión.
 9. **Cuéntaselo a Gonzalo** en 3-4 líneas: cuánto paga este trimestre, qué ha subido o bajado, y si hay algo que preguntar al administrador.
+
+### Revisión del control de peso
+
+Cuando Gonzalo pida «cómo voy con el peso» o pautas personales:
+
+1. `php remoto.php buscar salud texto="Peso"` → id; `php remoto.php peso <id>` da IMC, ritmo (kg/semana), cambios a 7/30/90/365 días, llegada estimada al objetivo, calorías, cintura y los `consejos` que ya enseña la página.
+2. Cuéntaselo en 4-6 líneas con esos números (no los recalcules a ojo). Si faltan altura, sexo, actividad o la fecha de nacimiento (en Personas), dilo: sin ellos no hay IMC ni calorías.
+3. Si te lo pide, reescribe `datos.plan` de la ficha (`elemento` con `id`): lo acordado con el médico, metas de la semana (pasos, días de fuerza, qué recortar) y lo que le esté funcionando. Corto y concreto, nada de dietas milagro ni cifras por debajo de 1.500 kcal (hombres) / 1.200 (mujeres).
+4. Es salud: no diagnostiques. Con IMC ≥ 30, pérdida sin buscarla o cualquier medicación, remite al médico.
 
 ### Nóminas y papeles del trabajo (sección Trabajo)
 

@@ -91,6 +91,9 @@ foreach ($titulos_hijos as $gs => [$titulo, $icono_g]) {
 }
 
 $acciones = '<a class="btn btn-sutil" href="' . e(url('elemento-editar.php?id=' . $id)) . '">' . icono('editar') . 'Editar</a>';
+if ($el['seccion'] === 'salud' && $el['tipo'] === 'peso') {
+    $acciones = '<a class="btn btn-primario" href="' . e(url('peso.php?id=' . $id)) . '">' . icono('bascula') . 'Evolución y pautas</a>' . $acciones;
+}
 if ($el['seccion'] === 'contratos' && $el['tipo'] === 'comunidad') {
     $acciones = '<a class="btn btn-sutil" href="' . e(url('gasto-comunidad.php?id=' . $id)) . '">' . icono('historial') . 'Gasto por partidas</a>' . $acciones;
 }

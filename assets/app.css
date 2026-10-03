@@ -413,3 +413,71 @@ details.tarjeta-plegable[open] > summary { margin-bottom: 12px; }
 .fp-elemento:hover strong { color: var(--acento); }
 .fp-tipo { display: block; font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--tenue); }
 .fp-pie { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: auto; padding-top: .9rem; border-top: 1px solid var(--borde); }
+
+/* ---------------- Control de peso (peso.php) ---------------- */
+.kpi-num small { font-size: .55em; font-weight: 600; color: var(--tenue); }
+.kpi-verde .kpi-num { color: var(--verde); }
+.texto-alto { color: var(--rojo); }
+.tabla .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.nota-pequena { font-size: .8rem; }
+.filtros-mini { margin: 0; padding: 0; }
+.filtros-mini .chip { padding: .25rem .6rem; font-size: .78rem; }
+.datos-compactos { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: .6rem 1rem; margin-top: .9rem; padding-top: .9rem; border-top: 1px solid var(--borde); }
+
+/* Móvil: Apuntar, la evolución y las pautas, el registro. Escritorio: Apuntar arriba a la derecha. */
+.peso-apuntar > .tarjeta { margin-bottom: 0; }
+@media (min-width: 1100px) {
+  .peso-rejilla { grid-template-rows: auto 1fr; }
+  .peso-apuntar { grid-column: 2; grid-row: 1; }
+  .peso-izq { grid-column: 1; grid-row: 1 / span 2; }
+  .peso-der { grid-column: 2; grid-row: 2; }
+}
+.grafica-peso { display: block; width: 100%; height: auto; }
+.gp-banda { fill: var(--verde); opacity: .1; }
+.gp-rejilla { stroke: var(--borde); stroke-width: 1; }
+.gp-eje { fill: var(--tenue); font-size: 11px; font-family: inherit; }
+.gp-objetivo { stroke: var(--verde); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.gp-objetivo-txt { fill: var(--verde); font-weight: 600; }
+.gp-punto { fill: var(--panel); stroke: var(--tenue); stroke-width: 1.5; }
+.gp-tendencia { fill: none; stroke: var(--acento); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+/* En el móvil el SVG se pinta a la mitad: rótulos y trazos, al doble para que se lean. */
+@media (max-width: 640px) {
+  .gp-eje { font-size: 21px; }
+  .gp-tendencia { stroke-width: 4.5; }
+  .gp-punto { stroke-width: 2.5; }
+  .gp-objetivo { stroke-width: 2.5; }
+}
+.gp-leyenda { display: flex; flex-wrap: wrap; gap: .3rem 1rem; font-size: .78rem; margin: .5rem 0 0; }
+.gp-leyenda span { display: inline-flex; align-items: center; gap: .35rem; }
+.gp-leyenda i { display: inline-block; flex: none; }
+.gp-l-punto { width: 8px; height: 8px; border-radius: 50%; border: 1.5px solid var(--tenue); }
+.gp-l-linea { width: 16px; height: 3px; border-radius: 2px; background: var(--acento); }
+.gp-l-banda { width: 14px; height: 10px; background: color-mix(in srgb, var(--verde) 18%, transparent); }
+.gp-l-objetivo { width: 16px; border-top: 2px dashed var(--verde); }
+
+.imc-escala { position: relative; display: flex; height: 8px; border-radius: 999px; overflow: visible; margin: .4rem 0 .2rem; }
+.imc-escala span { height: 100%; }
+.imc-escala span:first-child { border-radius: 999px 0 0 999px; }
+.imc-escala span:nth-child(4) { border-radius: 0 999px 999px 0; }
+.imc-bajo, .imc-sobre { background: color-mix(in srgb, var(--ambar) 55%, transparent); }
+.imc-normal { background: color-mix(in srgb, var(--verde) 60%, transparent); }
+.imc-obeso { background: color-mix(in srgb, var(--rojo) 50%, transparent); }
+.imc-escala i { position: absolute; top: -4px; width: 4px; height: 16px; margin-left: -2px; border-radius: 2px; background: var(--texto); box-shadow: 0 0 0 2px var(--panel); }
+.imc-marcas { position: relative; height: 1.1rem; font-size: .7rem; margin-bottom: .8rem; }
+.imc-marcas span { position: absolute; transform: translateX(-50%); }
+
+.consejos { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+.consejos li { padding: .55rem .8rem; border-radius: var(--radio-sm); border-left: 3px solid var(--tenue); background: var(--panel-2); font-size: .9rem; color: var(--texto-2); }
+.consejos .consejo-ok { border-left-color: var(--verde); }
+.consejos .consejo-aviso { border-left-color: var(--ambar); }
+.consejos .consejo-alto { border-left-color: var(--rojo); }
+.consejos .consejo-info { border-left-color: var(--acento); }
+
+.pauta { border-top: 1px solid var(--borde); }
+.pauta:first-of-type { border-top: 0; }
+.pauta summary { cursor: pointer; padding: .6rem 0; font-weight: 600; list-style: none; display: flex; justify-content: space-between; }
+.pauta summary::-webkit-details-marker { display: none; }
+.pauta summary::after { content: "▾"; color: var(--tenue); transition: transform .15s; }
+.pauta[open] summary::after { transform: rotate(180deg); }
+.pauta ul { margin: 0 0 .8rem; padding-left: 1.1rem; font-size: .9rem; color: var(--texto-2); }
+.pauta li { margin: .3rem 0; }

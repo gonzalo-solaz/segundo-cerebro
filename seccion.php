@@ -41,6 +41,9 @@ foreach ($sec['tipos'] as $t => $def) {
               . icono('mas') . e($def['nombre']) . '</a>';
 }
 
+if ($clave === 'salud' && elementos_peso($pdo)) {
+    $botones .= '<a class="btn btn-sutil" href="' . e(url('peso.php')) . '">' . icono('bascula') . 'Peso y pautas</a>';
+}
 if ($clave === 'contratos') {
     $botones .= '<a class="btn btn-sutil" href="' . e(url('gasto-suministros.php')) . '">' . icono('historial') . 'Gasto en suministros</a>';
     if (elementos_comunidad($pdo)) {
@@ -154,6 +157,9 @@ cabecera_pagina($sec['nombre'], e($sec['descripcion']), $botones, $sec['icono'],
               <?php foreach (resumen_elemento($el) as [$etq, $val]): ?>
                 <div><dt><?= e($etq) ?></dt><dd><?= e(recortar($val, 80)) ?></dd></div>
               <?php endforeach; ?>
+              <?php if ($el['tipo'] === 'peso' && $clave === 'salud'): ?>
+                <?php foreach (resumen_peso($pdo, $el) as [$etq, $val]): ?><div><dt><?= e($etq) ?></dt><dd><?= e($val) ?></dd></div><?php endforeach; ?>
+              <?php endif; ?>
               <?php if (!empty($el['enlace_nombre'])): ?>
                 <div><dt><?= e(tipo_def($el['seccion'], $el['tipo'])['enlace']['etiqueta']) ?></dt><dd><?= e(recortar($el['enlace_nombre'], 80)) ?></dd></div>
               <?php endif; ?>

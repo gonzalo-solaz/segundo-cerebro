@@ -76,6 +76,16 @@ function api_ejecutar(PDO $pdo, array $p, ?array $archivo = null): array {
             if (!$el || $el['seccion'] !== 'contratos' || $el['tipo'] !== 'comunidad') throw new RuntimeException('Ese elemento no es una comunidad de propietarios.');
             return ['elemento' => api_elemento_resumen($el), 'analisis' => analisis_comunidad($pdo, $el['id'])];
 
+        case 'peso':
+            // Números del control de peso (para poner al día el plan). Los
+            // pesajes se graban con «registro» (tipo Peso, Cintura o Grasa corporal).
+            $el = elemento($pdo, (int)($datos['id'] ?? 0));
+            if (!$el || $el['seccion'] !== 'salud' || $el['tipo'] !== 'peso') throw new RuntimeException('Ese elemento no es un control de peso.');
+            $an = analisis_peso($pdo, $el);
+            unset($an['tendencia']);
+            $an['mediciones'] = array_slice($an['mediciones'], -60, null, true);
+            return ['elemento' => api_elemento_resumen($el), 'analisis' => $an];
+
         case 'documento':
             if (!$archivo) throw new RuntimeException('Falta el archivo.');
             $id = guardar_documento_bytes($pdo, (int)($datos['elemento_id'] ?? 0), (string)($datos['titulo'] ?? ''),
@@ -85,7 +95,7 @@ function api_ejecutar(PDO $pdo, array $p, ?array $archivo = null): array {
         case 'actividad':
             return ['actividad' => actividad_reciente($pdo, 30)];
     }
-    throw new RuntimeException("Acción desconocida «{$accion}». Las que hay: estado, esquema, personas, buscar, ficha, elemento, vencimiento, hecho, registro, partidas, comunidad, documento, actividad.");
+    throw new RuntimeException("Acción desconocida «{$accion}». Las que hay: estado, esquema, personas, buscar, ficha, elemento, vencimiento, hecho, registro, partidas, comunidad, peso, documento, actividad.");
 }
 
 function api_estado(PDO $pdo): array {

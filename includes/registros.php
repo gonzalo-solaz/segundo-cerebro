@@ -30,7 +30,7 @@ function validar_registro(PDO $pdo, array $r): array {
         if ($valor === null) $errores[] = '«' . ($conf['valor'] ?? 'Valor') . '» tiene que ser un número.';
     }
     $unidad = trim((string)($r['unidad'] ?? ''));
-    if ($unidad === '') $unidad = (string)($conf['unidad'] ?? '');
+    if ($unidad === '') $unidad = (string)($conf['unidades'][$tipo] ?? $conf['unidad'] ?? '');
     if (longitud($unidad) > 15) $errores[] = 'La unidad es demasiado larga.';
 
     $coste = null;

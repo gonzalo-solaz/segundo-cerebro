@@ -446,6 +446,13 @@ function kpi_seccion(PDO $pdo, string $clave): ?string {
             $st->execute([sumar_meses(hoy(), 6)]);
             $n = (int)$st->fetchColumn();
             return $n ? $n . ($n === 1 ? ' caduca' : ' caducan') . ' en los próximos 6 meses' : 'Nada caduca en 6 meses';
+        case 'salud':
+            $partes = [];
+            foreach (elementos_peso($pdo) as $p) {
+                $r = resumen_peso($pdo, $p);
+                if ($r) $partes[] = nombre_corto($p['persona_nombre'] ?? $p['nombre']) . ': ' . explode(' · ', $r[0][1])[0];
+            }
+            return $partes ? implode(' · ', array_slice($partes, 0, 2)) : null;
         case 'familia':
             $n = count(personas($pdo));
             return $n . ($n === 1 ? ' persona' : ' personas');

@@ -65,6 +65,16 @@ pinta_bien('y enseña el análisis escrito', pedir('gasto-comunidad.php', ['id' 
 pinta_bien('y avisa del recibo sin desglose', pedir('gasto-comunidad.php'), 'no tiene desglose');
 pinta_bien('Contratos enlaza al gasto en comunidad', pedir('seccion.php', ['s' => 'contratos']), 'gasto-comunidad.php');
 pinta_bien('la ficha de la comunidad enlaza a su análisis', pedir('elemento.php', ['id' => (string)$id['comunidad']]), 'Gasto por partidas');
+pinta_bien('el control de peso calcula el IMC', pedir('peso.php'), '26,4');
+pinta_bien('…con su categoría', pedir('peso.php', ['id' => (string)$id['peso']]), 'Sobrepeso');
+pinta_bien('…pinta la gráfica', pedir('peso.php', ['id' => (string)$id['peso'], 'r' => 'todo']), 'class="gp-tendencia"');
+pinta_bien('…y da las pautas', pedir('peso.php'), 'Cuándo ir al médico');
+pinta_bien('…y las calorías', pedir('peso.php'), '1.910 kcal');
+pinta_bien('un id que no es un control de peso → no encontrado', pedir('peso.php', ['id' => (string)$id['furgo']]), 'No encontrado');
+pinta_bien('Salud enlaza al control de peso', pedir('seccion.php', ['s' => 'salud']), 'peso.php');
+pinta_bien('la tarjeta del control de peso enseña el último peso', pedir('seccion.php', ['s' => 'salud']), '85,5 kg');
+pinta_bien('la ficha del control de peso lleva a la evolución', pedir('elemento.php', ['id' => (string)$id['peso']]), 'Evolución y pautas');
+pinta_bien('el panel enseña el último peso', pedir('index.php'), 'Gonzalo: 85,5 kg');
 pinta_bien('sección que no existe → página de error', pedir('seccion.php', ['s' => 'nada']), 'Esa sección no existe');
 foreach (['furgo', 'casa', 'ficha_leo', 'dni', 'seguro', 'netflix', 'cole', 'cumple', 'fontanero', 'trat'] as $k) {
     pinta_bien("ficha de {$k}", pedir('elemento.php', ['id' => (string)$id[$k]]), 'Avisos');
@@ -176,6 +186,15 @@ file_put_contents($f, json_encode(['pagina' => 'personas.php', 'post' => ['accio
 exec(cli_php() . ' ' . escapeshellarg(__DIR__ . '/render.php') . ' ' . escapeshellarg($f) . ' 2>&1', $salida);
 @unlink($f);
 comprueba('sin token CSRF válido no se guarda nada', (int)$pdo->query("SELECT COUNT(*) FROM personas WHERE nombre = 'Sin token'")->fetchColumn() === 0);
+
+$r = pedir('peso.php', ['id' => (string)$id['peso']], ['accion' => 'medicion', 'fecha' => '2026-10-03', 'peso' => '85,2', 'cintura' => '100']);
+comprueba('apuntar un pesaje desde la página', str_ends_with((string)$r['redireccion'], '/peso.php?id=' . $id['peso'])
+    && mediciones_peso($pdo, $id['peso'])['2026-10-03']['peso'] === 85.2, $r['html']);
+$r = pedir('peso.php', ['id' => (string)$id['peso']], ['accion' => 'medicion', 'peso' => 'mucho']);
+comprueba('un peso que no es número no se apunta y se explica', str_contains($r['html'], 'FLASH:error'), $r['html']);
+$ids = implode(',', mediciones_peso($pdo, $id['peso'])['2026-10-03']['ids']);
+pedir('peso.php', ['id' => (string)$id['peso']], ['accion' => 'borrar-medicion', 'ids' => $ids]);
+comprueba('borrar lo de un día', !isset(mediciones_peso($pdo, $id['peso'])['2026-10-03']));
 
 $pdo = null;   // en Windows, un archivo abierto no se puede borrar
 @unlink($bd);
