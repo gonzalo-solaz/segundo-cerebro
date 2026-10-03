@@ -269,3 +269,6 @@ tiene garaje ni trastero; ascensor, limpieza, luz, agua y piscina se reparten
 `facturas/comunidad/` y los JSON grabados, en `private/comunidad/`. Informe
 inicial (foto fija de 1T-3T 2026, con fuentes de precios de mercado) en Claude Docs:
 https://claude.ai/code/artifact/bed5a1b2-46db-404b-bbcf-79e190dcb31d.
+**Grabado en producción (3/10/2026):** comunidad = ficha 9 (enlazada a la casa, id 2),
+recibos 1T26/2T26/3T26 = registros 4, 5 y 6 con sus partidas y sus PDF, y el
+campo `analisis` escrito. No repetir. El siguiente es el 4T26.

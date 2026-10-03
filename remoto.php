@@ -81,7 +81,16 @@ function llamar(string $accion, array $datos = [], ?string $archivo = null): arr
     }
     if ($archivo !== null) {
         if (!is_file($archivo)) { fwrite(STDERR, "No existe el archivo $archivo\n"); exit(1); }
-        $cmd .= ' -F ' . escapeshellarg('archivo=@' . $archivo . ';filename=' . basename($archivo));
+        // curl -F parte por comas y punto y coma («LIQUIDACION,CUOTAS 1T26.pdf»
+        // del administrador, 3/10/2026): se sube una copia con el nombre limpio.
+        $nombre = preg_replace('/[,;"]+/', ' ', basename($archivo));
+        if ($nombre !== basename($archivo) || preg_match('/[,;"]/', $archivo)) {
+            $copia = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'sc-' . getmypid() . '-' . $nombre;
+            copy($archivo, $copia);
+            $tmp[] = $copia;
+            $archivo = $copia;
+        }
+        $cmd .= ' -F ' . escapeshellarg('archivo=@' . $archivo . ';filename=' . $nombre);
     }
     $salida = shell_exec($cmd . ' 2>&1');
     foreach ($tmp as $f) @unlink($f);
