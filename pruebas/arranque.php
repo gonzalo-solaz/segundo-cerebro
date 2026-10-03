@@ -92,6 +92,12 @@ function sembrar(PDO $pdo): array {
                                           'repetir_meses' => 12, 'aviso_dias' => 30], $id['admin']);
     $id['registro'] = crear_registro($pdo, ['elemento_id' => $id['furgo'], 'fecha' => '2026-09-01', 'tipo' => 'Mantenimiento',
                                             'titulo' => 'Aceite y filtros', 'valor' => '150.000', 'coste' => '189,90'], $id['admin']);
+    // Facturas del suministro de luz: dos meses de 2026 y uno de 2025; y una
+    // incidencia con coste que NO es consumo y no debe entrar en la suma.
+    foreach ([['2025-12-09', '70,10'], ['2026-08-09', '80,50'], ['2026-09-09', '100,52']] as [$f, $c]) {
+        crear_registro($pdo, ['elemento_id' => $id['luz'], 'fecha' => $f, 'tipo' => 'Factura', 'titulo' => 'Factura luz', 'coste' => $c], $id['admin']);
+    }
+    crear_registro($pdo, ['elemento_id' => $id['luz'], 'fecha' => '2026-09-10', 'tipo' => 'Incidencia', 'titulo' => 'Cambio de contador', 'coste' => '25'], $id['admin']);
     $id['documento'] = guardar_documento_bytes($pdo, $id['dni'], 'DNI escaneado', 'dni.pdf', "%PDF-1.4\n% prueba\n", $id['admin']);
     return $id;
 }

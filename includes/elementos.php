@@ -382,6 +382,49 @@ function contar_elementos(PDO $pdo): array {
     return $out;
 }
 
+/**
+ * Facturas de los suministros (luz, gas, internet…) agrupadas por año natural
+ * de la fecha de la factura (no del consumo: la del gas de julio llega en
+ * agosto). Devuelve [año => ['total', 'n', 'meses' => [mes => importe],
+ * 'suministros' => [elemento_id => ['nombre', 'categoria', 'total', 'n']]]],
+ * con el año más reciente primero. Solo cuentan los apuntes de tipo «Factura»
+ * con coste: una reparación apuntada como «Incidencia» no es consumo.
+ */
+function gasto_suministros(PDO $pdo): array {
+    $st = $pdo->query("SELECT r.elemento_id, r.fecha, r.coste, e.nombre, e.datos
+                       FROM registros r JOIN elementos e ON e.id = r.elemento_id
+                       WHERE e.seccion = 'contratos' AND e.tipo = 'suministro'
+                         AND r.tipo = 'Factura' AND r.coste IS NOT NULL
+                       ORDER BY r.fecha, r.id");
+    $anios = [];
+    foreach ($st as $f) {
+        $anio = (int)substr($f['fecha'], 0, 4);
+        $mes = (int)substr($f['fecha'], 5, 2);
+        $coste = (float)$f['coste'];
+        $a = &$anios[$anio];
+        $a ??= ['total' => 0.0, 'n' => 0, 'meses' => [], 'suministros' => []];
+        $a['total'] += $coste;
+        $a['n']++;
+        $a['meses'][$mes] = ($a['meses'][$mes] ?? 0.0) + $coste;
+        $s = &$a['suministros'][(int)$f['elemento_id']];
+        $s ??= ['nombre' => $f['nombre'], 'categoria' => (string)(json_array($f['datos'])['categoria'] ?? ''), 'total' => 0.0, 'n' => 0];
+        $s['total'] += $coste;
+        $s['n']++;
+        unset($a, $s);
+    }
+    krsort($anios);
+    foreach ($anios as &$a) {
+        $a['total'] = round($a['total'], 2);
+        foreach ($a['suministros'] as &$s) $s['total'] = round($s['total'], 2);
+        unset($s);
+        foreach ($a['meses'] as &$m) $m = round($m, 2);
+        unset($m);
+        ksort($a['meses']);
+        uasort($a['suministros'], static fn($x, $y) => $y['total'] <=> $x['total']);
+    }
+    return $anios;
+}
+
 // Una línea de dato útil para la tarjeta de cada sección en el panel.
 function kpi_seccion(PDO $pdo, string $clave): ?string {
     switch ($clave) {

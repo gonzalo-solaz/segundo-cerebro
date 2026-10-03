@@ -57,6 +57,9 @@ foreach (array_keys(secciones()) as $s) {
         pinta_bien("alta de {$s}/{$t}", pedir('elemento-editar.php', ['s' => $s, 't' => $t]), 'Guardar');
     }
 }
+pinta_bien('el gasto en suministros suma las facturas del año', pedir('gasto-suministros.php'), '181,02');
+pinta_bien('y deja el año anterior aparte', pedir('gasto-suministros.php'), '70,10');
+pinta_bien('Contratos enlaza al gasto en suministros', pedir('seccion.php', ['s' => 'contratos']), 'gasto-suministros.php');
 pinta_bien('sección que no existe → página de error', pedir('seccion.php', ['s' => 'nada']), 'Esa sección no existe');
 foreach (['furgo', 'casa', 'ficha_leo', 'dni', 'seguro', 'netflix', 'cole', 'cumple', 'fontanero', 'trat'] as $k) {
     pinta_bien("ficha de {$k}", pedir('elemento.php', ['id' => (string)$id[$k]]), 'Avisos');

@@ -87,7 +87,7 @@ jobs:
             --exclude='.git/' --exclude='.github/' --exclude='.claude/' --exclude='_despliegue/' \
             --exclude='pruebas/' --exclude='*.md' --exclude='.gitignore' \
             --exclude='remoto.php' --exclude='servidor-local.php' --exclude='config.example.php' \
-            --exclude='private/'
+            --exclude='private/' --exclude='facturas/'
           # private/ solo lleva su .htaccess (el resto lo crea la app en el servidor).
           mkdir -p _despliegue/private && cp private/.htaccess _despliegue/private/.htaccess
           find _despliegue -type f | sort

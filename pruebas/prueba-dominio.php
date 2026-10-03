@@ -94,6 +94,12 @@ comprueba('un apunte con más km actualiza los km del vehículo', elemento($pdo,
 crear_registro($pdo, ['elemento_id' => $id['furgo'], 'fecha' => '2025-01-01', 'titulo' => 'Apunte viejo', 'valor' => '90000'], $id['admin']);
 comprueba('un apunte viejo con menos km no los baja', elemento($pdo, $id['furgo'])['datos']['km'] === 155120.0);
 comprueba('lo gastado en 12 meses suma los costes', abs(gasto_ultimo_ano($pdo, $id['furgo']) - 189.90) < 0.001);
+$gs = gasto_suministros($pdo);
+comprueba('el gasto de suministros se agrupa por año, el más reciente primero', array_keys($gs) === [2026, 2025], implode(',', array_keys($gs)));
+comprueba('suma las facturas del año y no la incidencia con coste', abs($gs[2026]['total'] - 181.02) < 0.001 && $gs[2026]['n'] === 2, var_export($gs[2026]['total'], true));
+comprueba('lo suma por suministro y por mes', abs($gs[2026]['suministros'][$id['luz']]['total'] - 181.02) < 0.001 && $gs[2026]['meses'] === [8 => 80.5, 9 => 100.52]);
+comprueba('el año anterior sale aparte', abs($gs[2025]['total'] - 70.10) < 0.001);
+comprueba('los vehículos no entran en el gasto de suministros', !isset($gs[2026]['suministros'][$id['furgo']]));
 $e = lanza(static fn() => crear_registro($pdo, ['elemento_id' => $id['dni'], 'titulo' => 'x'], null));
 comprueba('documentos no lleva historial', $e instanceof ErrorValidacion);
 $e = lanza(static fn() => crear_registro($pdo, ['elemento_id' => $id['furgo'], 'tipo' => 'Despegue'], null));

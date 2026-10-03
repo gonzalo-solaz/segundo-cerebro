@@ -310,7 +310,7 @@ function secciones(): array {
                 ],
             ],
             'sugerencias' => [['Comparar tarifas de luz y gas', 12, 15]],
-            'registros' => ['tipos' => ['Incidencia', 'Cambio de tarifa', 'Reclamación', 'Parte al seguro', 'Otro'],
+            'registros' => ['tipos' => ['Factura', 'Incidencia', 'Cambio de tarifa', 'Reclamación', 'Parte al seguro', 'Otro'],
                             'valor' => null, 'unidad' => ''],
         ],
 

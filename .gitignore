@@ -10,6 +10,10 @@ acceso.json
 private/*
 !private/.htaccess
 
+# Facturas y papeles personales que se dejan en disco para que Claude los grabe
+# en la app (van por la API, no por el repositorio ni por FTP).
+facturas/
+
 # Copias y temporales
 *.log
 *.bak

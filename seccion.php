@@ -24,6 +24,10 @@ foreach ($sec['tipos'] as $t => $def) {
               . icono('mas') . e($def['nombre']) . '</a>';
 }
 
+if ($clave === 'contratos') {
+    $botones .= '<a class="btn btn-sutil" href="' . e(url('gasto-suministros.php')) . '">' . icono('historial') . 'Gasto en suministros</a>';
+}
+
 cabecera($sec['nombre'], 'seccion:' . $clave);
 cabecera_pagina($sec['nombre'], e($sec['descripcion']), $botones, $sec['icono'], $sec['color']);
 ?>
