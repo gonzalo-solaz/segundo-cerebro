@@ -12,6 +12,7 @@
 //      php remoto.php elemento <archivo.json | JSON>
 //            {"seccion":"vehiculos","tipo":"vehiculo","nombre":"Furgo","datos":{"matricula":"1234ABC","proxima_itv":"2027-03-14"}}
 //            {"id":12,"datos":{"caducidad":"2031-05-02"}}      ← al actualizar, solo lo que cambia
+//            {"seccion":"contratos","tipo":"suministro","nombre":"Luz","enlace_id":2,"datos":{...}}  ← enlace_id: la vivienda/vehículo a la que pertenece (ver «esquema»)
 //      php remoto.php vencimiento <archivo.json | JSON>
 //            {"titulo":"IBI","fecha":"2026-11-05","seccion":"vivienda","repetir_meses":12,"aviso_dias":30}
 //      php remoto.php hecho <id>

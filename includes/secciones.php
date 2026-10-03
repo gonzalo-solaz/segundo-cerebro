@@ -35,6 +35,10 @@
 //    persona       null | 'opcional' | 'obligatoria' — a quién pertenece.
 //    persona_etiqueta  Texto del selector de persona («Titular», «Conductor habitual»).
 //    nombre_auto   Si se deja el nombre en blanco: «DNI de {persona}».
+//    enlace        ['etiqueta' => 'Vivienda', 'a' => [['vivienda', 'inmueble']]]:
+//                  a qué elemento (de qué sección y tipo) puede pertenecer este.
+//                  La ficha del elemento «padre» lista a sus hijos (los
+//                  contratos de la casa, el seguro del coche).
 //    campos        Los campos (ver arriba).
 //
 //  Sección — además: sugerencias de recordatorios típicos (solo rellenan el
@@ -263,6 +267,7 @@ function secciones(): array {
             'tipos' => [
                 'suministro' => [
                     'nombre' => 'Suministro', 'ejemplo' => 'Luz de casa', 'persona' => 'opcional', 'persona_etiqueta' => 'Titular',
+                    'enlace' => ['etiqueta' => 'Vivienda', 'a' => [['vivienda', 'inmueble']]],
                     'campos' => [
                         'categoria' => ['etiqueta' => 'Qué es', 'tipo' => 'opcion', 'resumen' => true,
                             'opciones' => ['Luz', 'Gas', 'Agua', 'Internet y fibra', 'Móvil', 'Alarma', 'Otro']],
@@ -279,6 +284,7 @@ function secciones(): array {
                 ],
                 'seguro' => [
                     'nombre' => 'Seguro', 'ejemplo' => 'Seguro de hogar', 'persona' => 'opcional', 'persona_etiqueta' => 'Tomador',
+                    'enlace' => ['etiqueta' => 'Vivienda o vehículo asegurado', 'a' => [['vivienda', 'inmueble'], ['vehiculos', 'vehiculo']]],
                     'campos' => [
                         'ramo' => ['etiqueta' => 'Tipo de seguro', 'tipo' => 'opcion', 'resumen' => true,
                             'opciones' => ['Hogar', 'Coche o moto', 'Salud', 'Vida', 'Decesos', 'Viaje', 'Otro']],

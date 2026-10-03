@@ -120,6 +120,31 @@ comprueba('borrar quita sus avisos y documentos', (int)$pdo->query('SELECT COUNT
     && documentos_de($pdo, $id['dni']) === []);
 comprueba('y el archivo del disco', !is_file($ruta));
 
+echo "\nContratos enlazados a una vivienda\n";
+$sum = static fn(int $enlace) => ['nombre' => 'Luz', 'enlace_id' => $enlace, 'datos' => ['categoria' => 'Luz', 'coste' => '60', 'periodicidad' => 'Mensual']];
+guardar_elemento($pdo, 'contratos', 'suministro', $sum($id['casa']), $id['luz'], $id['admin']);
+guardar_elemento($pdo, 'contratos', 'seguro', ['nombre' => 'Seguro de hogar', 'enlace_id' => $id['casa'],
+    'datos' => ['ramo' => 'Hogar', 'coste' => '240', 'periodicidad' => 'Anual']], $id['seguro'], $id['admin']);
+$hijos = array_column(elementos_enlazados($pdo, $id['casa']), 'id');
+sort($hijos);
+comprueba('la casa lista sus dos contratos', $hijos === [min($id['seguro'], $id['luz']), max($id['seguro'], $id['luz'])]);
+comprueba('el contrato sabe a qué casa pertenece', elemento($pdo, $id['luz'])['enlace_nombre'] === 'Casa de prueba');
+$res = resumen_enlazados($pdo);
+comprueba('el resumen cuenta 2 y suma 80 €/mes (60 + 240/12)', $res[$id['casa']]['n'] === 2 && abs($res[$id['casa']]['mensual'] - 80.0) < 0.001, json_encode($res));
+comprueba('la vivienda ofrece añadir suministros y seguros', array_column(tipos_que_enlazan('vivienda', 'inmueble'), 1) === ['suministro', 'seguro']);
+comprueba('un DNI no cuelga de nada', tipos_que_enlazan('documentos', 'dni') === []);
+$e = lanza(static fn() => guardar_elemento($pdo, 'contratos', 'suministro', $sum($id['furgo']), $id['luz'], $id['admin']));
+comprueba('un suministro no se puede enlazar a un vehículo', $e instanceof ErrorValidacion);
+guardar_elemento($pdo, 'contratos', 'seguro', ['nombre' => 'Seguro de la furgo', 'enlace_id' => $id['furgo'], 'datos' => ['ramo' => 'Coche o moto']], null, $id['admin']);
+comprueba('un seguro sí se puede enlazar a un vehículo', count(elementos_enlazados($pdo, $id['furgo'])) === 1);
+cambiar_activo_elemento($pdo, $id['seguro'], false, null);
+comprueba('archivar un contrato lo quita de la ficha de la casa', array_column(elementos_enlazados($pdo, $id['casa']), 'id') === [$id['luz']]);
+cambiar_activo_elemento($pdo, $id['seguro'], true, null);
+guardar_elemento($pdo, 'vivienda', 'equipo', ['nombre' => 'Caldera', 'enlace_id' => $id['casa'], 'datos' => ['marca' => 'Junkers']], $id['caldera'], $id['admin']);
+comprueba('un tipo sin «enlace» ignora el enlace que le llegue', elemento($pdo, $id['caldera'])['enlace_id'] === null);
+borrar_elemento($pdo, $id['casa'], $id['admin']);
+comprueba('borrar la casa deja sus contratos sin enlace (no huérfanos)', elemento($pdo, $id['luz'])['enlace_id'] === null);
+
 echo "\nPersonas y accesos\n";
 $e = lanza(static fn() => crear_usuario($pdo, ['nombre' => 'Otro', 'email' => 'ADMIN@ejemplo.test']));
 comprueba('no se repite email (sin distinguir mayúsculas)', $e instanceof ErrorValidacion);

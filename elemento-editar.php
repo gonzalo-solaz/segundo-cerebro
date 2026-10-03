@@ -19,14 +19,15 @@ $def = tipo_def($s, $t);
 if (!$sec || !$def) pagina_error(404, 'No encontrado', 'Ese tipo de elemento no existe.');
 
 $valores = $el
-    ? ['nombre' => $el['nombre'], 'persona_id' => $el['persona_id'], 'notas' => $el['notas'], 'datos' => $el['datos']]
-    : ['nombre' => '', 'persona_id' => (int)($_GET['persona'] ?? 0) ?: null, 'notas' => '', 'datos' => []];
+    ? ['nombre' => $el['nombre'], 'persona_id' => $el['persona_id'], 'enlace_id' => $el['enlace_id'], 'notas' => $el['notas'], 'datos' => $el['datos']]
+    : ['nombre' => '', 'persona_id' => (int)($_GET['persona'] ?? 0) ?: null, 'enlace_id' => (int)($_GET['enlace'] ?? 0) ?: null, 'notas' => '', 'datos' => []];
 $errores = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $entrada = [
         'nombre'     => (string)($_POST['nombre'] ?? ''),
         'persona_id' => $_POST['persona_id'] ?? null,
+        'enlace_id'  => $_POST['enlace_id'] ?? null,
         'notas'      => (string)($_POST['notas'] ?? ''),
         'datos'      => is_array($_POST['datos'] ?? null) ? $_POST['datos'] : [],
     ];
@@ -45,6 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $gente = $def['persona'] ? personas($pdo) : [];
+$destinos = !empty($def['enlace']) ? candidatos_enlace($pdo, $def) : [];
 $titulo = $el ? 'Editar «' . $el['nombre'] . '»' : 'Nuevo: ' . mb_minusculas_inicial($def['nombre']);
 $volver_a = $el ? 'elemento.php?id=' . $el['id'] : 'seccion.php?s=' . $s;
 
@@ -72,6 +74,15 @@ cabecera_pagina($titulo, '<a href="' . e(url('seccion.php?s=' . $s)) . '">' . e(
         <?= opciones_html(array_column($gente, 'nombre', 'id'), $valores['persona_id'], true, $def['persona'] === 'obligatoria' ? 'Elige…' : '—') ?>
       </select>
       <?php if (!$gente): ?><small class="ayuda">Aún no hay personas: <a href="<?= e(url('personas.php')) ?>">añádelas primero</a>.</small><?php endif; ?>
+    </div>
+  <?php endif; ?>
+  <?php if (!empty($def['enlace'])): ?>
+    <div class="campo">
+      <label for="enlace_id"><?= e($def['enlace']['etiqueta']) ?> <span class="tenue">(opcional)</span></label>
+      <select name="enlace_id" id="enlace_id">
+        <?= opciones_html($destinos, $valores['enlace_id'] ?? null, true, '—') ?>
+      </select>
+      <?php if (!$destinos): ?><small class="ayuda">Aún no hay ninguno: añádelo primero en su sección.</small><?php endif; ?>
     </div>
   <?php endif; ?>
 

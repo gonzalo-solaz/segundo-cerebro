@@ -36,6 +36,12 @@ comprueba('160000 (número JSON) no se lee como 160', $r['elemento']['datos']['k
 $r = $api('elemento', ['id' => $id['furgo'], 'datos' => ['km' => 12.345]]);
 comprueba('12.345 (número JSON con decimales) no se lee como 12345', $r['elemento']['datos']['km'] === 12.345, var_export($r['elemento']['datos']['km'], true));
 
+$r = $api('elemento', ['id' => $nuevo, 'enlace_id' => $id['furgo']]);
+comprueba('la API enlaza un seguro a su vehículo', $r['elemento']['enlace_id'] === $id['furgo']);
+$r = $api('elemento', ['id' => $nuevo, 'datos' => ['coste' => 400]]);
+comprueba('y lo conserva al actualizar otro campo', $r['elemento']['enlace_id'] === $id['furgo']);
+$r = $api('esquema');
+comprueba('el esquema explica a qué se puede enlazar', str_contains((string)$r['secciones']['contratos']['tipos']['suministro']['enlace'], 'vivienda/inmueble'));
 $e = lanza(static fn() => $api('elemento', ['seccion' => 'contratos', 'tipo' => 'seguro', 'nombre' => 'X', 'datos' => ['ramo' => 'Barco']]));
 comprueba('una opción inventada se rechaza con ErrorValidacion', $e instanceof ErrorValidacion);
 $e = lanza(static fn() => $api('elemento', ['seccion' => 'vehiculos', 'tipo' => 'vehiculo', 'nombre' => 'X', 'datos' => ['caballos' => 150]]));

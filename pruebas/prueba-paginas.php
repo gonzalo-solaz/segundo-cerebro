@@ -64,7 +64,13 @@ foreach (['furgo', 'casa', 'ficha_leo', 'dni', 'seguro', 'netflix', 'cole', 'cum
 }
 pinta_bien('la ficha del vehículo muestra lo gastado', pedir('elemento.php', ['id' => (string)$id['furgo']]), '189,90');
 pinta_bien('la ficha del DNI muestra su archivo', pedir('elemento.php', ['id' => (string)$id['dni']]), 'DNI escaneado');
-pinta_bien('elemento que no existe', pedir('elemento.php', ['id' => '99999']), 'No encontrado');
+$pdo->prepare('UPDATE elementos SET enlace_id = ? WHERE id IN (?, ?)')->execute([$id['casa'], $id['luz'], $id['seguro']]);
+pinta_bien('la ficha de la casa lista sus contratos', pedir('elemento.php', ['id' => (string)$id['casa']]), 'Contratos y seguros');
+pinta_bien('y los nombra', pedir('elemento.php', ['id' => (string)$id['casa']]), 'Seguro de hogar');
+pinta_bien('la ficha del contrato enlaza a su casa', pedir('elemento.php', ['id' => (string)$id['luz']]), 'Casa de prueba');
+pinta_bien('el listado de Vivienda resume los contratos de la casa', pedir('seccion.php', ['s' => 'vivienda']), 'Contratos y seguros');
+pinta_bien('el formulario de un suministro ofrece la vivienda', pedir('elemento-editar.php', ['s' => 'contratos', 't' => 'suministro', 'enlace' => (string)$id['casa']]), 'Casa de prueba');
+pinta_bien('elemento que no existe',pedir('elemento.php', ['id' => '99999']), 'No encontrado');
 pinta_bien('agenda', pedir('vencimientos.php'), 'Toca ya');
 pinta_bien('agenda filtrada', pedir('vencimientos.php', ['s' => 'contratos']), 'Renovación del seguro');
 $itv = agenda($pdo, 400, null, $id['furgo'])[0];

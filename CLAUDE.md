@@ -181,3 +181,58 @@ Sistema) y, si se quiere el flujo de papeles, `API_CLAVE` + `acceso.json`.
   `private/archivos/` del servidor y la base en MySQL de Hostinger (que hace
   copias, pero no versionadas por nosotros). Si el usuario habla de respaldos,
   es lo primero que hay que decirle.
+
+## Despliegue real y migración desde Notion (3/10/2026)
+
+**La app ya está desplegada en `https://gonzalosolaz.tech/admin/`** (no en
+`/segundo-cerebro/`: ese nombre es solo la carpeta del repo). Cada push a `main`
+pasa las pruebas y sube por FTP vía GitHub Actions (secretos en el repo
+`gonzalo-solaz/segundo-cerebro`). Los textos de `remoto.php`/INSTRUCCIONES que
+dicen `/segundo-cerebro` están desactualizados.
+
+**La API aún no está activa** (comprobado: `/admin/api.php` da 404 = falta el
+secreto `API_CLAVE`). Para que Claude grabe: Gonzalo crea el secreto `API_CLAVE`
+en GitHub, relanza el despliegue y crea `acceso.json` con
+`{"url":"https://gonzalosolaz.tech/admin","clave":"..."}`. Claude nunca debe
+pedir ni leer la clave por el chat.
+
+**Traer los datos de Notion (Inmuebles > Casa - C/ Doctor José Vilella).** Claude
+tiene el MCP de Notion (espacio privado completo: Personal, Vehículos, Médico,
+Inmuebles, Viajes...). Gonzalo decidió qué traer:
+
+- Preparado en `private/importar-notion/*.json` (gitignored; llevan CUPS):
+  vivienda, internet, gas, agua, luz, seguro de hogar (Tuio) y ventana Velux.
+  Se graban con `php remoto.php elemento <archivo>` cuando la API esté activa.
+  Hay que comprobar antes con `buscar` que no se dupliquen.
+- **Decidido NO traer:** la página «Pared comedor».
+- **El seguro está con Tuio** (no Liberty). Liberty/CoverGrup solo aparece en las
+  notas como histórico; su nº de póliza, teléfono y PDF NO se han traído.
+- **Pendiente de preguntar a Gonzalo:** nº de póliza de Tuio, coste y periodicidad
+  (162,42 € ¿anual?), renovación, teléfono de asistencia; coste/periodicidad/
+  permanencia de cada suministro; régimen, m² y fin de hipoteca de la casa;
+  WiFi (¿se guarda? lo ve toda la familia); material «homestone gris 42HO-38»
+  (¿tipo nuevo «Material» o equipo?); si Pilar García existe como persona.
+- **Campos que la app no tiene** (ahora van en `notas`): titularidad 60/40,
+  fecha de alta del suministro («Desde»), potencia contratada. Si se repiten,
+  añadirlos a `includes/secciones.php`.
+- **Aún sin revisar en Notion:** Casa madre (Massarrojos), Compra local/nave, Obra
+  baño feb 2023, Iluminación, Aparadores, Alfombras; y las páginas Vehículos y
+  Médico (datos médicos: pedir permiso antes de copiar nada).
+
+**Actualización 3/10/2026:** API activa y `acceso.json` creado. Grabados en
+producción los 7 elementos de `private/importar-notion/` (ids 2-8: vivienda, internet,
+gas, agua, luz, seguro Tuio, Velux). No repetir. Sigue pendiente lo de la lista
+anterior. Pilar García NO existe como persona (solo está Gonzalo, id 1).
+
+**Seguro Tuio completado (3/10/2026):** ficha id 7 con póliza 187006, 162,42 €/año,
+renovación 12/03/2027 (aviso creado), tomador Gonzalo. Falta: teléfono de
+asistencia (los papeles solo dan contacto@tuio.com) y adjuntar los PDF (recibo,
+IPID, condiciones particulares), que se pasaron en el chat y no están en disco.
+
+**Enlaces entre elementos (3/10/2026, petición de Gonzalo):** los suministros y
+seguros pueden pertenecer a una vivienda (los seguros también a un vehículo).
+Columna `elementos.enlace_id` (migración 002), clave `enlace` en el tipo de
+`secciones.php`. La ficha de la vivienda/vehículo lista sus contratos con el coste
+mensual, y el listado de Vivienda los resume. Los contratos siguen viviendo en
+Contratos (gasto fijo, avisos): no se duplican. Por la API: `enlace_id` en
+`elemento`. Borrar el padre deja a los hijos sin enlace.

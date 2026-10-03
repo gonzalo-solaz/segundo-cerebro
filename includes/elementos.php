@@ -13,13 +13,15 @@
 //  mueve o se borra solo al cambiar la fecha.
 // =====================================================================
 
-const SQL_ELEMENTO = 'SELECT e.*, p.nombre AS persona_nombre, p.color AS persona_color
-                      FROM elementos e LEFT JOIN personas p ON p.id = e.persona_id';
+const SQL_ELEMENTO = 'SELECT e.*, p.nombre AS persona_nombre, p.color AS persona_color, t.nombre AS enlace_nombre
+                      FROM elementos e LEFT JOIN personas p ON p.id = e.persona_id
+                      LEFT JOIN elementos t ON t.id = e.enlace_id';
 
 function decodificar_elemento(array $f): array {
     $f['id'] = (int)$f['id'];
     $f['activo'] = (int)$f['activo'];
     $f['persona_id'] = $f['persona_id'] !== null ? (int)$f['persona_id'] : null;
+    $f['enlace_id'] = ($f['enlace_id'] ?? null) !== null ? (int)$f['enlace_id'] : null;
     $f['datos'] = json_array($f['datos']);
     return $f;
 }
@@ -41,6 +43,53 @@ function elementos_de_persona(PDO $pdo, int $persona_id): array {
     $st = $pdo->prepare(SQL_ELEMENTO . ' WHERE e.persona_id = ? AND e.activo = 1 ORDER BY e.seccion, e.nombre');
     $st->execute([$persona_id]);
     return array_map('decodificar_elemento', $st->fetchAll());
+}
+
+// Los elementos que pertenecen a otro (los contratos de una vivienda, el
+// seguro de un vehículo), en el orden en que se enseñan en su ficha.
+function elementos_enlazados(PDO $pdo, int $id): array {
+    $st = $pdo->prepare(SQL_ELEMENTO . ' WHERE e.enlace_id = ? AND e.activo = 1 ORDER BY e.seccion, e.tipo, e.nombre');
+    $st->execute([$id]);
+    return array_map('decodificar_elemento', $st->fetchAll());
+}
+
+// Cuántos elementos cuelgan de cada uno y cuánto cuestan al mes:
+// [id_padre => ['n' => 5, 'mensual' => 13.54]]. Una sola consulta para
+// pintar el listado de una sección.
+function resumen_enlazados(PDO $pdo): array {
+    $out = [];
+    foreach ($pdo->query('SELECT enlace_id, datos FROM elementos WHERE activo = 1 AND enlace_id IS NOT NULL') as $f) {
+        $k = (int)$f['enlace_id'];
+        $out[$k] = $out[$k] ?? ['n' => 0, 'mensual' => 0.0];
+        $out[$k]['n']++;
+        $out[$k]['mensual'] += coste_mensual(json_array($f['datos']));
+    }
+    return $out;
+}
+
+// Los tipos que pueden colgar de un elemento de esta sección y tipo:
+// [[seccion, tipo, nombre del tipo], ...]. Vacío si nada puede enlazarse a él.
+function tipos_que_enlazan(string $seccion, string $tipo): array {
+    $out = [];
+    foreach (secciones() as $clave => $s) {
+        foreach ($s['tipos'] as $t => $def) {
+            foreach ($def['enlace']['a'] ?? [] as [$sd, $td]) {
+                if ($sd === $seccion && $td === $tipo) $out[] = [$clave, $t, $def['nombre']];
+            }
+        }
+    }
+    return $out;
+}
+
+// Elementos a los que se puede enlazar uno de este tipo: [id => nombre].
+function candidatos_enlace(PDO $pdo, array $def): array {
+    $out = [];
+    foreach ($def['enlace']['a'] ?? [] as [$seccion, $tipo]) {
+        foreach (elementos_de($pdo, $seccion) as $el) {
+            if ($el['tipo'] === $tipo) $out[$el['id']] = $el['nombre'];
+        }
+    }
+    return $out;
 }
 
 // Búsqueda para la API (y, si un día hace falta, para un buscador).
@@ -76,6 +125,22 @@ function validar_elemento(PDO $pdo, string $seccion, string $tipo, array $entrad
     }
     if (($def['persona'] ?? null) === 'obligatoria' && !$persona_id && !$errores) {
         $errores[] = 'Elige ' . mb_minusculas_inicial($def['persona_etiqueta'] ?? 'la persona') . '.';
+    }
+
+    // ---- Enlace (a qué vivienda o vehículo pertenece) ----
+    $enlace_id = (int)($entrada['enlace_id'] ?? 0) ?: null;
+    if (empty($def['enlace'])) {
+        $enlace_id = null;
+    } elseif ($enlace_id) {
+        $destino = elemento($pdo, $enlace_id);
+        $valido = false;
+        foreach ($def['enlace']['a'] as [$seccion_destino, $tipo_destino]) {
+            if ($destino && $destino['seccion'] === $seccion_destino && $destino['tipo'] === $tipo_destino) $valido = true;
+        }
+        if (!$valido) {
+            $errores[] = '«' . $def['enlace']['etiqueta'] . '» tiene que ser uno de los que ya existen en la app.';
+            $enlace_id = null;
+        }
     }
 
     // ---- Nombre ----
@@ -139,7 +204,7 @@ function validar_elemento(PDO $pdo, string $seccion, string $tipo, array $entrad
 
     return [[
         'seccion' => $seccion, 'tipo' => $tipo, 'nombre' => $nombre,
-        'persona_id' => $persona_id, 'datos' => $datos, 'notas' => $notas,
+        'persona_id' => $persona_id, 'enlace_id' => $enlace_id, 'datos' => $datos, 'notas' => $notas,
     ], $errores];
 }
 
@@ -167,13 +232,13 @@ function guardar_elemento(PDO $pdo, string $seccion, string $tipo, array $entrad
     $pdo->beginTransaction();
     try {
         if ($id) {
-            $pdo->prepare('UPDATE elementos SET nombre = ?, persona_id = ?, datos = ?, notas = ?, actualizado_en = ? WHERE id = ?')
-                ->execute([$f['nombre'], $f['persona_id'], json_texto($f['datos']), $f['notas'], ahora(), $id]);
+            $pdo->prepare('UPDATE elementos SET nombre = ?, persona_id = ?, enlace_id = ?, datos = ?, notas = ?, actualizado_en = ? WHERE id = ?')
+                ->execute([$f['nombre'], $f['persona_id'], $f['enlace_id'], json_texto($f['datos']), $f['notas'], ahora(), $id]);
             $verbo = 'actualizó';
         } else {
-            $pdo->prepare('INSERT INTO elementos (seccion, tipo, nombre, persona_id, datos, notas, activo, creado_en, actualizado_en)
-                           VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?)')
-                ->execute([$seccion, $tipo, $f['nombre'], $f['persona_id'], json_texto($f['datos']), $f['notas'], ahora(), ahora()]);
+            $pdo->prepare('INSERT INTO elementos (seccion, tipo, nombre, persona_id, enlace_id, datos, notas, activo, creado_en, actualizado_en)
+                           VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?)')
+                ->execute([$seccion, $tipo, $f['nombre'], $f['persona_id'], $f['enlace_id'], json_texto($f['datos']), $f['notas'], ahora(), ahora()]);
             $id = (int)$pdo->lastInsertId();
             $verbo = 'añadió';
         }
@@ -262,6 +327,7 @@ function borrar_elemento(PDO $pdo, int $id, ?int $usuario_id = null): ?string {
     foreach (['vencimientos', 'registros', 'documentos'] as $tabla) {
         $pdo->prepare("DELETE FROM {$tabla} WHERE elemento_id = ?")->execute([$id]);
     }
+    $pdo->prepare('UPDATE elementos SET enlace_id = NULL WHERE enlace_id = ?')->execute([$id]);
     $pdo->prepare('DELETE FROM elementos WHERE id = ?')->execute([$id]);
     anotar($pdo, $usuario_id, "borró «{$el['nombre']}» de " . seccion($el['seccion'])['nombre']);
     return $el['seccion'];

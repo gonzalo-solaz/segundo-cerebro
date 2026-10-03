@@ -13,6 +13,7 @@ $proximo = [];
 foreach ($avisos as $v) {
     if ($v['elemento_id'] && !isset($proximo[$v['elemento_id']])) $proximo[$v['elemento_id']] = $v;
 }
+$enlazados = resumen_enlazados($pdo);
 $por_tipo = [];
 foreach ($elementos as $el) $por_tipo[$el['tipo']][] = $el;
 $volver = 'seccion.php?s=' . $clave;
@@ -67,6 +68,12 @@ cabecera_pagina($sec['nombre'], e($sec['descripcion']), $botones, $sec['icono'],
               <?php foreach (resumen_elemento($el) as [$etq, $val]): ?>
                 <div><dt><?= e($etq) ?></dt><dd><?= e(recortar($val, 80)) ?></dd></div>
               <?php endforeach; ?>
+              <?php if (!empty($el['enlace_nombre'])): ?>
+                <div><dt><?= e(tipo_def($el['seccion'], $el['tipo'])['enlace']['etiqueta']) ?></dt><dd><?= e(recortar($el['enlace_nombre'], 80)) ?></dd></div>
+              <?php endif; ?>
+              <?php if (!empty($enlazados[$el['id']])): $en = $enlazados[$el['id']]; ?>
+                <div><dt>Contratos y seguros</dt><dd><?= (int)$en['n'] ?><?= $en['mensual'] > 0 ? ' · ' . e(eur($en['mensual'])) . ' al mes' : '' ?></dd></div>
+              <?php endif; ?>
             </dl>
             <?php if ($prox): ?>
               <p class="ts-proximo venc-<?= e($prox['situacion']) ?>"><?= icono('reloj', 'ico ico-mini') ?><?= e(fecha_corta($prox['fecha'])) ?> · <?= e(relativo($prox['dias'])) ?></p>

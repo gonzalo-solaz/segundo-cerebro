@@ -105,6 +105,8 @@ function api_esquema(): array {
                 $campos[$c] = array_intersect_key($cd, array_flip(['etiqueta', 'tipo', 'opciones', 'unidad', 'vence', 'aviso', 'repetir']));
             }
             $tipos[$t] = ['nombre' => $def['nombre'], 'persona' => $def['persona'] ?? null,
+                          'enlace' => isset($def['enlace']) ? $def['enlace']['etiqueta'] . ' (enlace_id de un elemento de: '
+                              . implode(', ', array_map(static fn($a) => $a[0] . '/' . $a[1], $def['enlace']['a'])) . ')' : null,
                           'nombre_auto' => $def['nombre_auto'] ?? null, 'campos' => $campos];
         }
         $out[$k] = ['nombre' => $s['nombre'], 'tipos' => $tipos, 'registros' => $s['registros'],
@@ -115,7 +117,8 @@ function api_esquema(): array {
 
 function api_elemento_resumen(array $e): array {
     return ['id' => $e['id'], 'seccion' => $e['seccion'], 'tipo' => $e['tipo'], 'nombre' => $e['nombre'],
-            'persona' => $e['persona_nombre'], 'persona_id' => $e['persona_id'], 'datos' => $e['datos'], 'activo' => $e['activo']];
+            'persona' => $e['persona_nombre'], 'persona_id' => $e['persona_id'],
+            'enlace_id' => $e['enlace_id'], 'enlace' => $e['enlace_nombre'], 'datos' => $e['datos'], 'activo' => $e['activo']];
 }
 
 // Los números del JSON pasan a texto «a la española» (12.5 → "12,5") para
@@ -143,6 +146,7 @@ function api_guardar_elemento(PDO $pdo, array $d): array {
         $entrada = [
             'nombre' => array_key_exists('nombre', $d) ? $d['nombre'] : $actual['nombre'],
             'persona_id' => array_key_exists('persona_id', $d) ? $d['persona_id'] : $actual['persona_id'],
+            'enlace_id' => array_key_exists('enlace_id', $d) ? $d['enlace_id'] : $actual['enlace_id'],
             'notas' => array_key_exists('notas', $d) ? $d['notas'] : $actual['notas'],
             'datos' => array_map('api_valor_a_texto', $datos),
         ];
