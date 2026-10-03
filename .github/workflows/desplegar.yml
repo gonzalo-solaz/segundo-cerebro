@@ -58,8 +58,9 @@ jobs:
           # FRENO (3/10/2026): la primera vez, sin FTP_CARPETA, se subió TODO a la raíz
           # del dominio y pisó la web que vive allí. Ahora el destino es obligatorio y
           # ser exactamente admin/ (la cuenta FTP cuelga de public_html): nunca a ./
-          if [ -n "$FTP_SERVIDOR" ] && ! printf %s "$FTP_CARPETA" | grep -qE '^(\./)?admin/$'; then
-            echo "::error::FTP_CARPETA tiene que ser exactamente admin/ (sin ruta absoluta). No se despliega."
+          LIMPIA=$(printf %s "$FTP_CARPETA" | tr -d ' \r\n\t')
+          if [ -n "$FTP_SERVIDOR" ] && [ "$LIMPIA" != "admin/" ]; then
+            echo "::error::FTP_CARPETA tiene que ser exactamente admin/ (sin ruta absoluta). Le llegan ${#FTP_CARPETA} caracteres (debería ser 6); empieza por barra: $([ "${FTP_CARPETA:0:1}" = / ] && echo si || echo no); termina en barra: $([ "${LIMPIA: -1}" = / ] && echo si || echo no). No se despliega."
             exit 1
           fi
           if [ -z "$FTP_SERVIDOR" ]; then
@@ -126,6 +127,6 @@ jobs:
           username: ${{ secrets.FTP_USUARIO }}
           password: ${{ secrets.FTP_CONTRASENA }}
           protocol: ${{ secrets.FTP_PROTOCOLO || 'ftps' }}
-          server-dir: ${{ secrets.FTP_CARPETA }}
+          server-dir: admin/   # fijo a propósito: el freno de arriba ya comprobó que el secreto es este valor
           local-dir: ./_despliegue/
           log-level: standard
