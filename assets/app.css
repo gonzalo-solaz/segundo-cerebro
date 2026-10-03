@@ -380,7 +380,11 @@ select {
   background-repeat: no-repeat; background-position: right 10px center;
 }
 input:focus, select:focus, textarea:focus { outline: none; border-color: var(--acento); box-shadow: 0 0 0 3px color-mix(in srgb, var(--acento) 18%, transparent); }
-input[type=file] { font: inherit; font-size: .9rem; color: var(--texto-2); }
+input[type=file] { font: inherit; font-size: .9rem; color: var(--texto-2); max-width: 100%; }
+input[type=file]::file-selector-button {
+  font: inherit; font-size: 13px; font-weight: 500; margin-right: 10px; padding: 8px 14px; cursor: pointer;
+  border: 1px solid var(--borde); border-radius: var(--radio-sm); background: var(--panel-2); color: var(--texto-2);
+}
 textarea { resize: vertical; }
 .ayuda { font-size: 11px; color: var(--tenue); display: flex; gap: .3rem; align-items: center; }
 .ayuda-aviso { color: var(--acento); }
@@ -390,7 +394,8 @@ textarea { resize: vertical; }
 .acciones-form { display: flex; gap: .5rem; flex-wrap: wrap; }
 .form-elemento { padding: 20px 22px; }
 .en-linea { display: inline-flex; gap: .3rem; align-items: center; margin: 0; }
-.en-linea select { width: auto; padding: 4px 28px 4px 8px; font-size: 13px; }
+.en-linea select { width: auto; padding: 6px 28px 6px 8px; font-size: 16px; /* 16px: sin zoom de iOS */ }
+@media (min-width: 640px) { .en-linea select { padding: 4px 28px 4px 8px; font-size: 13px; } }
 .borrar-aparte { margin-top: 1rem; padding-top: 1rem; border-top: 1px dashed var(--borde); }
 
 details.desplegable { margin-top: .9rem; }
@@ -476,6 +481,7 @@ details.tarjeta-plegable[open] > summary { margin-bottom: 12px; }
 .kpi-verde .kpi-num { color: var(--verde); }
 .texto-alto { color: var(--rojo); }
 .tabla .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.tabla td.fecha-celda { white-space: nowrap; }
 .nota-pequena { font-size: .8rem; }
 .filtros-mini { margin: 0; padding: 0; }
 .filtros-mini .chip { padding: 4px 10px; font-size: 11.5px; }
@@ -557,6 +563,9 @@ details.tarjeta-plegable[open] > summary { margin-bottom: 12px; }
   .chip-boton, .filtros .chip { min-height: 36px; display: inline-flex; align-items: center; }
   .menu a { padding: 11px 11px; }
   .tabla .btn-icono { width: 36px; height: 36px; }
+  summary { min-height: 40px; align-items: center; }
+  details.tarjeta-plegable > summary, .pauta summary { min-height: 44px; }
+  input[type=file] { padding: 6px 0; }
 }
 /* Los botones no se parten en escritorio, pero en un móvil estrecho (320 px) un
    rótulo largo («Generar códigos de recuperación nuevos») se saldría de la tarjeta. */
@@ -583,4 +592,22 @@ details.tarjeta-plegable[open] > summary { margin-bottom: 12px; }
   .tabla-apilada td .en-linea select { width: 100%; }
   .tabla-apilada td.acciones-fila { display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 8px; padding-top: 8px; white-space: normal; }
   .tabla-apilada td.acciones-fila .en-linea { flex: none; }
+}
+
+/* Tablas con muchas columnas numéricas (registro de peso): menos aire en el móvil para que quepan. */
+@media (max-width: 480px) {
+  .tabla th, .tabla td { padding: 9px 4px; }
+  .tabla th { font-size: 10px; letter-spacing: 0; }
+  .tabla { font-size: 12.5px; }
+  .tabla-scroll { margin: 0 -14px; padding: 0 14px; }
+  .tabla .acciones-fila { padding-left: 0; }
+  .tabla .btn-icono { width: 32px; height: 32px; border-radius: 8px; }
+}
+
+/* 320 px (iPhone SE antiguo, Android pequeños): el año de la fecha sobra en el registro de peso. */
+@media (max-width: 340px) {
+  .tabla { font-size: 11.5px; }
+  .tabla th { font-size: 9px; }
+  .tabla th, .tabla td { padding: 9px 2px; }
+  .tabla .btn-icono { width: 26px; height: 26px; }
 }

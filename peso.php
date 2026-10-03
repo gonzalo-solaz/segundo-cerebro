@@ -304,7 +304,7 @@ cabecera_pagina($el ? $el['nombre'] : 'Control de peso',
             <tbody>
               <?php foreach ($filas as $f => $m): ?>
                 <tr>
-                  <td><?= e(fecha_es($f)) ?><?php if ($m['notas'] !== ''): ?><br><span class="tenue nota-pequena"><?= e($m['notas']) ?></span><?php endif; ?></td>
+                  <td class="fecha-celda"><?= e(fecha_es($f)) ?><?php if ($m['notas'] !== ''): ?><br><span class="tenue nota-pequena"><?= e($m['notas']) ?></span><?php endif; ?></td>
                   <td class="num"><?= $m['peso'] !== null ? e(numero_es($m['peso'])) : '<span class="tenue">—</span>' ?></td>
                   <td class="num tenue"><?= $m['peso'] !== null && ($anterior[$f] ?? null) !== null ? e(kg_signo(round($m['peso'] - $anterior[$f], 2))) : '' ?></td>
                   <?php if ($a['altura']): ?><td class="num"><?= $m['peso'] !== null ? e(numero_es(imc($m['peso'], $a['altura']))) : '' ?></td><?php endif; ?>
