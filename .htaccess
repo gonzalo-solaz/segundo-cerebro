@@ -1,0 +1,57 @@
+# =====================================================================
+#  Segundo cerebro — seguridad y privacidad
+#  (en public_html/segundo-cerebro/ de gonzalosolaz.tech)
+# =====================================================================
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # ---- Una sola dirección: SIN www ----
+    # La raíz del dominio manda «gonzalosolaz.tech» → «www.» para otras
+    # rutas, y la cookie de sesión es de UN host: entrando a veces con www y
+    # a veces sin él, «se pierde» la sesión. finanzas vive sin www, y el día
+    # que compartan acceso tienen que estar en el mismo host. (Este
+    # .htaccess, al llevar RewriteEngine On, sustituye a las reglas de la
+    # raíz para esta carpeta: no hay bucle de redirecciones.)
+    RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+    RewriteRule ^ https://%1%{REQUEST_URI} [L,R=301]
+
+    # ---- Siempre por HTTPS ----
+    # La segunda condición es la que funciona en Hostinger, donde PHP va
+    # detrás de un proxy y %{HTTPS} no siempre está a "on".
+    RewriteCond %{HTTPS} !=on
+    RewriteCond %{HTTP:X-Forwarded-Proto} !https
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+
+<IfModule mod_headers.c>
+    Header set X-Robots-Tag "noindex, nofollow"
+    Header always set Strict-Transport-Security "max-age=31536000"
+    Header set Referrer-Policy "no-referrer"
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "DENY"
+</IfModule>
+
+# ---- Archivos que nunca deben servirse ----
+<FilesMatch "(config\.php|\.htaccess|\.user\.ini|acceso\.json)$">
+    Require all denied
+</FilesMatch>
+<FilesMatch "\.(bak|tmp|orig|save|swp|old|inc|sql|sqlite|md|markdown|log|dist|example|json)$">
+    Require all denied
+</FilesMatch>
+<FilesMatch "\.php\.">
+    Require all denied
+</FilesMatch>
+# Herramientas de este ordenador que no pintan nada en el servidor (por si
+# se suben sin querer: ya se niegan a correr fuera de la línea de
+# comandos, pero mejor que ni respondan).
+<FilesMatch "^(remoto|servidor-local)\.php$">
+    Require all denied
+</FilesMatch>
+
+# ---- Carpetas que no se navegan desde fuera ----
+# Cada una lleva su PROPIO .htaccess con "Require all denied" (includes/,
+# private/, pruebas/, sql/): así la protección funciona sea cual sea la
+# carpeta donde viva la app, cosa que una ruta escrita aquí no haría.
+
+Options -Indexes

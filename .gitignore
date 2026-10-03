@@ -1,0 +1,19 @@
+# Credenciales: NUNCA al repositorio.
+config.php
+acceso.json
+
+# private/* y no private/: así se puede designorar private/.htaccess (abajo).
+# Con "private/" a secas Git ignora la carpeta entera y la excepción no
+# tendría efecto. La lección viene de finanzas: sesion.php y antiabuso.php
+# CREAN private/ solas en cuanto alguien entra, así que su .htaccess tiene
+# que viajar con el código o la carpeta nacería abierta.
+private/*
+!private/.htaccess
+
+# Copias y temporales
+*.log
+*.bak
+*.tmp
+*.sqlite
+.DS_Store
+Thumbs.db

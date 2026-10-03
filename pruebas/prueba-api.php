@@ -1,0 +1,67 @@
+<?php
+// La API (lo que usa Claude vía remoto.php) graba con las mismas reglas
+// que los formularios.
+require __DIR__ . '/arranque.php';
+require __DIR__ . '/../includes/api.php';
+echo "API\n";
+
+$pdo = bd_nueva();
+$id = sembrar($pdo);
+$api = static fn(string $accion, array $datos = [], ?array $archivo = null) =>
+    api_ejecutar($pdo, ['accion' => $accion, 'datos' => json_encode($datos)], $archivo);
+
+$r = $api('estado');
+comprueba('estado: hoy, avisos y gasto fijo', $r['hoy'] === '2026-10-03' && count($r['avisos']) > 0 && abs($r['gasto_fijo_mensual'] - 127.99) < 0.001);
+$r = $api('esquema');
+comprueba('esquema: describe campos con sus opciones y avisos', $r['secciones']['vehiculos']['tipos']['vehiculo']['campos']['proxima_itv']['vence'] === 'Pasar la ITV'
+    && in_array('Diésel', $r['secciones']['vehiculos']['tipos']['vehiculo']['campos']['combustible']['opciones'], true));
+$r = $api('buscar', ['seccion' => 'vehiculos', 'texto' => 'Fur']);
+comprueba('buscar por sección y texto', count($r['elementos']) === 1 && $r['elementos'][0]['id'] === $id['furgo']);
+
+// Crear desde un papel leído por Claude: los números llegan como números JSON.
+$r = $api('elemento', ['seccion' => 'contratos', 'tipo' => 'seguro', 'nombre' => 'Seguro de la furgo',
+    'datos' => ['ramo' => 'Coche o moto', 'compania' => 'Aseguradora', 'coste' => 412.35, 'periodicidad' => 'Anual', 'renovacion' => '2027-03-01']]);
+$nuevo = $r['elemento']['id'];
+comprueba('crea el seguro con el importe exacto', $r['elemento']['datos']['coste'] === 412.35, var_export($r['elemento']['datos']['coste'], true));
+comprueba('y su aviso de renovación sale solo', count($r['vencimientos']) === 1 && $r['vencimientos'][0]['fecha'] === '2027-03-01');
+
+// Actualizar SOLO un campo: el resto se conserva.
+$r = $api('elemento', ['id' => $nuevo, 'datos' => ['renovacion' => '2027-03-15']]);
+comprueba('actualizar un campo conserva los demás', $r['elemento']['datos']['compania'] === 'Aseguradora' && $r['elemento']['datos']['coste'] === 412.35);
+comprueba('y mueve el aviso', $r['vencimientos'][0]['fecha'] === '2027-03-15');
+$r = $api('elemento', ['id' => $nuevo, 'datos' => ['compania' => null]]);
+comprueba('un campo a null se vacía', !isset($r['elemento']['datos']['compania']));
+$r = $api('elemento', ['id' => $id['furgo'], 'datos' => ['km' => 160000]]);
+comprueba('160000 (número JSON) no se lee como 160', $r['elemento']['datos']['km'] === 160000.0);
+$r = $api('elemento', ['id' => $id['furgo'], 'datos' => ['km' => 12.345]]);
+comprueba('12.345 (número JSON con decimales) no se lee como 12345', $r['elemento']['datos']['km'] === 12.345, var_export($r['elemento']['datos']['km'], true));
+
+$e = lanza(static fn() => $api('elemento', ['seccion' => 'contratos', 'tipo' => 'seguro', 'nombre' => 'X', 'datos' => ['ramo' => 'Barco']]));
+comprueba('una opción inventada se rechaza con ErrorValidacion', $e instanceof ErrorValidacion);
+$e = lanza(static fn() => $api('elemento', ['seccion' => 'vehiculos', 'tipo' => 'vehiculo', 'nombre' => 'X', 'datos' => ['caballos' => 150]]));
+comprueba('un campo inventado se rechaza', $e instanceof ErrorValidacion);
+
+$r = $api('vencimiento', ['titulo' => 'Revisión caldera', 'fecha' => '05/11/2026', 'seccion' => 'vivienda', 'elemento_id' => $id['caldera'], 'repetir_meses' => 12]);
+comprueba('vencimiento con fecha española', $r['vencimiento']['fecha'] === '2026-11-05' && $r['vencimiento']['elemento_id'] === $id['caldera']);
+$r2 = $api('vencimiento', ['id' => $r['vencimiento']['id'], 'fecha' => '2026-11-20']);
+comprueba('cambiar solo la fecha de un vencimiento', $r2['vencimiento']['fecha'] === '2026-11-20' && $r2['vencimiento']['titulo'] === 'Revisión caldera');
+$r = $api('hecho', ['id' => $r['vencimiento']['id']]);
+comprueba('hecho devuelve el siguiente', $r['siguiente'] === '2027-11-20');
+
+$r = $api('registro', ['elemento_id' => $id['furgo'], 'fecha' => '2026-10-02', 'tipo' => 'Mantenimiento', 'titulo' => 'Pastillas de freno', 'valor' => 161000, 'coste' => 120.5]);
+comprueba('registro actualiza km', $r['elemento']['datos']['km'] === 161000.0);
+
+$r = $api('documento', ['elemento_id' => $nuevo, 'titulo' => 'Póliza'], ['nombre' => 'poliza.pdf', 'contenido' => "%PDF-1.7\nx"]);
+comprueba('documento por la API', $r['documento']['titulo'] === 'Póliza' && $r['documento']['mime'] === 'application/pdf');
+$e = lanza(static fn() => $api('documento', ['elemento_id' => $nuevo]));
+comprueba('documento sin archivo → error claro', $e instanceof RuntimeException && str_contains($e->getMessage(), 'archivo'));
+
+$r = $api('ficha', ['id' => $nuevo]);
+comprueba('ficha trae avisos y documentos', count($r['vencimientos']) === 1 && count($r['documentos']) === 1);
+$r = $api('actividad');
+comprueba('lo hecho por la API queda como de «Claude»', $r['actividad'][0]['quien'] === 'Claude');
+$e = lanza(static fn() => api_ejecutar($pdo, ['accion' => 'borrar-todo']));
+comprueba('acción desconocida → lista las que hay', $e instanceof RuntimeException && str_contains($e->getMessage(), 'estado'));
+$e = lanza(static fn() => api_ejecutar($pdo, ['accion' => 'elemento', 'datos' => '{roto']));
+comprueba('JSON roto → error claro', $e instanceof RuntimeException && str_contains($e->getMessage(), 'JSON'));
+terminar();

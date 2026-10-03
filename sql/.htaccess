@@ -1,0 +1,11 @@
+# Nunca se abre por URL. Este archivo protege la carpeta donde viva la app
+# (raíz o subcarpeta), a diferencia de una ruta escrita a mano en el
+# .htaccess de arriba. private/ guarda sesiones, archivos de la familia y
+# el registro del cron: es la que más tiene que perder.
+<IfModule mod_authz_core.c>
+  Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+  Order allow,deny
+  Deny from all
+</IfModule>

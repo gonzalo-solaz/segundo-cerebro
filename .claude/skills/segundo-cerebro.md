@@ -1,0 +1,119 @@
+---
+name: segundo-cerebro
+description: "Gestiona el Segundo cerebro de Gonzalo (gonzalosolaz.tech/segundo-cerebro): el panel de mandos de la casa con vivienda, vehículos, salud, documentos, contratos y familia. Graba en la app lo que el usuario pasa (pólizas, permisos de circulación, fichas técnicas, ITV, DNI, pasaportes, informes médicos, recetas, facturas, contratos de luz o internet), cuenta qué vence, marca avisos como hechos, añade o cambia secciones y campos, y prepara los cambios de código para subirlos con FileZilla. Usa esta skill siempre que se trabaje en la carpeta segundo-cerebro. Triggers: 'te paso la póliza', 'guarda esto en el segundo cerebro', 'apunta la ITV', 'ha caducado el DNI', 'qué vence este mes', 'qué tengo pendiente', 'renové el seguro', 'he pasado la revisión del coche', 'añade una sección', 'quiero controlar también X', 'nuevo campo', 'sube los cambios', 'qué archivos subo', 'integrar finanzas', 'dale acceso a mi pareja'."
+---
+
+# Segundo cerebro
+
+Mantiene vivo el panel de mandos de la casa: graba lo que el usuario te pasa, le cuenta qué vence y hace crecer la app sin romperla.
+
+**Regla fundamental: nunca inventes un dato.** Fecha, importe, número de póliza, matrícula, kilómetros: si el papel no lo dice con claridad, pregunta o déjalo vacío. Un aviso con una fecha inventada es peor que no tener aviso.
+
+Antes de nada, si no lo has hecho en esta conversación, **lee `CLAUDE.md`** (decisiones, reglas, cómo se prueba y despliega).
+
+---
+
+## Paso 1 — Entender qué quiere
+
+Identifica el modo por lo que dice el usuario. Si no está claro, pregunta en una línea.
+
+| Lo que dice | Modo |
+|---|---|
+| «te paso…», adjunta un PDF/foto, «apunta…», «renové…», «he pasado la ITV» | **A. Grabar** |
+| «qué vence», «qué tengo pendiente», «resumen» | **B. Revisar** |
+| «quiero controlar también…», «añade un campo», «nueva sección» | **C. Ampliar la app** |
+| un fallo, un cambio de diseño, una mejora | **D. Cambiar código** |
+| «súbelo», «qué archivos subo», primera instalación | **E. Desplegar** |
+| «integrar finanzas» | **F. Finanzas** (ver `CLAUDE.md` → Ideas para después; decidir con el usuario antes de tocar nada de finanzas) |
+
+---
+
+## Paso 2A — Grabar lo que el usuario pasa
+
+La vía es `php remoto.php <acción>` (habla con la API del servidor; ver la cabecera de `remoto.php`).
+
+**Si falta `acceso.json`** o `php remoto.php estado` falla: no te bloquees. Explícale el apartado 8 de `INSTRUCCIONES.md` (`API_CLAVE` + `acceso.json`) y, mientras tanto, dale los datos ya extraídos y ordenados para que los meta él por el formulario (di en qué sección y qué tipo).
+
+1. **Lee el documento** con Read (los PDF con capa de texto y las fotos se leen bien). Si es ilegible, dilo y pide otra foto.
+2. **Conoce los campos válidos**: `php remoto.php esquema` (una vez por conversación). Usa SOLO las claves, tipos y opciones que devuelve; la API rechaza lo inventado.
+3. **¿Ya existe?** `php remoto.php buscar <seccion> texto="..."` y `php remoto.php personas`. Si ya existe, **actualiza** (con `id`, enviando solo lo que cambia); si no, **crea**.
+4. **Decide dónde va**, con el sentido común de casa:
+   - Seguro del coche → `contratos/seguro` con `ramo: "Coche o moto"` (no en vehículos).
+   - Permiso de circulación / ficha técnica → `vehiculos/vehiculo` (matrícula, bastidor, fecha de matriculación).
+   - Informe médico, analítica → historial (`registro`) de la ficha médica de esa persona; el PDF, como `documento` de esa ficha.
+   - Receta → `salud/tratamiento` con `receta_hasta`.
+   - DNI/pasaporte/carnet → `documentos`, con su titular.
+   - Factura de una reparación → `registro` del elemento con `coste`, y el PDF adjunto.
+5. **Graba**: escribe el JSON en un archivo temporal del scratchpad y usa `php remoto.php elemento|vencimiento|registro <archivo.json>`. Las fechas, en `AAAA-MM-DD`; los importes, como números JSON.
+6. **Adjunta el original**: `php remoto.php documento <ruta> elemento=<id> titulo="Póliza 2026"`.
+7. **Las fechas de la ficha crean sus avisos solas** (ITV, caducidad, renovación…). No crees un vencimiento a mano para algo que ya tiene campo. Usa `vencimiento` solo para lo que no tiene campo («cambiar las ruedas en primavera»).
+8. **«Renové el seguro / pasé la ITV»**: busca el aviso pendiente (`php remoto.php ficha <id>`) y márcalo con `php remoto.php hecho <id>` — si se repite, el siguiente se programa solo. Si el usuario te da la fecha nueva (la ITV siguiente), actualiza el campo de la ficha.
+
+Sobre el contexto de la casa:
+- Personas: usa las que devuelve `personas`. Si el papel es de alguien que no está, pregunta antes de crearlo.
+- Si dudas de a qué vehículo o persona se refiere un papel, pregunta: no lo deduzcas por el nombre.
+- Lo que aprendas que se repite (cómo se llama «la furgo» en la app, qué compañía es cuál) anótalo en `CLAUDE.md` para la próxima vez.
+
+---
+
+## Paso 2B — Revisar qué vence
+
+1. `php remoto.php estado`.
+2. Cuéntalo agrupado y en lenguaje de casa:
+   - **Ya vencido** (lo primero, sin dramatizar);
+   - **Toca ya** (dentro de su ventana de aviso);
+   - **Próximas semanas**.
+3. Para cada cosa, di qué hay que hacer en concreto si es obvio (pedir cita ITV, comparar el seguro antes de que renueve).
+4. **No marques nada como hecho sin que el usuario lo confirme.**
+5. Si `vigilancia` dice que el cron no corre, avísalo al final con el paso 6 de `INSTRUCCIONES.md`.
+
+---
+
+## Paso 2C — Ampliar la app (secciones, tipos, campos)
+
+Todo se declara en **`includes/secciones.php`** (la cabecera del archivo explica cada clave). No hace falta SQL.
+
+1. Propón el diseño al usuario en 3-5 líneas: tipo, campos, cuál sale en la tarjeta (`resumen`), qué fechas avisan (`vence`, `aviso`, `repetir`). Pregunta solo lo que cambie el diseño.
+2. Edita `includes/secciones.php`:
+   - Una sección nueva necesita además un icono en `includes/iconos.php` (trazo SVG 24×24, estilo Lucide) y un color que no repita los existentes.
+   - **No cambies la clave de un campo que ya tiene datos**: los datos se quedarían huérfanos en el JSON. Si hay que renombrar, hace falta una migración que reescriba `elementos.datos`.
+   - Las opciones de un campo `opcion` se pueden ampliar; quitar una que esté en uso deja datos que ya no validan al editar.
+3. Si añades una sección, añade su caso a `kpi_seccion()` (`includes/elementos.php`) solo si hay un dato que de verdad aporte.
+4. Corre las pruebas (Paso 3) — `prueba-paginas` pinta el alta de cada tipo, así que caza un campo mal declarado.
+
+---
+
+## Paso 2D — Cambiar código
+
+Sigue las reglas de `CLAUDE.md` → «Cómo se trabaja aquí». Lo que más se olvida:
+- Página nueva → añadirla a `pruebas/prueba-paginas.php`.
+- Esquema → `sql/migraciones/NNN-*.sql`, dentro de lo que traduce `sql_traducir()`.
+- Fechas en consultas → desde PHP (`hoy()`), nunca `NOW()`.
+- JS → en `assets/app.js` con `data-accion`; la CSP prohíbe JS en línea.
+- Diseño → tokens de `:root` en `assets/app.css`; probar a 390 px y en oscuro.
+- Lecturas de elementos/avisos → por las funciones de `includes/elementos.php` y `vencimientos.php`, nunca SQL directo en las páginas.
+
+Libertad creativa en el diseño, dentro de la paleta y del tono de la app (sobria, clara, sin ruido).
+
+---
+
+## Paso 3 — Probar
+
+```
+php pruebas/todas.php
+```
+
+Tiene que dar **5/5**. Si una prueba falla, arréglalo antes de seguir; no la «ajustes» para que pase sin entender por qué fallaba. Para un cambio visual, además: `php servidor-local.php` y captura con Edge headless (cómo, en `CLAUDE.md`).
+
+---
+
+## Paso 4 — Desplegar y cerrar
+
+Al terminar, presenta siempre:
+
+1. **Qué se ha hecho**, en 2-4 líneas.
+2. **Si se grabaron datos**: qué elementos, qué avisos se crearon (con fecha) y qué quedó sin rellenar porque el papel no lo decía.
+3. **Si se tocó código**: resultado de las pruebas y la **lista exacta de archivos a subir** con FileZilla a `segundo-cerebro/` (ruta relativa: `includes/secciones.php`, `assets/app.css`…). Aparte, si toca subir `config.php` o cambiar `ASSETS_VERSION`.
+4. **Nunca en la lista**: `pruebas/`, `remoto.php`, `servidor-local.php`, `acceso.json`, `*.md`, `.claude/`, `private/` (salvo `private/.htaccess` en la primera instalación).
+5. Si cambió algo que `CLAUDE.md` debería saber (una decisión, una lección), **actualízalo** con fecha y porqué.
+6. Pregunta si quiere ajustar algo.

@@ -1,0 +1,123 @@
+# =====================================================================
+#  Probar y desplegar en Hostinger con cada push a main.
+#
+#  1. Pasa las pruebas (php pruebas/todas.php). Si alguna falla, NO se sube
+#     nada: es la regla de la casa («5/5 antes de subir»), ahora automática.
+#  2. Monta una carpeta solo con lo que va al servidor (sin pruebas, docs ni
+#     herramientas locales) y genera config.php a partir de los secretos.
+#  3. La sube por FTP. Solo envía lo que ha cambiado desde la última vez
+#     (guarda un .ftp-deploy-sync-state.json en el servidor, que .htaccess
+#     bloquea como todos los .json). No toca private/ ni nada que no subiera.
+#
+#  Secretos (GitHub → Settings → Secrets and variables → Actions):
+#    FTP_SERVIDOR, FTP_USUARIO, FTP_CONTRASENA   obligatorios para desplegar
+#    FTP_CARPETA      carpeta de destino vista desde la cuenta FTP; si la cuenta
+#                     ya apunta a segundo-cerebro/, déjalo sin crear (= ./)
+#    FTP_PROTOCOLO    ftps (por defecto) o ftp
+#    DB_NAME, DB_USER, DB_PASS                   la base de datos de hPanel
+#    EMAIL_AVISOS, API_CLAVE, CRON_CLAVE         opcionales
+#  Sin los secretos de FTP, el flujo solo prueba y avisa de que no despliega.
+# =====================================================================
+name: Probar y desplegar
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: despliegue
+  cancel-in-progress: false
+
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: pdo_sqlite
+          coverage: none
+      - name: Pruebas
+        run: php pruebas/todas.php
+
+  desplegar:
+    needs: pruebas
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: ¿Hay datos de FTP?
+        id: listo
+        env:
+          FTP_SERVIDOR: ${{ secrets.FTP_SERVIDOR }}
+          DB_PASS: ${{ secrets.DB_PASS }}
+        run: |
+          if [ -z "$FTP_SERVIDOR" ]; then
+            echo "::warning::Sin el secreto FTP_SERVIDOR no se despliega (las pruebas sí han pasado)."
+            echo "listo=no" >> "$GITHUB_OUTPUT"
+          elif [ -z "$DB_PASS" ]; then
+            echo "::error::Faltan los secretos de la base de datos (DB_NAME, DB_USER, DB_PASS)."
+            exit 1
+          else
+            echo "listo=si" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: shivammathur/setup-php@v2
+        if: steps.listo.outputs.listo == 'si'
+        with:
+          php-version: '8.3'
+          coverage: none
+
+      - name: Montar la carpeta de despliegue
+        if: steps.listo.outputs.listo == 'si'
+        run: |
+          mkdir _despliegue
+          rsync -a ./ _despliegue/ \
+            --exclude='.git/' --exclude='.github/' --exclude='.claude/' --exclude='_despliegue/' \
+            --exclude='pruebas/' --exclude='*.md' --exclude='.gitignore' \
+            --exclude='remoto.php' --exclude='servidor-local.php' --exclude='config.example.php' \
+            --exclude='private/'
+          # private/ solo lleva su .htaccess (el resto lo crea la app en el servidor).
+          mkdir -p _despliegue/private && cp private/.htaccess _despliegue/private/.htaccess
+          find _despliegue -type f | sort
+
+      - name: Generar config.php desde los secretos
+        if: steps.listo.outputs.listo == 'si'
+        env:
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASS: ${{ secrets.DB_PASS }}
+          EMAIL_AVISOS: ${{ secrets.EMAIL_AVISOS }}
+          API_CLAVE: ${{ secrets.API_CLAVE }}
+          CRON_CLAVE: ${{ secrets.CRON_CLAVE }}
+        run: |
+          php -r '
+            // var_export: ninguna comilla o barra de una contraseña puede romper el PHP.
+            $c = ["DB_HOST" => "localhost", "DB_NAME" => getenv("DB_NAME"), "DB_USER" => getenv("DB_USER"),
+                  "DB_PASS" => getenv("DB_PASS"), "BASE_URL" => "/segundo-cerebro",
+                  "URL_APP" => "https://gonzalosolaz.tech/segundo-cerebro", "NOMBRE_APP" => "Segundo cerebro",
+                  "EMAIL_AVISOS" => (string)getenv("EMAIL_AVISOS"), "API_CLAVE" => (string)getenv("API_CLAVE"),
+                  "CRON_CLAVE" => (string)getenv("CRON_CLAVE"),
+                  "FINANZAS_URL" => "https://gonzalosolaz.tech/finanzas-personales/"];
+            $php = "<?php\n// GENERADO por .github/workflows/desplegar.yml a partir de los secretos de GitHub.\n"
+                 . "// No lo edites en el servidor: el próximo despliegue lo sobrescribe. Cambia el secreto.\n"
+                 . "@ini_set(\"display_errors\", \"0\");\n@ini_set(\"log_errors\", \"1\");\nerror_reporting(E_ALL);\n"
+                 . "date_default_timezone_set(\"Europe/Madrid\");\n";
+            foreach ($c as $k => $v) $php .= "define(" . var_export($k, true) . ", " . var_export($v, true) . ");\n";
+            file_put_contents("_despliegue/config.php", $php);
+          '
+          php -l _despliegue/config.php
+
+      - name: Subir a Hostinger
+        if: steps.listo.outputs.listo == 'si'
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVIDOR }}
+          username: ${{ secrets.FTP_USUARIO }}
+          password: ${{ secrets.FTP_CONTRASENA }}
+          protocol: ${{ secrets.FTP_PROTOCOLO || 'ftps' }}
+          server-dir: ${{ secrets.FTP_CARPETA || './' }}
+          local-dir: ./_despliegue/
+          log-level: standard

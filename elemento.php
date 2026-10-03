@@ -1,0 +1,219 @@
+<?php
+// Ficha de un elemento: sus datos, avisos, historial y archivos.
+require_once __DIR__ . '/includes/auth.php';
+
+$id = (int)($_GET['id'] ?? 0);
+$el = elemento($pdo, $id);
+if (!$el) pagina_error(404, 'No encontrado', 'Ese elemento no existe o se ha borrado.');
+$sec = seccion($el['seccion']);
+$def = tipo_def($el['seccion'], $el['tipo']);
+$uid = (int)$usuario_actual['id'];
+$aqui = 'elemento.php?id=' . $id;
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $accion = (string)($_POST['accion'] ?? '');
+    $ancla = '';
+    if (!csrf_ok()) {
+        flash('error', 'La página llevaba demasiado tiempo abierta. Vuelve a intentarlo.');
+    } else {
+        try {
+            switch ($accion) {
+                case 'registro':
+                    crear_registro($pdo, ['elemento_id' => $id] + $_POST, $uid);
+                    flash('ok', 'Apuntado en el historial.');
+                    $ancla = '#historial';
+                    break;
+                case 'borrar-registro':
+                    borrar_registro($pdo, (int)($_POST['registro_id'] ?? 0), $id, $uid);
+                    $ancla = '#historial';
+                    break;
+                case 'documento':
+                    guardar_documento_subido($pdo, $id, (string)($_POST['titulo'] ?? ''), $_FILES['archivo'] ?? null, $uid);
+                    flash('ok', 'Archivo guardado.');
+                    $ancla = '#archivos';
+                    break;
+                case 'borrar-documento':
+                    borrar_documento($pdo, (int)($_POST['documento_id'] ?? 0), $id, $uid);
+                    $ancla = '#archivos';
+                    break;
+                case 'archivar':
+                    cambiar_activo_elemento($pdo, $id, false, $uid);
+                    flash('ok', 'Archivado. Sus avisos dejan de salir; puedes recuperarlo cuando quieras.');
+                    break;
+                case 'recuperar':
+                    cambiar_activo_elemento($pdo, $id, true, $uid);
+                    flash('ok', 'Recuperado.');
+                    break;
+                case 'borrar':
+                    if (!es_admin()) throw new RuntimeException('Solo un administrador puede borrar. Puedes archivarlo.');
+                    $s = borrar_elemento($pdo, $id, $uid);
+                    flash('ok', 'Borrado, con sus avisos, historial y archivos.');
+                    redirigir('seccion.php?s=' . $s);
+            }
+        } catch (ErrorValidacion $ex) {
+            flash('error', implode(' ', $ex->errores));
+        } catch (RuntimeException $ex) {
+            flash('error', $ex->getMessage());
+        }
+    }
+    redirigir($aqui . $ancla);
+}
+
+$avisos = agenda($pdo, 36500, null, $id);
+$hechos = hechos_recientes($pdo, 10, null, $id);
+$conf_reg = $sec['registros'];
+$registros = $conf_reg ? registros_de($pdo, $id) : [];
+$gasto = $conf_reg ? gasto_ultimo_ano($pdo, $id) : 0.0;
+$docs = documentos_de($pdo, $id);
+
+$acciones = '<a class="btn btn-sutil" href="' . e(url('elemento-editar.php?id=' . $id)) . '">' . icono('editar') . 'Editar</a>';
+cabecera($el['nombre'], 'seccion:' . $el['seccion']);
+cabecera_pagina($el['nombre'],
+    '<a href="' . e(url('seccion.php?s=' . $el['seccion'])) . '">' . e($sec['nombre']) . '</a> · ' . e($def['nombre']),
+    $acciones, $sec['icono'], $sec['color']);
+?>
+<?php if (!$el['activo']): ?>
+  <div class="flash flash-aviso">Este elemento está archivado: sus avisos no salen en la agenda.</div>
+<?php endif; ?>
+
+<div class="ficha-rejilla">
+  <div class="ficha-columna">
+    <section class="tarjeta">
+      <div class="tarjeta-cabecera"><h2>Datos</h2><?= chip_persona($el['persona_nombre'], $el['persona_color']) ?></div>
+      <dl class="datos">
+        <?php $alguno = false; ?>
+        <?php foreach ($def['campos'] as $clave => $c): ?>
+          <?php if (!isset($el['datos'][$clave]) || $el['datos'][$clave] === '') continue; $alguno = true; ?>
+          <div class="<?= $c['tipo'] === 'area' ? 'dato-ancho' : '' ?>">
+            <dt><?= e($c['etiqueta']) ?></dt>
+            <dd><?php
+              $val = valor_campo($c, $el['datos'][$clave]);
+              if ($c['tipo'] === 'tel') echo '<a href="tel:' . e(preg_replace('/[^0-9+]/', '', $val)) . '">' . e($val) . '</a>';
+              elseif ($c['tipo'] === 'email') echo '<a href="mailto:' . e($val) . '">' . e($val) . '</a>';
+              else echo nl2br(e($val));
+            ?></dd>
+          </div>
+        <?php endforeach; ?>
+        <?php if (($cm = coste_mensual($el['datos'])) > 0 && ($el['datos']['periodicidad'] ?? '') !== 'Mensual'): ?>
+          <div><dt>Equivale a</dt><dd><?= e(eur($cm)) ?> al mes</dd></div>
+        <?php endif; ?>
+      </dl>
+      <?php if (!$alguno): ?><p class="vacio-mini">Sin datos todavía. <a href="<?= e(url('elemento-editar.php?id=' . $id)) ?>">Complétalos</a>.</p><?php endif; ?>
+      <?php if (trim((string)$el['notas']) !== ''): ?>
+        <h3 class="subtitulo">Notas</h3>
+        <p class="notas"><?= nl2br(e($el['notas'])) ?></p>
+      <?php endif; ?>
+    </section>
+
+    <section class="tarjeta" id="archivos">
+      <div class="tarjeta-cabecera"><h2><?= icono('clip') ?>Archivos</h2></div>
+      <?php if (!$docs): ?><p class="vacio-mini">Sube aquí la copia escaneada, la póliza, la factura…</p><?php endif; ?>
+      <ul class="lista-docs">
+        <?php foreach ($docs as $d): ?>
+          <li>
+            <a href="<?= e(url('archivo.php?id=' . $d['id'])) ?>" target="_blank" rel="noopener"><?= icono('clip', 'ico ico-mini') ?><?= e($d['titulo']) ?></a>
+            <span class="tenue"><?= e(strtoupper(pathinfo($d['archivo'], PATHINFO_EXTENSION))) ?> · <?= e(tamano_legible((int)$d['bytes'])) ?> · <?= e(fecha_es(substr($d['creado_en'], 0, 10))) ?></span>
+            <a class="btn-icono" href="<?= e(url('archivo.php?id=' . $d['id'] . '&descargar=1')) ?>" title="Descargar"><?= icono('descarga') ?></a>
+            <form method="post" data-confirmar="¿Borrar «<?= e($d['titulo']) ?>»? No se puede deshacer.">
+              <?= csrf_input() ?><input type="hidden" name="accion" value="borrar-documento"><input type="hidden" name="documento_id" value="<?= (int)$d['id'] ?>">
+              <button class="btn-icono" title="Borrar"><?= icono('papelera') ?></button>
+            </form>
+          </li>
+        <?php endforeach; ?>
+      </ul>
+      <details class="desplegable">
+        <summary class="btn btn-sutil"><?= icono('mas') ?>Subir archivo</summary>
+        <form method="post" enctype="multipart/form-data" class="form-rejilla">
+          <?= csrf_input() ?><input type="hidden" name="accion" value="documento">
+          <div class="campo"><label>Título <span class="tenue">(opcional)</span></label><input type="text" name="titulo" maxlength="150" placeholder="Ej.: Póliza 2026"></div>
+          <div class="campo"><label>Archivo (PDF o foto, hasta 15 MB)</label><input type="file" name="archivo" required accept=".pdf,.jpg,.jpeg,.png,.webp,.heic,application/pdf,image/*"></div>
+          <div class="campo-ancho"><button class="btn btn-primario"><?= icono('check') ?>Subir</button></div>
+        </form>
+      </details>
+    </section>
+  </div>
+
+  <div class="ficha-columna">
+    <section class="tarjeta" id="avisos">
+      <div class="tarjeta-cabecera"><h2><?= icono('agenda') ?>Avisos</h2></div>
+      <?php if (!$avisos): ?><p class="vacio-mini">Nada pendiente.</p><?php endif; ?>
+      <?php foreach ($avisos as $v) fila_vencimiento($v, $aqui, false, false); ?>
+      <?php formulario_vencimiento($el['seccion'], $id, $aqui); ?>
+      <?php if ($hechos): ?>
+        <h3 class="subtitulo">Hechos</h3>
+        <ul class="lista-hechos">
+          <?php foreach ($hechos as $h): ?>
+            <li><?= icono('check', 'ico ico-mini') ?><?= e($h['titulo']) ?> <span class="tenue">· <?= e(fecha_es($h['hecho_en'])) ?></span></li>
+          <?php endforeach; ?>
+        </ul>
+      <?php endif; ?>
+    </section>
+
+    <?php if ($conf_reg): ?>
+      <section class="tarjeta" id="historial">
+        <div class="tarjeta-cabecera">
+          <h2><?= icono('historial') ?>Historial</h2>
+          <?php if ($gasto > 0): ?><span class="tenue">Gastado en 12 meses: <strong><?= e(eur($gasto)) ?></strong></span><?php endif; ?>
+        </div>
+        <details class="desplegable">
+          <summary class="btn btn-sutil"><?= icono('mas') ?>Apuntar</summary>
+          <form method="post" class="form-rejilla">
+            <?= csrf_input() ?><input type="hidden" name="accion" value="registro">
+            <div class="campo"><label>Tipo</label><select name="tipo"><?= opciones_html(array_combine($conf_reg['tipos'], $conf_reg['tipos']), '') ?></select></div>
+            <div class="campo"><label>Fecha</label><input type="date" name="fecha" value="<?= e(hoy()) ?>" required></div>
+            <div class="campo campo-ancho"><label>Qué se hizo</label><input type="text" name="titulo" maxlength="150" placeholder="Ej.: Cambio de aceite y filtros"></div>
+            <?php if ($conf_reg['valor']): ?>
+              <div class="campo"><label><?= e($conf_reg['valor']) ?> <span class="tenue">(opcional)</span></label>
+                <div class="con-sufijo"><input type="text" inputmode="decimal" name="valor"><?php if ($conf_reg['unidad'] !== ''): ?><span><?= e($conf_reg['unidad']) ?></span><?php else: ?><input type="text" name="unidad" placeholder="unidad" class="input-unidad"><?php endif; ?></div>
+              </div>
+            <?php endif; ?>
+            <div class="campo"><label>Coste <span class="tenue">(opcional)</span></label><div class="con-sufijo"><input type="text" inputmode="decimal" name="coste" placeholder="0,00"><span>€</span></div></div>
+            <div class="campo campo-ancho"><label>Notas <span class="tenue">(opcional)</span></label><textarea name="notas" rows="2"></textarea></div>
+            <div class="campo-ancho"><button class="btn btn-primario"><?= icono('check') ?>Apuntar</button></div>
+          </form>
+        </details>
+        <?php if (!$registros): ?><p class="vacio-mini">Sin apuntes todavía.</p><?php endif; ?>
+        <ul class="historial">
+          <?php foreach ($registros as $r): ?>
+            <li>
+              <div class="h-fecha"><?= e(fecha_es($r['fecha'])) ?></div>
+              <div class="h-cuerpo">
+                <strong><?= e($r['titulo']) ?></strong>
+                <?php if ($r['tipo'] !== '' && $r['tipo'] !== $r['titulo']): ?><span class="chip"><?= e($r['tipo']) ?></span><?php endif; ?>
+                <div class="tenue">
+                  <?php if ($r['valor'] !== null): ?><?= e(numero_es($r['valor']) . ($r['unidad'] !== '' ? ' ' . $r['unidad'] : '')) ?><?php endif; ?>
+                  <?php if ($r['coste'] !== null): ?> · <?= e(eur($r['coste'])) ?><?php endif; ?>
+                  <?php if ($r['autor']): ?> · <?= e(nombre_corto($r['autor'])) ?><?php else: ?> · Claude<?php endif; ?>
+                </div>
+                <?php if (trim((string)$r['notas']) !== ''): ?><p class="notas"><?= nl2br(e($r['notas'])) ?></p><?php endif; ?>
+              </div>
+              <form method="post" data-confirmar="¿Borrar este apunte?">
+                <?= csrf_input() ?><input type="hidden" name="accion" value="borrar-registro"><input type="hidden" name="registro_id" value="<?= (int)$r['id'] ?>">
+                <button class="btn-icono" title="Borrar"><?= icono('papelera') ?></button>
+              </form>
+            </li>
+          <?php endforeach; ?>
+        </ul>
+      </section>
+    <?php endif; ?>
+  </div>
+</div>
+
+<section class="tarjeta zona-peligro">
+  <?php if ($el['activo']): ?>
+    <form method="post" data-confirmar="¿Archivar «<?= e($el['nombre']) ?>»? Dejará de salir, con sus avisos. Se puede recuperar.">
+      <?= csrf_input() ?><input type="hidden" name="accion" value="archivar">
+      <button class="btn btn-sutil"><?= icono('archivar') ?>Archivar</button>
+    </form>
+  <?php else: ?>
+    <form method="post"><?= csrf_input() ?><input type="hidden" name="accion" value="recuperar">
+      <button class="btn btn-sutil"><?= icono('archivar') ?>Recuperar</button></form>
+  <?php endif; ?>
+  <?php if (es_admin()): ?>
+    <form method="post" data-confirmar="¿Borrar «<?= e($el['nombre']) ?>» con TODOS sus avisos, historial y archivos? No se puede deshacer.">
+      <?= csrf_input() ?><input type="hidden" name="accion" value="borrar">
+      <button class="btn btn-peligro"><?= icono('papelera') ?>Borrar del todo</button>
+    </form>
+  <?php endif; ?>
+</section>
+<?php pie();

@@ -1,0 +1,97 @@
+<?php
+// =====================================================================
+//  Lo común a todas las pruebas: extensiones, avisos de PHP convertidos en
+//  errores, configuración de pruebas, base SQLite nueva y datos de
+//  ejemplo creados con las MISMAS funciones que usa la app.
+// =====================================================================
+if (PHP_SAPI !== 'cli') { http_response_code(403); exit('Solo por línea de comandos.'); }
+
+require_once __DIR__ . '/../includes/cli.php';
+// Solo pdo_sqlite: mbstring se deja SIN cargar a propósito, para que las
+// pruebas cacen cualquier dependencia de ella (Hostinger la trae, pero el
+// código no debe necesitarla).
+cli_asegurar_extensiones(['pdo_sqlite']);
+
+error_reporting(E_ALL);
+ini_set('display_errors', '1');
+// Un aviso o un «undefined index» es un fallo, no ruido.
+// (Salvo lo silenciado a propósito con @, como los @unlink de limpieza.)
+set_error_handler(static function (int $n, string $m, string $f, int $l): bool {
+    if (!(error_reporting() & $n)) return false;
+    throw new ErrorException($m, 0, $n, $f, $l);
+});
+putenv('SC_CONFIG=' . __DIR__ . '/config-pruebas.php');
+
+require_once __DIR__ . '/../includes/config-carga.php';
+require_once __DIR__ . '/../includes/esquema.php';
+require_once __DIR__ . '/../includes/app.php';
+
+$GLOBALS['sc_fallos'] = 0;
+$GLOBALS['sc_pruebas'] = 0;
+
+function comprueba(string $que, bool $ok, string $detalle = ''): void {
+    $GLOBALS['sc_pruebas']++;
+    if ($ok) {
+        echo "  ✓ {$que}\n";
+    } else {
+        $GLOBALS['sc_fallos']++;
+        echo "  ✗ {$que}" . ($detalle !== '' ? "\n      → {$detalle}" : '') . "\n";
+    }
+}
+
+function lanza(callable $fn): ?Throwable {
+    try { $fn(); } catch (Throwable $e) { return $e; }
+    return null;
+}
+
+function terminar(): void {
+    $f = $GLOBALS['sc_fallos'];
+    echo "\n  " . ($f ? "{$f} fallo(s)" : 'Todo bien') . " de {$GLOBALS['sc_pruebas']} comprobaciones.\n";
+    exit($f ? 1 : 0);
+}
+
+function bd_nueva(): PDO {
+    $pdo = conectar_bd();
+    esquema_al_dia($pdo, true);
+    return $pdo;
+}
+
+/** Una familia y una casa de ejemplo (fechas relativas a SC_HOY = 3/10/2026). */
+function sembrar(PDO $pdo): array {
+    $id = [];
+    $id['yo']   = guardar_persona($pdo, ['nombre' => 'Gonzalo Prueba', 'relacion' => 'Yo']);
+    $id['ana']  = guardar_persona($pdo, ['nombre' => 'Ana Prueba', 'relacion' => 'Pareja']);
+    $id['leo']  = guardar_persona($pdo, ['nombre' => 'Leo Prueba', 'relacion' => 'Hijo', 'fecha_nacimiento' => '2018-05-10']);
+
+    [$id['admin']]   = crear_usuario($pdo, ['nombre' => 'Gonzalo', 'email' => 'admin@ejemplo.test', 'password' => 'una-contraseña-larga',
+                                            'rol' => 'admin', 'persona_id' => $id['yo']]);
+    [$id['miembro']] = crear_usuario($pdo, ['nombre' => 'Ana', 'email' => 'ana@ejemplo.test', 'password' => 'otra-contraseña-larga',
+                                            'rol' => 'miembro', 'persona_id' => $id['ana']]);
+
+    $g = static fn(string $s, string $t, array $e) => guardar_elemento($pdo, $s, $t, $e, null, $id['admin']);
+    $id['casa']      = $g('vivienda', 'inmueble', ['nombre' => 'Casa de prueba', 'datos' => ['direccion' => 'Calle Mayor 1', 'regimen' => 'Propiedad', 'superficie' => '95,5']]);
+    $id['caldera']   = $g('vivienda', 'equipo', ['nombre' => 'Caldera', 'datos' => ['marca' => 'Junkers', 'garantia_hasta' => '2026-10-20']]);
+    $id['fontanero'] = $g('vivienda', 'contacto', ['nombre' => 'Fontanero', 'datos' => ['oficio' => 'Fontanería', 'telefono' => '600 000 000']]);
+    $id['furgo']     = $g('vehiculos', 'vehiculo', ['nombre' => 'Furgo', 'persona_id' => $id['yo'],
+                          'datos' => ['matricula' => '1234ABC', 'km' => '154.300', 'proxima_itv' => '2026-09-20', 'combustible' => 'Diésel']]);
+    $id['ficha_leo'] = $g('salud', 'ficha', ['persona_id' => $id['leo'], 'datos' => ['grupo_sanguineo' => '0+', 'alergias' => 'Ninguna conocida']]);
+    $id['trat']      = $g('salud', 'tratamiento', ['nombre' => 'Antihistamínico', 'persona_id' => $id['ana'], 'datos' => ['receta_hasta' => '2026-10-10']]);
+    $id['medico']    = $g('salud', 'profesional', ['nombre' => 'Dra. Prueba', 'datos' => ['especialidad' => 'Pediatría']]);
+    $id['dni']       = $g('documentos', 'dni', ['persona_id' => $id['yo'], 'datos' => ['numero' => '00000000T', 'caducidad' => '2027-01-15']]);
+    $id['pasaporte'] = $g('documentos', 'pasaporte', ['persona_id' => $id['ana'], 'datos' => ['caducidad' => '2026-12-01']]);
+    $id['carnet']    = $g('documentos', 'carnet', ['persona_id' => $id['yo'], 'datos' => ['permisos' => 'B']]);
+    $id['tse']       = $g('documentos', 'otro', ['nombre' => 'Tarjeta sanitaria europea', 'persona_id' => $id['leo'], 'datos' => []]);
+    $id['seguro']    = $g('contratos', 'seguro', ['nombre' => 'Seguro de hogar', 'datos' => ['ramo' => 'Hogar', 'coste' => '240', 'periodicidad' => 'Anual', 'renovacion' => '2026-11-01']]);
+    $id['luz']       = $g('contratos', 'suministro', ['nombre' => 'Luz', 'datos' => ['categoria' => 'Luz', 'coste' => '60', 'periodicidad' => 'Mensual']]);
+    $id['netflix']   = $g('contratos', 'suscripcion', ['nombre' => 'Netflix', 'datos' => ['coste' => '12,99', 'periodicidad' => 'Mensual', 'renovacion' => '2026-10-15']]);
+    $id['cole']      = $g('familia', 'colegio', ['nombre' => 'Colegio de prueba', 'persona_id' => $id['leo'], 'datos' => ['curso' => '3º Primaria']]);
+    $id['natacion']  = $g('familia', 'actividad', ['nombre' => 'Natación', 'persona_id' => $id['leo'], 'datos' => ['coste' => '35', 'periodicidad' => 'Mensual']]);
+    $id['cumple']    = $g('familia', 'fecha', ['nombre' => 'Cumpleaños de la abuela', 'datos' => ['fecha' => '2026-12-01']]);
+
+    $id['ibi'] = crear_vencimiento($pdo, ['titulo' => 'IBI', 'fecha' => '2026-11-05', 'seccion' => 'vivienda',
+                                          'repetir_meses' => 12, 'aviso_dias' => 30], $id['admin']);
+    $id['registro'] = crear_registro($pdo, ['elemento_id' => $id['furgo'], 'fecha' => '2026-09-01', 'tipo' => 'Mantenimiento',
+                                            'titulo' => 'Aceite y filtros', 'valor' => '150.000', 'coste' => '189,90'], $id['admin']);
+    $id['documento'] = guardar_documento_bytes($pdo, $id['dni'], 'DNI escaneado', 'dni.pdf', "%PDF-1.4\n% prueba\n", $id['admin']);
+    return $id;
+}
