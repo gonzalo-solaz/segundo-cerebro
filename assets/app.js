@@ -15,10 +15,6 @@
       try { localStorage.setItem('cerebro-tema', nuevo); } catch (e) { /* sin almacenamiento */ }
     }
 
-    if (accion === 'menu') {
-      document.body.classList.toggle('menu-abierto');
-    }
-
     // Una sugerencia («ITV», «IBI»...) rellena el formulario de recordatorio.
     // La fecha NO: esa la pone siempre la persona.
     if (accion === 'sugerencia') {
@@ -53,6 +49,14 @@
   }
   window.addEventListener('hashchange', abrirAncla);
   document.addEventListener('DOMContentLoaded', abrirAncla);
+
+  // En el móvil las pestañas se deslizan: la de la página actual queda a la vista.
+  document.addEventListener('DOMContentLoaded', function () {
+    var tabs = document.querySelector('.tabs');
+    var activa = tabs && tabs.querySelector('.tab.active');
+    if (!activa || tabs.scrollWidth <= tabs.clientWidth) return;
+    tabs.scrollLeft = activa.offsetLeft - (tabs.clientWidth - activa.offsetWidth) / 2;
+  });
 
   // Los avisos se borran solos a los pocos segundos.
   document.addEventListener('DOMContentLoaded', function () {

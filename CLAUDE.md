@@ -99,9 +99,16 @@ avisa por correo.
 - **Archivos en `private/archivos/AAAA/`** con nombre aleatorio; solo se sirven
   por `archivo.php` (con sesión). El tipo se decide por los bytes, no por la
   extensión, y así no hace falta la extensión fileinfo.
-- **Diseño**: paleta Velzon, la misma familia que el dashboard de finanzas, tema
-  claro/oscuro, mobile first, tipografía del sistema (cero recursos externos:
-  hay datos de salud).
+- **Diseño = el de finanzas (3/10/2026, petición de Gonzalo: «quiero que se vea
+  toda la app como se ve finanzas-personales»).** Mismos tokens de color (Velzon,
+  valores exactos de `vistas/dashboard-cabecera.html`), **Poppins** 400/500/600 en
+  `assets/fuentes/` (local: cero recursos externos, hay datos de salud), logo
+  `gonzalosolaz*.png` arriba con los botones cuadrados de icono (usuario, tema,
+  salir) y las secciones como **pestañas** con el activo subrayado (una fila que se
+  desliza en el móvil; `app.js` centra la activa). Ya no hay menú lateral. Tema
+  oscuro por defecto si el sistema no dice lo contrario, como finanzas. Si cambia el
+  CSS de finanzas, cambiar aquí los tokens de `assets/app.css`. Las fuentes
+  `hanken-grotesk` y `plex-mono` de `assets/fuentes/` no las usa nadie.
 
 ## Cómo se trabaja aquí
 
