@@ -1,0 +1,193 @@
+/* =====================================================================
+   Finanzas dentro del segundo cerebro (finanzas.php).
+   El panel llega de finanzas-personales con su marcado, su panel.css y su
+   panel.js. Este archivo se carga DESPUÉS de panel.css y lo viste con el
+   diseño del resto de la app (Gonzalo, 3/10/2026: «finanzas no ha quedado
+   como las otras secciones»): las mismas tarjetas, píldoras, letra, banda
+   de cifras y colores. Solo toca lo que está dentro de .panel-fin.en-cerebro;
+   el panel de finanzas en su propia web no cambia.
+   Si finanzas renombra clases o variables, revisar aquí.
+   ===================================================================== */
+
+/* Sus variables, con los valores de aquí (el JS de los gráficos las lee de :root). */
+html:root {
+  --bg: var(--bg-app); --bg-card: var(--panel); --bg-card-2: var(--panel-2); --border: var(--borde);
+  --text: var(--texto); --text-dim: var(--texto-2); --text-muted: var(--tenue);
+  --accent: #405189; --green: #1d9a6c; --red: #c4232b; --yellow: #c27c0e; --purple: #6a54a8;
+  --chart-grid: rgba(27, 37, 89, .08); --hover-overlay: var(--hover); --card-shadow: none;
+}
+html:root[data-theme="dark"] {
+  --accent: #a3b8ff; --green: #6fd8ad; --red: #ff8a80; --yellow: #ffc552; --purple: #b5a6f0;
+  --chart-grid: rgba(255, 255, 255, .07);
+}
+
+.panel-fin.en-cerebro { font-family: inherit; background: transparent; color: var(--texto-2); font-size: 15px; }
+.panel-fin.en-cerebro h1, .panel-fin.en-cerebro h2, .panel-fin.en-cerebro h3 { font-family: inherit; }
+/* Aquí no hay etiquetas en mayúsculas pequeñas: todo en tipo frase. */
+.panel-fin.en-cerebro, .panel-fin.en-cerebro * { text-transform: none !important; }
+
+/* ---------- Pestañas de años: control segmentado en píldoras ---------- */
+.panel-fin.en-cerebro .topbar { border-bottom: 0; margin-bottom: 18px; gap: 16px; align-items: center; }
+.panel-fin.en-cerebro .tabs { border-bottom: 0; gap: 8px; margin: 0; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding: 2px; }
+.panel-fin.en-cerebro .tab {
+  border: 1px solid var(--borde-control); border-radius: var(--pildora); margin: 0; padding: 7px 16px;
+  color: var(--texto); font-size: 14px; font-weight: 550; white-space: nowrap;
+}
+@media (hover: hover) and (pointer: fine) { .panel-fin.en-cerebro .tab:hover { color: var(--texto); border-color: var(--texto); background: var(--hover); } }
+.panel-fin.en-cerebro .tab.active { background: var(--marino); border-color: var(--marino); color: #fff; font-weight: 600; }
+:root[data-theme="dark"] .panel-fin.en-cerebro .tab.active { background: var(--celeste); border-color: var(--celeste); color: var(--marino); }
+.panel-fin.en-cerebro .tab .tab-count { background: var(--neutro); color: inherit; }
+.panel-fin.en-cerebro .tab:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; box-shadow: none; border-radius: var(--pildora); }
+
+/* ---------- Botones de acción (importar, revisar…): los círculos de la app ---------- */
+.panel-fin.en-cerebro #acciones-finanzas { gap: 8px; margin: 0 0 20px; }
+.panel-fin.en-cerebro .theme-toggle {
+  width: 40px; height: 40px; border-radius: 50%; border: 0; background: var(--neutro); color: var(--texto-2);
+}
+@media (hover: hover) and (pointer: fine) { .panel-fin.en-cerebro .theme-toggle:hover { background: var(--neutro-hover); color: var(--texto); } }
+.panel-fin.en-cerebro .acciones-aviso { background: var(--marino); color: #fff; box-shadow: 0 0 0 2px var(--bg-app); }
+:root[data-theme="dark"] .panel-fin.en-cerebro .acciones-aviso { background: var(--celeste); color: var(--marino); }
+
+/* ---------- Tarjetas ---------- */
+.panel-fin.en-cerebro .card {
+  background: var(--panel); border: 1px solid var(--borde); border-radius: 20px; box-shadow: none; padding: 20px;
+}
+@media (min-width: 640px) { .panel-fin.en-cerebro .card { border-radius: var(--radio); padding: 26px 28px; } }
+@media (hover: hover) and (pointer: fine) { .panel-fin.en-cerebro .card:hover { transform: none; box-shadow: none; } }
+.panel-fin.en-cerebro section { margin-top: 20px !important; }
+.panel-fin.en-cerebro .card h2 { font-size: 18px; font-weight: 700; letter-spacing: -.02em; color: var(--texto); }
+.panel-fin.en-cerebro .patrimonio-card { border-color: var(--borde); }
+.panel-fin.en-cerebro .updated { font-size: 13.5px; color: var(--tenue); }
+.panel-fin.en-cerebro .updated strong { color: var(--texto); font-weight: 650; }
+.panel-fin.en-cerebro .cuentas-grupo-titulo { font-size: 15px; font-weight: 700; color: var(--texto); letter-spacing: -.01em; margin-bottom: 12px; }
+
+/* Estrategia: tarjeta normal (sin degradado), titulares en el azul de la app. */
+.panel-fin.en-cerebro .insight { background: var(--panel); border-color: var(--borde); }
+.panel-fin.en-cerebro .insight h2 { color: var(--texto); }
+.panel-fin.en-cerebro #consejos li { font-size: 14.5px; color: var(--texto-2); }
+.panel-fin.en-cerebro #insights li { font-size: 14px; }
+
+/* Tarjetas de dentro (cuentas, inversiones, cripto, inmuebles, vehículos, CEU): pozos suaves. */
+.panel-fin.en-cerebro :is(.saldo-cta, .pias-card, .stock-card, .broker-card, .inmueble-card, .vehiculo-card, .cripto-card, .ceu-kpi) {
+  background: var(--panel-2); border: 0; border-radius: var(--radio-md); padding: 18px 20px;
+}
+.panel-fin.en-cerebro .saldo-cta h2, .panel-fin.en-cerebro :is(.inmueble-card, .vehiculo-card, .cripto-card) .alias {
+  font-size: 15px; font-weight: 700; color: var(--texto); letter-spacing: -.015em;
+}
+.panel-fin.en-cerebro :is(.saldo-cta, .pias-card, .broker-head, .ceu-kpi) .alias,
+.panel-fin.en-cerebro .ceu-kpi .lbl, .panel-fin.en-cerebro .pias-card .lbl {
+  font-size: 13px; font-weight: 500; letter-spacing: -.005em; color: var(--tenue);
+}
+/* Las cifras: pesadas y apretadas, como en el resto de la app. */
+.panel-fin.en-cerebro :is(.saldo-cta, .pias-card, .stock-card, .broker-head, .inmueble-card, .vehiculo-card, .cripto-card, .ceu-kpi) .v,
+.panel-fin.en-cerebro #cripto-total, .panel-fin.en-cerebro #vehiculos-total {
+  font-weight: 800; letter-spacing: -.035em; color: var(--texto); font-variant-numeric: tabular-nums;
+}
+.panel-fin.en-cerebro :is(.saldo-cta, .ceu-kpi) .v { font-size: 30px; }
+.panel-fin.en-cerebro #cripto-total, .panel-fin.en-cerebro #vehiculos-total { font-size: 30px !important; font-weight: 800 !important; }
+.panel-fin.en-cerebro .ceu-kpi.accent .v { color: var(--verde); }
+.panel-fin.en-cerebro .ceu-kpi.purple .v { color: var(--lila); }
+.panel-fin.en-cerebro :is(.meta, .v-meta, .broker-meta, .direccion, .modelo, .objetivo, .delta, .sub) { font-size: 12.5px; color: var(--tenue); }
+.panel-fin.en-cerebro :is(.breakdown, .cantidad) { font-size: 13px; }
+.panel-fin.en-cerebro .broker-item { border-top-color: var(--borde); }
+.panel-fin.en-cerebro .broker-item .l .name { font-weight: 600; }
+
+/* Etiquetas: píldoras con fondo tintado, sin borde. */
+.panel-fin.en-cerebro :is(.tag-proposito, .tag-inactiva, .badge-tipo, .badge, .symbol, .cur-badge, .tipo-badge) {
+  border: 0 !important; border-radius: var(--pildora); padding: 3px 10px; font-size: 12px; font-weight: 550;
+}
+.panel-fin.en-cerebro .tag-proposito { background: color-mix(in srgb, var(--verde) 13%, var(--panel)); color: var(--verde); }
+.panel-fin.en-cerebro :is(.tag-inactiva, .badge-tipo, .badge, .cur-badge) { background: var(--neutro); color: var(--texto-2); }
+.panel-fin.en-cerebro .cripto-card .symbol { background: color-mix(in srgb, var(--ambar) 14%, var(--panel)); color: var(--ambar); }
+.panel-fin.en-cerebro .tipo-ingreso { background: color-mix(in srgb, var(--verde) 13%, var(--panel)); color: var(--verde); }
+.panel-fin.en-cerebro .tipo-gasto { background: color-mix(in srgb, var(--rojo) 11%, var(--panel)); color: var(--rojo); }
+.panel-fin.en-cerebro .tipo-transferencia { background: var(--neutro); color: var(--texto-2); }
+
+/* Barras de progreso: redondas, con la pista neutra. */
+.panel-fin.en-cerebro :is(.progress, .perf-bar) { background: var(--panel-3); border-radius: var(--pildora); height: 6px; }
+.panel-fin.en-cerebro .progress-bar { border-radius: var(--pildora); }
+.panel-fin.en-cerebro .pias-card .progress-bar { background: var(--acento); }
+
+/* ---------- Patrimonio neto: la banda de cifras (como las del panel y el peso) ---------- */
+.panel-fin.en-cerebro .header-bottom.three-cols > div:first-child {
+  background: var(--banda-bg); background-image: none; border: 0; border-radius: 20px; box-shadow: none;
+  padding: 22px 20px 24px; color: #fff; gap: 18px 44px;
+}
+@media (min-width: 640px) { .panel-fin.en-cerebro .header-bottom.three-cols > div:first-child { border-radius: var(--radio); padding: 28px 30px 30px; } }
+.panel-fin.en-cerebro .header-bottom.three-cols .header-meta h1 { font-size: 15px; font-weight: 650; color: rgba(255, 255, 255, .78); letter-spacing: -.01em; margin: 0; }
+.panel-fin.en-cerebro .header-bottom.three-cols .updated { color: rgba(255, 255, 255, .55); }
+.panel-fin.en-cerebro .header-bottom.three-cols .liquidez {
+  font-size: 40px; font-weight: 850; letter-spacing: -.045em; color: #fff; line-height: 1.05; white-space: nowrap; margin-top: 6px;
+}
+.panel-fin.en-cerebro .header-bottom.three-cols .liquidez.neg { color: #ff8a80; }
+.panel-fin.en-cerebro .header-bottom.three-cols .liquidez .currency { font-size: 18px; font-weight: 600; color: rgba(255, 255, 255, .6); letter-spacing: 0; }
+.panel-fin.en-cerebro .header-bottom.three-cols .patrimonio-nota { color: rgba(255, 255, 255, .55); font-size: 12.5px; }
+.panel-fin.en-cerebro .hero-disponible { border-top-color: rgba(255, 255, 255, .14); margin-top: 20px; padding-top: 18px; }
+.panel-fin.en-cerebro .hero-disponible .hd-lbl { font-size: 13.5px; font-weight: 500; letter-spacing: -.005em; color: rgba(255, 255, 255, .66); }
+.panel-fin.en-cerebro .hero-disponible .hd-val { font-size: 30px; font-weight: 850; letter-spacing: -.04em; color: var(--celeste); }
+.panel-fin.en-cerebro .hero-disponible .hd-sub { font-size: 12.5px; color: rgba(255, 255, 255, .55); }
+.panel-fin.en-cerebro .header-bottom.three-cols .bd-head { font-size: 13px; font-weight: 600; letter-spacing: -.005em; color: rgba(255, 255, 255, .6); margin-bottom: 8px; }
+.panel-fin.en-cerebro .header-bottom.three-cols .patrimonio-breakdown .row { border-bottom: 1px solid rgba(255, 255, 255, .1); padding: 6px 0; }
+.panel-fin.en-cerebro .header-bottom.three-cols .patrimonio-breakdown .lbl { font-size: 14px; color: rgba(255, 255, 255, .78); }
+.panel-fin.en-cerebro .header-bottom.three-cols .patrimonio-breakdown .val { font-size: 14.5px; font-weight: 700; color: #fff; }
+.panel-fin.en-cerebro .header-bottom.three-cols .patrimonio-breakdown .val.neg { color: #ff8a80; }
+.panel-fin.en-cerebro .header-bottom.three-cols .patrimonio-breakdown .val.pos { color: #7fe0b6; }
+.panel-fin.en-cerebro .header-bottom.three-cols .patrimonio-breakdown a.row .lbl::after { color: rgba(255, 255, 255, .6); }
+@media (hover: hover) and (pointer: fine) {
+  .panel-fin.en-cerebro .header-bottom.three-cols .patrimonio-breakdown a.row:hover { background: rgba(255, 255, 255, .07); }
+  .panel-fin.en-cerebro .header-bottom.three-cols .patrimonio-breakdown a.row:hover .lbl::after { color: var(--celeste); }
+}
+@media (min-width: 960px) { .panel-fin.en-cerebro .header-bottom.three-cols .liquidez { font-size: 38px; } }
+
+/* Resúmenes de inmuebles / vehículos / cripto (si se ven). */
+.panel-fin.en-cerebro .vehiculos-summary .row { border-bottom-style: solid; }
+.panel-fin.en-cerebro .vehiculos-summary .row.total .lbl { font-size: 13.5px; letter-spacing: 0; font-weight: 650; }
+
+/* ---------- Tablas ---------- */
+.panel-fin.en-cerebro table { font-size: 14px; }
+.panel-fin.en-cerebro table th { font-size: 13px; font-weight: 600; letter-spacing: 0; color: var(--tenue); }
+.panel-fin.en-cerebro table td { color: var(--texto); }
+.panel-fin.en-cerebro table.cashflow-table th { font-size: 12.5px; letter-spacing: 0; }
+.panel-fin.en-cerebro table.cashflow-table tfoot td, .panel-fin.en-cerebro table.matrix tfoot td { border-top: 1.5px solid var(--texto); }
+.panel-fin.en-cerebro .movs-table-wrap { border-radius: var(--radio-md); border-color: var(--borde); }
+.panel-fin.en-cerebro table.movs-table thead th { background: var(--panel-2); }
+.panel-fin.en-cerebro :is(.stock-card, .cripto-card) details th { font-size: 11.5px; letter-spacing: 0; }
+
+/* ---------- Filtros, campos y conmutadores ---------- */
+.panel-fin.en-cerebro .filter-label { font-size: 13px; font-weight: 600; letter-spacing: 0; color: var(--texto); }
+.panel-fin.en-cerebro .pill, .panel-fin.en-cerebro .cripto-more .more-btn {
+  background: transparent; border: 1px solid var(--borde-control); border-radius: var(--pildora);
+  color: var(--texto); font-size: 14px; font-weight: 550; padding: 7px 16px; font-style: normal;
+}
+@media (hover: hover) and (pointer: fine) {
+  .panel-fin.en-cerebro .pill:hover, .panel-fin.en-cerebro .cripto-more .more-btn:hover { border-color: var(--texto); background: var(--hover); }
+}
+.panel-fin.en-cerebro .pill.active { background: var(--marino); border-color: var(--marino); color: #fff; font-weight: 600; }
+:root[data-theme="dark"] .panel-fin.en-cerebro .pill.active { background: var(--celeste); border-color: var(--celeste); color: var(--marino); }
+.panel-fin.en-cerebro :is(.input, .ceu-year-select) {
+  background-color: var(--panel); border: 1px solid var(--borde-control); border-radius: var(--radio-sm);
+  padding: 10px 14px; font-size: 15px; color: var(--texto);
+}
+.panel-fin.en-cerebro .ceu-year-select { border-radius: var(--pildora); padding: 6px 32px 6px 14px; font-size: 14px; }
+.panel-fin.en-cerebro :is(.input, .ceu-year-select):focus { border-color: var(--acento); box-shadow: inset 0 0 0 1px var(--acento); }
+.panel-fin.en-cerebro .ceu-mode-toggle { border: 1px solid var(--borde-control); border-radius: var(--pildora); padding: 2px; gap: 2px; }
+.panel-fin.en-cerebro .ceu-mode-btn { background: transparent; border: 0 !important; border-radius: var(--pildora); padding: 5px 14px; font-size: 13.5px; color: var(--texto-2); }
+.panel-fin.en-cerebro .ceu-mode-btn.active { background: var(--marino); color: #fff; }
+:root[data-theme="dark"] .panel-fin.en-cerebro .ceu-mode-btn.active { background: var(--celeste); color: var(--marino); }
+.panel-fin.en-cerebro .ceu-empty { border-radius: var(--radio-md); }
+.panel-fin.en-cerebro ul#ceu-avisos li { border: 0; border-radius: var(--radio-sm); background: var(--panel-2); }
+.panel-fin.en-cerebro ul#ceu-avisos li.warn { background: color-mix(in srgb, var(--rojo) 9%, var(--panel)); }
+.panel-fin.en-cerebro ul#ceu-avisos li.ok { background: color-mix(in srgb, var(--verde) 10%, var(--panel)); }
+
+.panel-fin.en-cerebro footer { font-size: 13px; color: var(--tenue); }
+
+/* «Disponible ahora» va DENTRO de la cifra del patrimonio (lo pinta panel.js): que no herede su tracking. */
+.panel-fin.en-cerebro .header-bottom.three-cols .liquidez :is(.hero-disponible, .patrimonio-nota) { white-space: normal; letter-spacing: -.005em; line-height: 1.4; }
+.panel-fin.en-cerebro .hero-disponible .hd-val { letter-spacing: -.04em; line-height: 1.1; margin: 4px 0 2px; }
+/* Rótulos con estilo en línea (11 px en mayúsculas) dentro de las cuentas. */
+.panel-fin.en-cerebro .saldo-cta .meta[style] { font-size: 13px !important; letter-spacing: 0 !important; margin-top: 10px !important; }
+.panel-fin.en-cerebro .fondo-analisis { font-size: 13px; border-top-color: var(--borde); }
+.panel-fin.en-cerebro .fondo-analisis .meses { font-size: 14px; }
+.panel-fin.en-cerebro .hero-disponible .hd-lbl,
+.panel-fin.en-cerebro .hero-disponible .hd-sub { display: block; font-weight: 450 !important; letter-spacing: 0 !important; color: rgba(255, 255, 255, .62) !important; }
+.panel-fin.en-cerebro .hero-disponible .hd-lbl { font-weight: 550 !important; color: rgba(255, 255, 255, .72) !important; }

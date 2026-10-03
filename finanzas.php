@@ -28,6 +28,7 @@ $est = finanzas_ruta_estaticos();
 $v = rawurlencode((string)($d['version'] ?? '1'));
 
 cabecera('Finanzas', 'finanzas');
+cabecera_pagina('Finanzas', 'Cuentas, inversiones, patrimonio y nóminas.', '', 'cartera', '#405189');
 ?>
 <?php if ($r['error']): ?>
   <div class="flash flash-aviso"><?= e($r['error']) ?><?= $d ? ' Enseño la última copia (' . e(fecha_corta(substr((string)$r['leido_en'], 0, 10)) . ' ' . substr((string)$r['leido_en'], 11, 5)) . ').' : '' ?></div>
@@ -35,6 +36,8 @@ cabecera('Finanzas', 'finanzas');
 
 <?php if (!empty($d['html'])): ?>
   <link rel="stylesheet" href="<?= e($est . 'panel.css?v=' . $v) ?>">
+  <?php // Después del suyo: lo viste con el diseño de esta app (assets/finanzas.css). ?>
+  <link rel="stylesheet" href="<?= e(asset('finanzas.css')) ?>">
   <div class="panel-fin en-cerebro"><?= $d['html'] ?></div>
   <script id="data-finanzas" type="application/json"><?= json_encode($d['datos'] ?? new stdClass(),
       JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?></script>
