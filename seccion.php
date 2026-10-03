@@ -16,6 +16,12 @@ if ($clave === 'vivienda' && !$archivados && empty($_GET['lista'])) {
     $casas = array_values(array_filter($elementos, static fn($el) => $el['tipo'] === 'inmueble'));
     if (count($casas) === 1) redirigir('elemento.php?id=' . $casas[0]['id']);
 }
+
+// Lo que cuelga de otro elemento de esta misma sección (el equipamiento de una
+// vivienda) se ve dentro de la ficha del padre, no suelto en el listado. Si el
+// padre no está en la lista (archivado), se deja a la vista para no perderlo.
+$en_lista = array_flip(array_column($elementos, 'id'));
+$elementos = array_values(array_filter($elementos, static fn($el) => $el['enlace_id'] === null || !isset($en_lista[$el['enlace_id']])));
 $avisos = agenda($pdo, 365, $clave);
 
 // «persona=ID» (desde la tarjeta de la persona): solo lo suyo y sus avisos.
