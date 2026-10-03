@@ -22,11 +22,11 @@ define('DB_USER', 'u123456789_cerebro');
 define('DB_PASS', 'la-contraseña-de-la-base');
 
 // ---- Ruta pública desde la raíz del dominio ----
-// En una subcarpeta → '/segundo-cerebro' (empieza y NO termina en "/").
-define('BASE_URL', '/segundo-cerebro');
+// En una subcarpeta → '/admin' (empieza y NO termina en "/").
+define('BASE_URL', '/admin');
 
 // URL completa y canónica (SIN www: ver .htaccess). La usan los correos.
-define('URL_APP', 'https://gonzalosolaz.tech/segundo-cerebro');
+define('URL_APP', 'https://gonzalosolaz.tech/admin');
 
 define('NOMBRE_APP', 'Segundo cerebro');
 date_default_timezone_set('Europe/Madrid');

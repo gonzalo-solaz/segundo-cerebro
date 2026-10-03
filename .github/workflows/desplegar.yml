@@ -57,9 +57,9 @@ jobs:
         run: |
           # FRENO (3/10/2026): la primera vez, sin FTP_CARPETA, se subió TODO a la raíz
           # del dominio y pisó la web que vive allí. Ahora el destino es obligatorio y
-          # tiene que terminar en segundo-cerebro/: nunca se sube a ciegas a ./
-          if [ -n "$FTP_SERVIDOR" ] && ! printf %s "$FTP_CARPETA" | grep -qE 'segundo-cerebro/?$'; then
-            echo "::error::FTP_CARPETA falta o no termina en segundo-cerebro/. No se despliega."
+          # ser exactamente admin/ (la cuenta FTP cuelga de public_html): nunca a ./
+          if [ -n "$FTP_SERVIDOR" ] && ! printf %s "$FTP_CARPETA" | grep -qE '^(\./)?admin/$'; then
+            echo "::error::FTP_CARPETA tiene que ser exactamente admin/ (sin ruta absoluta). No se despliega."
             exit 1
           fi
           if [ -z "$FTP_SERVIDOR" ]; then
@@ -104,8 +104,8 @@ jobs:
           php -r '
             // var_export: ninguna comilla o barra de una contraseña puede romper el PHP.
             $c = ["DB_HOST" => "localhost", "DB_NAME" => getenv("DB_NAME"), "DB_USER" => getenv("DB_USER"),
-                  "DB_PASS" => getenv("DB_PASS"), "BASE_URL" => "/segundo-cerebro",
-                  "URL_APP" => "https://gonzalosolaz.tech/segundo-cerebro", "NOMBRE_APP" => "Segundo cerebro",
+                  "DB_PASS" => getenv("DB_PASS"), "BASE_URL" => "/admin",
+                  "URL_APP" => "https://gonzalosolaz.tech/admin", "NOMBRE_APP" => "Segundo cerebro",
                   "EMAIL_AVISOS" => (string)getenv("EMAIL_AVISOS"), "API_CLAVE" => (string)getenv("API_CLAVE"),
                   "CRON_CLAVE" => (string)getenv("CRON_CLAVE"),
                   "FINANZAS_URL" => "https://gonzalosolaz.tech/finanzas-personales/"];
