@@ -125,11 +125,20 @@ cabecera_pagina($el['nombre'],
         <?php endif; ?>
       </dl>
       <?php if (!$alguno): ?><p class="vacio-mini">Sin datos todavía. <a href="<?= e(url('elemento-editar.php?id=' . $id)) ?>">Complétalos</a>.</p><?php endif; ?>
-      <?php if (trim((string)$el['notas']) !== ''): ?>
+      <?php $notas_largas = longitud(trim((string)$el['notas'])) > 280; ?>
+      <?php if (trim((string)$el['notas']) !== '' && !$notas_largas): ?>
         <h3 class="subtitulo">Notas</h3>
         <p class="notas"><?= nl2br(e($el['notas'])) ?></p>
       <?php endif; ?>
     </section>
+
+    <?php // Notas largas: plegadas, para que no tapen los datos (3/10/2026: la ficha del Mini ocupaba dos pantallas de texto). ?>
+    <?php if ($notas_largas): ?>
+      <details class="tarjeta tarjeta-plegable">
+        <summary><h2>Notas</h2></summary>
+        <p class="notas"><?= nl2br(e($el['notas'])) ?></p>
+      </details>
+    <?php endif; ?>
 
     <?php foreach ($def['campos'] as $clave => $c): ?>
       <?php if (empty($c['aparte']) || trim((string)($el['datos'][$clave] ?? '')) === '') continue; ?>
