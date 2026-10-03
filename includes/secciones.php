@@ -21,6 +21,10 @@
 //    unidad     Se pinta detrás del valor («km», «m²»).
 //    resumen    true = sale en la tarjeta del listado.
 //    ayuda      Texto pequeño bajo el campo.
+//    aparte     (tipo area) Va en su propia tarjeta plegada, fuera de «Datos».
+//    lista      (con aparte) Se pinta como lista: una línea = un punto; una línea
+//               que acaba en «:» abre un grupo; «Etiqueta: valor» pone la etiqueta
+//               en negrita (ver lista_campo() en funciones.php).
 //    vence      (tipo fecha) Crea y mantiene SOLO un aviso con ese título
 //               («Renovar el DNI» → «Renovar el DNI · DNI de Ana»). Si el
 //               título lleva {nombre}, se sustituye por el nombre del elemento.
@@ -150,11 +154,12 @@ function secciones(): array {
                             'vence' => 'Revisión en el taller', 'aviso' => 21],
                         // Plegados (3/10/2026): las notas de los coches acabaron siendo un muro de texto.
                         // Las notas quedan para lo breve (avería pendiente, baja temporal...).
-                        'equipamiento' => ['etiqueta' => 'Equipamiento y extras', 'tipo' => 'area', 'aparte' => true],
-                        'recambios' => ['etiqueta' => 'Recambios y mantenimiento', 'tipo' => 'area', 'aparte' => true,
-                            'ayuda' => 'Referencias de filtros, aceite, neumáticos, batería, defectos a vigilar.'],
-                        'origen' => ['etiqueta' => 'Origen e historia', 'tipo' => 'area', 'aparte' => true,
-                            'ayuda' => 'Procedencia, propietarios, papeles, seguros anteriores.'],
+                        'equipamiento' => ['etiqueta' => 'Equipamiento y componentes', 'tipo' => 'area', 'aparte' => true, 'lista' => true,
+                            'ayuda' => 'Lo que lleva el coche: motor, caja, ruedas y neumáticos, batería, extras. Una línea por punto; una línea que acaba en «:» abre un grupo.'],
+                        'recambios' => ['etiqueta' => 'Recambios y mantenimiento', 'tipo' => 'area', 'aparte' => true, 'lista' => true,
+                            'ayuda' => 'Lo que se usa para mantenerlo: aceite, referencias de filtros y frenos, plan de mantenimiento, defectos a vigilar. Una línea por punto.'],
+                        'origen' => ['etiqueta' => 'Origen e historia', 'tipo' => 'area', 'aparte' => true, 'lista' => true,
+                            'ayuda' => 'Procedencia, propietarios, compra, papeles, seguros anteriores. Una línea por punto.'],
                     ],
                 ],
                 'contacto' => tipo_contacto('Taller o contacto', 'Taller de confianza', 'Especialidad'),

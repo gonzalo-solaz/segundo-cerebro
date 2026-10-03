@@ -232,6 +232,33 @@ function longitud(string $s): int {
     return function_exists('mb_strlen') ? mb_strlen($s, 'UTF-8') : (int)preg_match_all('/./us', $s);
 }
 
+/**
+ * Un texto de varias líneas como lista: cada línea es un punto; una línea que
+ * acaba en «:» abre un grupo con ese título; «Etiqueta: valor» pone la etiqueta
+ * en negrita. Es el formato de los campos con 'lista' => true (secciones.php).
+ */
+function lista_campo(string $texto): string {
+    $html = '';
+    $abierta = false;
+    foreach (preg_split('/\R/u', trim($texto)) as $linea) {
+        $linea = trim($linea);
+        if ($linea === '') continue;
+        if (str_ends_with($linea, ':')) {
+            if ($abierta) $html .= '</ul>';
+            $html .= '<h3 class="subtitulo">' . e(rtrim($linea, ':')) . '</h3><ul class="lista-campo">';
+            $abierta = true;
+            continue;
+        }
+        if (!$abierta) { $html .= '<ul class="lista-campo">'; $abierta = true; }
+        if (preg_match('/^([^:]{1,40}):\s+(.+)$/u', $linea, $m)) {
+            $html .= '<li><strong>' . e($m[1]) . ':</strong> ' . e($m[2]) . '</li>';
+        } else {
+            $html .= '<li>' . e($linea) . '</li>';
+        }
+    }
+    return $html . ($abierta ? '</ul>' : '');
+}
+
 function recortar(string $s, int $max): string {
     if (longitud($s) <= $max) return $s;
     if (function_exists('mb_substr')) return mb_substr($s, 0, $max - 1, 'UTF-8') . '…';

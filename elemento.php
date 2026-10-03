@@ -144,7 +144,11 @@ cabecera_pagina($el['nombre'],
       <?php if (empty($c['aparte']) || trim((string)($el['datos'][$clave] ?? '')) === '') continue; ?>
       <details class="tarjeta tarjeta-plegable">
         <summary><h2><?= e($c['etiqueta']) ?></h2></summary>
-        <p class="notas"><?= nl2br(e($el['datos'][$clave])) ?></p>
+        <?php if (!empty($c['lista'])): ?>
+          <?= lista_campo((string)$el['datos'][$clave]) ?>
+        <?php else: ?>
+          <p class="notas"><?= nl2br(e($el['datos'][$clave])) ?></p>
+        <?php endif; ?>
       </details>
     <?php endforeach; ?>
 

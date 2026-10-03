@@ -288,6 +288,12 @@ a.chip:hover { text-decoration: none; background: color-mix(in srgb, var(--c) 22
 .dato-ancho { grid-column: 1 / -1; }
 .subtitulo { margin: 1.2rem 0 .5rem; font-size: .85rem; color: var(--tenue); text-transform: uppercase; letter-spacing: .04em; }
 .notas { white-space: normal; color: var(--texto-2); margin: .3rem 0 0; }
+/* Campos de texto en lista (equipamiento, recambios, origen de un vehículo) */
+.lista-campo { margin: 0 0 .4rem; padding-left: 1.15rem; color: var(--texto-2); }
+.lista-campo li { margin: .2rem 0; padding-left: .1rem; }
+.lista-campo li::marker { color: var(--tenue); }
+.lista-campo strong { color: var(--texto); font-weight: 600; }
+details.tarjeta-plegable > .subtitulo:first-of-type { margin-top: 0; }
 .zona-peligro { display: flex; flex-wrap: wrap; gap: .5rem; box-shadow: none; background: transparent; border-style: dashed; }
 .zona-peligro form { margin: 0; }
 
