@@ -375,3 +375,13 @@ valor de mercado, capital pendiente) vive en finanzas, que lee estas fichas con 
   transferencias no cuentan) y las nóminas. Copia de una hora por acción en
   `private/cache/finanzas-<acción>.json` («Actualizar» la fuerza). Los botones llevan a
   cada pantalla de finanzas por el pase.
+- **Fase 4 hecha (origen único, en producción):** la casa (2) tiene titular Gonzalo, 60 %
+  (copropietaria Pilar, 40 %), 123 m², 2008 y el apunte «Compra o venta» de 155.000 €
+  (7/11/2017); nueva **Hipoteca Freedom (Mediolanum)**, contratos id 33, enlazada a la casa,
+  cuota 611,65 €/mes (la entera: decisión de Gonzalo; ya cuenta en el gasto fijo), fin
+  7/11/2042; **Casa madre (Massarrojos)**, vivienda id 34 (12,5 % de Gonzalo); **empleo**
+  «Universidad CEU Cardenal Herrera» id 35 (nóminas en finanzas) y su **convenio** id 36
+  (tablas 2023-2027; siguen también en `CEU_CONVENIO` de finanzas, hay que cambiar las dos);
+  acogida «Sí» en los colegios 22 y 23. Finanzas lee todo esto por la acción `fichas` y ya no
+  lo guarda (ver su CLAUDE.md, «Origen único»). **Si cambia la cuota de la hipoteca, se cambia
+  aquí (ficha 33)**; el capital pendiente, en finanzas. No repetir.

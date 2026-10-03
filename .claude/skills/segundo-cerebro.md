@@ -95,6 +95,10 @@ Los **números** de la nómina viven en **finanzas**, no aquí (decisión de Gon
 3. Cartas de retribución, certificados de retenciones, contratos y anexos: igual, con su tipo de apunte. Si cambian el puesto, el bruto o la categoría, actualiza la ficha del empleo.
 4. **Convenio**: ficha tipo `convenio` enlazada al empleo. Las tablas salariales van en `tablas`, y las dudas para RRHH, en `analisis`. La tabla que usa finanzas para comparar sigue en `CEU_CONVENIO` de su `dashboard-pie.html`: si cambian las tablas, actualiza las dos (que finanzas la lea de aquí está pendiente).
 
+### Casas, hipoteca, vehículos e hijos: un solo origen (con finanzas)
+
+Desde el 3/10/2026, la ficha de aquí manda en la identidad (nombre, dirección, catastro, compra, titular y su %, términos de la hipoteca, marca, modelo, año, curso del colegio, acogida) y finanzas la lee; el dinero (valor de mercado, capital pendiente, cuotas pagadas) vive en finanzas. Si te pasan el recibo de una revisión de la hipoteca, cambia `coste` de su ficha aquí. Un vehículo o una casa nuevos que cuenten como patrimonio: la ficha aquí y, en finanzas, `patrimonio_nuevo` con su valor y `elemento_id`. Si cambia el curso de un hijo, solo su ficha de colegio.
+
 Sobre el contexto de la casa:
 - Personas: usa las que devuelve `personas`. Si el papel es de alguien que no está, pregunta antes de crearlo.
 - Si dudas de a qué vehículo o persona se refiere un papel, pregunta: no lo deduzcas por el nombre.
