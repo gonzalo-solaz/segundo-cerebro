@@ -3,7 +3,8 @@
 //  Maqueta y piezas de interfaz compartidas.
 //  El diseño vive en assets/app.css (tokens en :root, tema claro/oscuro).
 //  Nada externo: ni fuentes de Google ni CDN (regla de van4ever, y aquí
-//  hay datos de salud): la tipografía es la del sistema.
+//  hay datos de salud): Poppins (la de finanzas) se sirve desde assets/fuentes.
+//  La maqueta es la de finanzas: logo y botones arriba, secciones en pestañas.
 // =====================================================================
 
 function menu_principal(): array {
@@ -46,46 +47,39 @@ function cabecera(string $titulo, string $activa = ''): void {
     cabeza_html($titulo);
     ?>
 <body>
-<div class="app">
-  <aside class="lateral" id="lateral">
-    <a class="marca" href="<?= e(url('index.php')) ?>">
-      <span class="marca-icono"><?= icono('cerebro') ?></span><span class="marca-texto"><?= e(NOMBRE_APP) ?></span>
-    </a>
-    <nav class="menu" aria-label="Secciones">
-      <?php foreach (menu_principal() as $i): ?>
-        <a href="<?= e(url($i['url'])) ?>" class="<?= $activa === $i['clave'] ? 'activo' : '' ?>"<?= isset($i['color']) ? ' style="--c:' . e($i['color']) . '"' : '' ?>>
-          <?= icono($i['icono']) ?><span><?= e($i['texto']) ?></span>
+<div class="wrap">
+  <div class="topbar">
+    <div class="topbar-fila">
+      <a class="marca" href="<?= e(url('index.php')) ?>" title="<?= e(NOMBRE_APP) ?>">
+        <span class="brand-logo" role="img" aria-label="gonzalo solaz"></span><span class="marca-app"><?= e(NOMBRE_APP) ?></span>
+      </a>
+      <div class="topbar-acciones">
+        <a class="usuario <?= $activa === 'cuenta' ? 'activo' : '' ?>" href="<?= e(url('cuenta.php')) ?>" title="Mi cuenta">
+          <?= avatar($usuario_actual['nombre'], $usuario_actual['persona_color'] ?? null) ?>
+          <span><?= e(nombre_corto($usuario_actual['nombre'])) ?></span>
         </a>
+        <button type="button" class="theme-toggle" data-accion="tema" title="Cambiar entre tema claro y oscuro" aria-label="Cambiar entre tema claro y oscuro">
+          <?= icono('luna', 'ico solo-claro') ?><?= icono('sol', 'ico solo-oscuro') ?>
+        </button>
+        <form method="post" action="<?= e(url('logout.php')) ?>">
+          <?= csrf_input() ?>
+          <button class="theme-toggle" title="Salir" aria-label="Salir"><?= icono('salir') ?></button>
+        </form>
+      </div>
+    </div>
+    <nav class="tabs" aria-label="Secciones">
+      <?php foreach (menu_principal() as $i): ?>
+        <a href="<?= e(url($i['url'])) ?>" class="tab<?= $activa === $i['clave'] ? ' active activo' : '' ?>"<?= $activa === $i['clave'] ? ' aria-current="page"' : '' ?>><?= e($i['texto']) ?></a>
       <?php endforeach; ?>
       <?php if (es_admin()): ?>
-        <div class="menu-separador"></div>
         <?php if (FINANZAS_URL !== ''): ?>
-          <a href="<?= e(url('finanzas.php')) ?>" class="<?= $activa === 'finanzas' ? 'activo' : '' ?>" style="--c:#405189"><?= icono('cartera') ?><span>Finanzas</span></a>
+          <a href="<?= e(url('finanzas.php')) ?>" class="tab<?= $activa === 'finanzas' ? ' active activo' : '' ?>"<?= $activa === 'finanzas' ? ' aria-current="page"' : '' ?>>Finanzas</a>
         <?php endif; ?>
-        <a href="<?= e(url('ajustes.php')) ?>" class="<?= $activa === 'ajustes' ? 'activo' : '' ?>"><?= icono('ajustes') ?><span>Ajustes</span></a>
+        <a href="<?= e(url('ajustes.php')) ?>" class="tab<?= $activa === 'ajustes' ? ' active activo' : '' ?>"<?= $activa === 'ajustes' ? ' aria-current="page"' : '' ?>>Ajustes</a>
       <?php endif; ?>
     </nav>
-    <div class="lateral-pie">
-      <a class="usuario <?= $activa === 'cuenta' ? 'activo' : '' ?>" href="<?= e(url('cuenta.php')) ?>" title="Mi cuenta">
-        <?= avatar($usuario_actual['nombre'], $usuario_actual['persona_color'] ?? null) ?>
-        <span><?= e(nombre_corto($usuario_actual['nombre'])) ?></span>
-      </a>
-      <button type="button" class="btn-icono" data-accion="tema" title="Cambiar entre tema claro y oscuro">
-        <?= icono('luna', 'ico solo-claro') ?><?= icono('sol', 'ico solo-oscuro') ?>
-      </button>
-      <form method="post" action="<?= e(url('logout.php')) ?>">
-        <?= csrf_input() ?>
-        <button class="btn-icono" title="Salir"><?= icono('salir') ?></button>
-      </form>
-    </div>
-  </aside>
-  <div class="velo" data-accion="menu"></div>
-  <div class="principal">
-    <header class="barra-movil">
-      <button type="button" class="btn-icono" data-accion="menu" aria-label="Abrir el menú"><?= icono('menu') ?></button>
-      <a class="marca" href="<?= e(url('index.php')) ?>"><span class="marca-icono"><?= icono('cerebro') ?></span><span class="marca-texto"><?= e(NOMBRE_APP) ?></span></a>
-    </header>
-    <main class="contenido">
+  </div>
+  <main class="contenido">
       <?php foreach ($flashes as $f): ?>
         <div class="flash flash-<?= e($f['tipo']) ?>" role="status"><?= e($f['texto']) ?></div>
       <?php endforeach; ?>
@@ -94,8 +88,7 @@ function cabecera(string $titulo, string $activa = ''): void {
 
 function pie(): void {
     ?>
-    </main>
-  </div>
+  </main>
 </div>
 </body>
 </html>
@@ -108,7 +101,7 @@ function cabecera_publica(string $titulo): void {
     ?>
 <body class="publica">
   <main class="tarjeta-acceso">
-    <div class="acceso-marca"><span class="marca-icono"><?= icono('cerebro') ?></span><span><?= e(NOMBRE_APP) ?></span></div>
+    <div class="acceso-marca"><span class="brand-logo" role="img" aria-label="gonzalo solaz"></span><span class="marca-app"><?= e(NOMBRE_APP) ?></span></div>
     <h1><?= e($titulo) ?></h1>
 <?php
 }
