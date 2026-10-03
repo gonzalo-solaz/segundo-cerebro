@@ -253,6 +253,18 @@ a.chip:hover { text-decoration: none; background: color-mix(in srgb, var(--c) 22
 .tarjeta-persona.archivada { opacity: .55; }
 .tarjeta-persona p { margin: .7rem 0 .4rem; font-size: .86rem; }
 .enlaces-persona { display: flex; flex-wrap: wrap; gap: .3rem 1rem; font-size: .84rem; }
+.persona-secciones { list-style: none; margin: 0 0 .6rem; padding: 0; display: grid; gap: .15rem; }
+.persona-secciones a {
+  display: flex; align-items: center; gap: .55rem; padding: .4rem .5rem; border-radius: 8px;
+  color: var(--texto); font-size: .88rem;
+}
+.persona-secciones a:hover { text-decoration: none; background: color-mix(in srgb, var(--c) 10%, transparent); }
+.persona-secciones .ico { color: var(--c); flex: none; }
+.persona-secciones span { flex: 1; }
+.persona-secciones strong {
+  min-width: 1.6rem; text-align: center; padding: .05rem .45rem; border-radius: 999px; font-size: .78rem;
+  background: color-mix(in srgb, var(--c) 14%, transparent); color: var(--texto-2);
+}
 .acciones-tarjeta { display: flex; justify-content: space-between; align-items: center; margin-top: .8rem; }
 .acciones-tarjeta form { margin: 0; }
 

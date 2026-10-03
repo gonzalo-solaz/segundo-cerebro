@@ -87,7 +87,11 @@ pinta_bien('agenda filtrada', pedir('vencimientos.php', ['s' => 'contratos']), '
 $itv = agenda($pdo, 400, null, $id['furgo'])[0];
 pinta_bien('editar un aviso automático explica de dónde sale', pedir('vencimientos.php', ['editar' => (string)$itv['id'], 'volver' => 'index.php']), 'sale de la ficha');
 pinta_bien('personas', pedir('personas.php'), 'Leo Prueba');
-pinta_bien('editar persona', pedir('personas.php', ['editar' => (string)$id['leo']]), 'Editar a Leo Prueba');
+pinta_bien('la tarjeta de la persona resume por sección y enlaza al filtro', pedir('personas.php'), 'seccion.php?s=documentos&amp;persona=' . $id['leo']);
+$r = pedir('seccion.php', ['s' => 'documentos', 'persona' => (string)$id['leo'], 'lista' => '1']);
+pinta_bien('la sección filtrada por persona lo dice', $r, 'Solo de Leo Prueba');
+comprueba('…y solo enseña lo suyo', substr_count($r['html'], 'tarjeta tarjeta-elemento') === 1 && str_contains($r['html'], 'Tarjeta sanitaria europea'));
+pinta_bien('editar persona',pedir('personas.php', ['editar' => (string)$id['leo']]), 'Editar a Leo Prueba');
 pinta_bien('ajustes (admin)', pedir('ajustes.php'), 'Accesos');
 pinta_bien('mi cuenta', pedir('cuenta.php'), 'Cambiar la contraseña');
 pinta_bien('un miembro no ve Ajustes', pedir('ajustes.php', [], null, $id['miembro']), 'Solo para administradores');

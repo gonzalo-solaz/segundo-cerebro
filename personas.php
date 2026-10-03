@@ -51,18 +51,28 @@ cabecera_pagina('Personas', 'La familia. Cada uno tiene sus documentos, su salud
               <span class="tenue"><?= e($p['relacion'] ?: '—') ?><?= ($ed = edad($p['fecha_nacimiento'])) !== null ? ' · ' . $ed . ' años' : '' ?></span>
             </div>
           </div>
-          <p class="tenue"><?= (int)$p['n_elementos'] ?> cosas a su nombre<?= $p['usuario_nombre'] ? ' · tiene acceso' : '' ?></p>
           <?php
+            // Un resumen por sección, no la lista entera: con 19 cosas a su
+            // nombre la tarjeta se volvía ilegible. Cada fila lleva a la
+            // sección filtrada por la persona.
             $suyas = elementos_de_persona($pdo, (int)$p['id']);
             $tiene = [];
-            foreach ($suyas as $el) $tiene[$el['seccion'] . '/' . $el['tipo']] = true;
+            $por_seccion = [];
+            foreach ($suyas as $el) {
+                $tiene[$el['seccion'] . '/' . $el['tipo']] = true;
+                $por_seccion[$el['seccion']] = ($por_seccion[$el['seccion']] ?? 0) + 1;
+            }
           ?>
-          <?php if ($suyas): ?>
-            <div class="enlaces-persona">
-              <?php foreach ($suyas as $el): ?>
-                <a class="enlace-tenue" href="<?= e(url('elemento.php?id=' . $el['id'])) ?>"><?= icono('check', 'ico ico-mini') ?><?= e($el['nombre']) ?></a>
+          <p class="tenue"><?= $suyas ? count($suyas) . ' cosas a su nombre' : 'Nada a su nombre todavía' ?><?= $p['usuario_nombre'] ? ' · tiene acceso' : '' ?></p>
+          <?php if ($por_seccion): ?>
+            <ul class="persona-secciones">
+              <?php foreach (secciones() as $s => $def): ?>
+                <?php if (empty($por_seccion[$s])) continue; ?>
+                <li><a href="<?= e(url('seccion.php?s=' . $s . '&persona=' . $p['id'] . '&lista=1')) ?>" style="--c:<?= e($def['color']) ?>">
+                  <?= icono($def['icono']) ?><span><?= e($def['nombre']) ?></span><strong><?= (int)$por_seccion[$s] ?></strong>
+                </a></li>
               <?php endforeach; ?>
-            </div>
+            </ul>
           <?php endif; ?>
           <?php if ($p['activa']): ?>
             <div class="enlaces-persona">

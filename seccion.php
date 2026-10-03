@@ -17,6 +17,15 @@ if ($clave === 'vivienda' && !$archivados && empty($_GET['lista'])) {
     if (count($casas) === 1) redirigir('elemento.php?id=' . $casas[0]['id']);
 }
 $avisos = agenda($pdo, 365, $clave);
+
+// «persona=ID» (desde la tarjeta de la persona): solo lo suyo y sus avisos.
+$filtro_persona = !empty($_GET['persona']) ? persona($pdo, (int)$_GET['persona']) : null;
+if ($filtro_persona) {
+    $pid = (int)$filtro_persona['id'];
+    $elementos = array_values(array_filter($elementos, static fn($el) => (int)$el['persona_id'] === $pid));
+    $ids = array_flip(array_column($elementos, 'id'));
+    $avisos = array_values(array_filter($avisos, static fn($v) => $v['elemento_id'] && isset($ids[$v['elemento_id']])));
+}
 $proximo = [];
 foreach ($avisos as $v) {
     if ($v['elemento_id'] && !isset($proximo[$v['elemento_id']])) $proximo[$v['elemento_id']] = $v;
@@ -24,7 +33,7 @@ foreach ($avisos as $v) {
 $enlazados = resumen_enlazados($pdo);
 $por_tipo = [];
 foreach ($elementos as $el) $por_tipo[$el['tipo']][] = $el;
-$volver = 'seccion.php?s=' . $clave;
+$volver = 'seccion.php?s=' . $clave . ($filtro_persona ? '&persona=' . $filtro_persona['id'] . '&lista=1' : '');
 
 $botones = '';
 foreach ($sec['tipos'] as $t => $def) {
@@ -42,10 +51,17 @@ if ($clave === 'contratos') {
 cabecera($sec['nombre'], 'seccion:' . $clave);
 cabecera_pagina($sec['nombre'], e($sec['descripcion']), $botones, $sec['icono'], $sec['color']);
 ?>
+<?php if ($filtro_persona): ?>
+  <div class="filtros">
+    <a class="chip chip-activo" href="<?= e(url('seccion.php?s=' . $clave . '&lista=1')) ?>" title="Quitar el filtro">Solo de <?= e($filtro_persona['nombre']) ?> ×</a>
+    <a class="chip" href="<?= e(url('personas.php')) ?>"><?= icono('atras', 'ico ico-mini') ?>Personas</a>
+  </div>
+<?php endif; ?>
 
 <?php if ($clave === 'familia' && !$archivados): ?>
   <?php
   $gente = personas($pdo);
+  if ($filtro_persona) $gente = array_values(array_filter($gente, static fn($p) => (int)$p['id'] === (int)$filtro_persona['id']));
   $de_persona = [];
   foreach ($elementos as $el) $de_persona[(int)$el['persona_id']][] = $el;
   ?>
