@@ -98,6 +98,24 @@ function sembrar(PDO $pdo): array {
         crear_registro($pdo, ['elemento_id' => $id['luz'], 'fecha' => $f, 'tipo' => 'Factura', 'titulo' => 'Factura luz', 'coste' => $c], $id['admin']);
     }
     crear_registro($pdo, ['elemento_id' => $id['luz'], 'fecha' => '2026-09-10', 'tipo' => 'Incidencia', 'titulo' => 'Cambio de contador', 'coste' => '25'], $id['admin']);
+    // Comunidad de propietarios con dos recibos desglosados en 2026 (uno con
+    // obra extraordinaria) y uno de 2025 sin desglose. Sin coste en la ficha
+    // para no mover el gasto fijo mensual que comprueban otras pruebas.
+    $id['comunidad'] = $g('contratos', 'comunidad', ['nombre' => 'Comunidad de prueba', 'enlace_id' => $id['casa'],
+        'datos' => ['cuota_participacion' => '8,355', 'cuota_zona' => '21,23', 'analisis' => 'El ascensor es lo más caro en un trimestre normal.']]);
+    $recibo = static fn(string $f, string $t, string $c) => crear_registro($pdo, ['elemento_id' => $id['comunidad'], 'fecha' => $f,
+        'tipo' => 'Recibo', 'titulo' => $t, 'coste' => $c], $id['admin']);
+    $id['recibo_1t'] = $recibo('2026-03-26', 'Comunidad 1T26', '84,78');
+    $id['recibo_2t'] = $recibo('2026-06-30', 'Comunidad 2T26', '290,17');
+    $id['recibo_4t25'] = $recibo('2025-12-20', 'Comunidad 4T25', '80');
+    guardar_partidas($pdo, $id['recibo_1t'], [
+        ['concepto' => 'Mantenimiento piscina', 'categoria' => 'Piscina', 'zona' => 'escalera', 'total' => '290,40'],
+        ['concepto' => 'Administrador', 'categoria' => 'Administración', 'zona' => 'comun', 'total' => '276,86'],
+    ], $id['admin']);
+    guardar_partidas($pdo, $id['recibo_2t'], [
+        ['concepto' => 'Mantenimiento piscina', 'categoria' => 'Piscina', 'zona' => 'escalera', 'total' => '290,40'],
+        ['concepto' => 'Obra fuga de la piscina', 'categoria' => 'Piscina', 'zona' => 'comun', 'total' => '2.735,10', 'extraordinaria' => true],
+    ], $id['admin']);
     $id['documento'] = guardar_documento_bytes($pdo, $id['dni'], 'DNI escaneado', 'dni.pdf', "%PDF-1.4\n% prueba\n", $id['admin']);
     return $id;
 }

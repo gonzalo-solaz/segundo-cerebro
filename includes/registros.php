@@ -76,6 +76,7 @@ function borrar_registro(PDO $pdo, int $id, int $elemento_id, ?int $usuario_id =
     $st->execute([$id, $elemento_id]);
     $titulo = $st->fetchColumn();
     if ($titulo === false) return;
+    $pdo->prepare('DELETE FROM partidas WHERE registro_id = ?')->execute([$id]);
     $pdo->prepare('DELETE FROM registros WHERE id = ?')->execute([$id]);
     anotar($pdo, $usuario_id, "borró el apunte «{$titulo}»");
 }

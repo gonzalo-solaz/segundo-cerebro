@@ -26,6 +26,9 @@ foreach ($sec['tipos'] as $t => $def) {
 
 if ($clave === 'contratos') {
     $botones .= '<a class="btn btn-sutil" href="' . e(url('gasto-suministros.php')) . '">' . icono('historial') . 'Gasto en suministros</a>';
+    if (elementos_comunidad($pdo)) {
+        $botones .= '<a class="btn btn-sutil" href="' . e(url('gasto-comunidad.php')) . '">' . icono('historial') . 'Gasto en comunidad</a>';
+    }
 }
 
 cabecera($sec['nombre'], 'seccion:' . $clave);

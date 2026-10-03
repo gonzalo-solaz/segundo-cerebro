@@ -24,7 +24,8 @@ function api_ejecutar(PDO $pdo, array $p, ?array $archivo = null): array {
             return api_estado($pdo);
 
         case 'esquema':
-            return ['secciones' => api_esquema(), 'repetir' => opciones_repetir(), 'relaciones' => relaciones()];
+            return ['secciones' => api_esquema(), 'repetir' => opciones_repetir(), 'relaciones' => relaciones(),
+                    'partidas_comunidad' => ['categorias' => categorias_comunidad(), 'zonas' => array_map(static fn($z) => $z[0] . ' (coeficiente: ' . $z[1] . ')', zonas_comunidad())]];
 
         case 'personas':
             return ['personas' => personas($pdo, false)];
@@ -66,6 +67,15 @@ function api_ejecutar(PDO $pdo, array $p, ?array $archivo = null): array {
             $id = crear_registro($pdo, $datos, null);
             return ['registro_id' => $id, 'elemento' => elemento($pdo, (int)$datos['elemento_id'])];
 
+        case 'partidas':
+            // Desglose de un recibo de la comunidad. Sustituye el que hubiera.
+            return guardar_partidas($pdo, (int)($datos['registro_id'] ?? 0), (array)($datos['partidas'] ?? []), null);
+
+        case 'comunidad':
+            $el = elemento($pdo, (int)($datos['id'] ?? 0));
+            if (!$el || $el['seccion'] !== 'contratos' || $el['tipo'] !== 'comunidad') throw new RuntimeException('Ese elemento no es una comunidad de propietarios.');
+            return ['elemento' => api_elemento_resumen($el), 'analisis' => analisis_comunidad($pdo, $el['id'])];
+
         case 'documento':
             if (!$archivo) throw new RuntimeException('Falta el archivo.');
             $id = guardar_documento_bytes($pdo, (int)($datos['elemento_id'] ?? 0), (string)($datos['titulo'] ?? ''),
@@ -75,7 +85,7 @@ function api_ejecutar(PDO $pdo, array $p, ?array $archivo = null): array {
         case 'actividad':
             return ['actividad' => actividad_reciente($pdo, 30)];
     }
-    throw new RuntimeException("Acción desconocida «{$accion}». Las que hay: estado, esquema, personas, buscar, ficha, elemento, vencimiento, hecho, registro, documento, actividad.");
+    throw new RuntimeException("Acción desconocida «{$accion}». Las que hay: estado, esquema, personas, buscar, ficha, elemento, vencimiento, hecho, registro, partidas, comunidad, documento, actividad.");
 }
 
 function api_estado(PDO $pdo): array {

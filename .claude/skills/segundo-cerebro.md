@@ -1,6 +1,6 @@
 ---
 name: segundo-cerebro
-description: "Gestiona el Segundo cerebro de Gonzalo (gonzalosolaz.tech/segundo-cerebro): el panel de mandos de la casa con vivienda, vehículos, salud, documentos, contratos y familia. Graba en la app lo que el usuario pasa (pólizas, permisos de circulación, fichas técnicas, ITV, DNI, pasaportes, informes médicos, recetas, facturas, contratos de luz o internet), cuenta qué vence, marca avisos como hechos, añade o cambia secciones y campos, y prepara los cambios de código para subirlos con FileZilla. Usa esta skill siempre que se trabaje en la carpeta segundo-cerebro. Triggers: 'te paso la póliza', 'guarda esto en el segundo cerebro', 'apunta la ITV', 'ha caducado el DNI', 'qué vence este mes', 'qué tengo pendiente', 'renové el seguro', 'he pasado la revisión del coche', 'añade una sección', 'quiero controlar también X', 'nuevo campo', 'sube los cambios', 'qué archivos subo', 'integrar finanzas', 'dale acceso a mi pareja'."
+description: "Gestiona el Segundo cerebro de Gonzalo (gonzalosolaz.tech/segundo-cerebro): el panel de mandos de la casa con vivienda, vehículos, salud, documentos, contratos y familia. Graba en la app lo que el usuario pasa (pólizas, permisos de circulación, fichas técnicas, ITV, DNI, pasaportes, informes médicos, recetas, facturas, contratos de luz o internet), cuenta qué vence, marca avisos como hechos, añade o cambia secciones y campos, y prepara los cambios de código para subirlos con FileZilla. Usa esta skill siempre que se trabaje en la carpeta segundo-cerebro. Triggers: 'te paso la póliza', 'guarda esto en el segundo cerebro', 'apunta la ITV', 'ha caducado el DNI', 'qué vence este mes', 'qué tengo pendiente', 'renové el seguro', 'he pasado la revisión del coche', 'liquidación de la comunidad', 'recibo de la comunidad', 'gastos de la comunidad', 'añade una sección', 'quiero controlar también X', 'nuevo campo', 'sube los cambios', 'qué archivos subo', 'integrar finanzas', 'dale acceso a mi pareja'."
 ---
 
 # Segundo cerebro
@@ -48,6 +48,33 @@ La vía es `php remoto.php <acción>` (habla con la API del servidor; ver la cab
 6. **Adjunta el original**: `php remoto.php documento <ruta> elemento=<id> titulo="Póliza 2026"`.
 7. **Las fechas de la ficha crean sus avisos solas** (ITV, caducidad, renovación…). No crees un vencimiento a mano para algo que ya tiene campo. Usa `vencimiento` solo para lo que no tiene campo («cambiar las ruedas en primavera»).
 8. **«Renové el seguro / pasé la ITV»**: busca el aviso pendiente (`php remoto.php ficha <id>`) y márcalo con `php remoto.php hecho <id>` — si se repite, el siguiente se programa solo. Si el usuario te da la fecha nueva (la ITV siguiente), actualiza el campo de la ficha.
+
+### Liquidación de la comunidad de propietarios (cada trimestre)
+
+Cuando Gonzalo deje una liquidación nueva en `facturas/comunidad/` (o la pase por el chat), el análisis de `gasto-comunidad.php` se pone al día así. Los números se calculan solos con las partidas; lo único que se reescribe a mano es el texto del campo `analisis`.
+
+1. **Ficha**: `php remoto.php buscar contratos texto="Comunidad"` → id. Sus coeficientes están en `cuota_participacion` (zona común) y `cuota_zona` (escalera).
+2. **¿Ya está?** `php remoto.php ficha <id>`: mira en el historial que ese trimestre no tenga ya su `Recibo`.
+3. **Lee el PDF entero.** Página 1: balance de caja (no sirve para el reparto). Página 2, «Balance de gastos desglosado por conceptos de distribución»: cada partida por bloque (Zona común, Escalera A, Escalera B, Garaje). Página 3, «Distribución de cargas»: la fila **GONZALO SOLAZ SOLER, 2º-6ª (A)**, con su zona común + escalera A = total a pagar.
+4. **Recibo**: `registro` con `tipo: "Recibo"`, fecha = la de la liquidación, título «Comunidad 4T26», `coste` = total de Gonzalo en la página 3 y notas «Zona común X + escalera A Y», más lo raro (cobro en dos mitades, derrama…).
+5. **Partidas**: `php remoto.php partidas <json>` con el `registro_id` del paso 4. Solo las líneas de **Zona común** (`zona: "comun"`) y **Escalera A** (`zona: "escalera"`) de la página 2: nunca Escalera B ni Garaje. El «Fondo de reserva 5 %» de cada bloque también va, con la categoría «Fondo de reserva». Lo del apartado «Gastos y reparaciones extraordinarias» (obras, reparaciones, limpiezas extra) lleva `extraordinaria: true`. El total de cada línea, tal cual; la parte la calcula la app. La respuesta da `diferencia` con el recibo: 1-2 céntimos es redondeo (el administrador redondea por bloque); si es más, falta o sobra una línea.
+   Las categorías válidas las da `esquema` → `partidas_comunidad`. El mapa que se usó en 2026 (mantenlo igual para poder comparar):
+   | Concepto en la liquidación | Categoría |
+   |---|---|
+   | Manto. Piscina, depuradora, obras en la piscina | Piscina |
+   | Manto. Ascensor (incluye teléfono), reparaciones de ascensor | Ascensor |
+   | Limpieza viviendas, limpiezas extra | Limpieza |
+   | Luz eléctrica viviendas | Luz |
+   | Agua | Agua |
+   | Seguro comunitario | Seguro |
+   | Administrador, gastos bancarios, retenciones IRPF, suplidos, certificado digital (DEH), prevención de riesgos (CAE) | Administración |
+   | Extintores, BIES, detección de incendios | Contra incendios |
+   | Bombillas, electricidad u otras reparaciones de la escalera | Reparaciones |
+   | Fondo de reserva 5 % | Fondo de reserva |
+6. **PDF**: `php remoto.php documento <pdf> elemento=<id> titulo="Liquidación 4T26"`.
+7. **Coste de la ficha**: si el trimestre fue normal (sin obras) y el recibo cambió, actualiza `coste` (cuenta en el gasto fijo mensual).
+8. **Análisis**: `php remoto.php comunidad <id>` da los números. Reescribe `datos.analisis` de la ficha (`elemento` con `id`) en 10-15 líneas: lo pagado en el año y lo que se estima para el año entero; las 3 partidas que más cuestan; qué ha cambiado respecto al trimestre anterior (la tabla recibo a recibo); y las preguntas abiertas para la junta. Conserva lo que siga valiendo, quita lo resuelto y no inventes precios de mercado: si citas uno, que venga de una fuente abierta en esa misma sesión.
+9. **Cuéntaselo a Gonzalo** en 3-4 líneas: cuánto paga este trimestre, qué ha subido o bajado, y si hay algo que preguntar al administrador.
 
 Sobre el contexto de la casa:
 - Personas: usa las que devuelve `personas`. Si el papel es de alguien que no está, pregunta antes de crearlo.

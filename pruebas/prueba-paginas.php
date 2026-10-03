@@ -60,6 +60,11 @@ foreach (array_keys(secciones()) as $s) {
 pinta_bien('el gasto en suministros suma las facturas del año', pedir('gasto-suministros.php'), '181,02');
 pinta_bien('y deja el año anterior aparte', pedir('gasto-suministros.php'), '70,10');
 pinta_bien('Contratos enlaza al gasto en suministros', pedir('seccion.php', ['s' => 'contratos']), 'gasto-suministros.php');
+pinta_bien('el gasto en comunidad suma la piscina con su obra', pedir('gasto-comunidad.php'), '351,82');
+pinta_bien('y enseña el análisis escrito', pedir('gasto-comunidad.php', ['id' => (string)$id['comunidad']]), 'El ascensor es lo más caro');
+pinta_bien('y avisa del recibo sin desglose', pedir('gasto-comunidad.php'), 'no tiene desglose');
+pinta_bien('Contratos enlaza al gasto en comunidad', pedir('seccion.php', ['s' => 'contratos']), 'gasto-comunidad.php');
+pinta_bien('la ficha de la comunidad enlaza a su análisis', pedir('elemento.php', ['id' => (string)$id['comunidad']]), 'Gasto por partidas');
 pinta_bien('sección que no existe → página de error', pedir('seccion.php', ['s' => 'nada']), 'Esa sección no existe');
 foreach (['furgo', 'casa', 'ficha_leo', 'dni', 'seguro', 'netflix', 'cole', 'cumple', 'fontanero', 'trat'] as $k) {
     pinta_bien("ficha de {$k}", pedir('elemento.php', ['id' => (string)$id[$k]]), 'Avisos');

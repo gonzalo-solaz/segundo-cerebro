@@ -18,11 +18,16 @@
 //      php remoto.php hecho <id>
 //      php remoto.php registro <archivo.json | JSON>
 //            {"elemento_id":12,"fecha":"2026-09-30","tipo":"Mantenimiento","titulo":"Aceite y filtros","valor":154300,"coste":189.9}
+//      php remoto.php partidas <archivo.json | JSON>      Desglose de un recibo de la comunidad (sustituye el anterior)
+//            {"registro_id":40,"partidas":[{"concepto":"Mantenimiento piscina","categoria":"Piscina","zona":"escalera","total":290.40},
+//                                          {"concepto":"Obra fuga","categoria":"Piscina","zona":"comun","total":2735.10,"extraordinaria":true}]}
+//            zona comun|escalera → la parte se calcula con los coeficientes de la ficha; o "parte" a mano
+//      php remoto.php comunidad <id>                Números del análisis (por año, categoría y recibo)
 //      php remoto.php documento <archivo.pdf> elemento=<id> [titulo="..."]
 //      php remoto.php actividad
 //
 //  Conexión en acceso.json (NO va al repositorio ni al servidor):
-//      {"url": "https://gonzalosolaz.tech/segundo-cerebro", "clave": "la API_CLAVE de config.php"}
+//      {"url": "https://gonzalosolaz.tech/admin", "clave": "la API_CLAVE de config.php"}
 // =====================================================================
 if (PHP_SAPI !== 'cli') { http_response_code(403); exit('Solo por línea de comandos.'); }
 date_default_timezone_set('Europe/Madrid');
@@ -116,11 +121,14 @@ switch ($accion) {
         mostrar(llamar('buscar', ['seccion' => $pos[0] ?? '', 'texto' => $kv['texto'] ?? '', 'archivados' => !empty($kv['archivados'])]));
     case 'ficha':
         mostrar(llamar('ficha', ['id' => (int)($pos[0] ?? 0)]));
+    case 'comunidad':
+        mostrar(llamar('comunidad', ['id' => (int)($pos[0] ?? 0)]));
     case 'hecho':
         mostrar(llamar('hecho', ['id' => (int)($pos[0] ?? 0)]));
     case 'elemento':
     case 'vencimiento':
     case 'registro':
+    case 'partidas':
         mostrar(llamar($accion, leer_json_arg($pos[0] ?? null)));
     case 'documento':
         if (empty($pos[0]) || empty($kv['elemento'])) { fwrite(STDERR, "Uso: php remoto.php documento <archivo> elemento=<id> [titulo=\"...\"]\n"); exit(1); }

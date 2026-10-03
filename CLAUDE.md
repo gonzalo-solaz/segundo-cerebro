@@ -229,6 +229,20 @@ renovación 12/03/2027 (aviso creado), tomador Gonzalo. Falta: teléfono de
 asistencia (los papeles solo dan contacto@tuio.com) y adjuntar los PDF (recibo,
 IPID, condiciones particulares), que se pasaron en el chat y no están en disco.
 
+**Facturas de suministros y gasto anual (3/10/2026, petición de Gonzalo):** los
+PDF que Gonzalo deja en `facturas/` (gitignored y excluida del despliegue: llevan
+CUPS e IBAN parcial) se graban en la ficha del suministro con `registro` (tipo
+`Factura`, `coste`, fecha = la de la factura) + `documento`. Grabadas en
+producción: gas julio (14,62 €, ficha 4), luz agosto (100,52 €, ficha 6) y
+Pepephone septiembre (44,90 €, ficha 3); no repetir. La página
+`gasto-suministros.php` (botón en Contratos) suma por año, suministro y mes
+SOLO los apuntes tipo `Factura` de suministros (`gasto_suministros()` en
+`includes/elementos.php`): una incidencia con coste no es consumo. La migración
+003 pasa a `Factura` esas tres, que se grabaron antes sin tipo (la API no tiene
+editar/borrar registro). El año a medias sale bajo, no se proyecta nada. Pendiente:
+el campo `coste` de los suministros sigue vacío, así que el gasto fijo mensual no
+cuenta luz, gas ni internet.
+
 **Enlaces entre elementos (3/10/2026, petición de Gonzalo):** los suministros y
 seguros pueden pertenecer a una vivienda (los seguros también a un vehículo).
 Columna `elementos.enlace_id` (migración 002), clave `enlace` en el tipo de
@@ -236,3 +250,22 @@ Columna `elementos.enlace_id` (migración 002), clave `enlace` en el tipo de
 mensual, y el listado de Vivienda los resume. Los contratos siguen viviendo en
 Contratos (gasto fijo, avisos): no se duplican. Por la API: `enlace_id` en
 `elemento`. Borrar el padre deja a los hijos sin enlace.
+
+**Comunidad de propietarios (3/10/2026, petición de Gonzalo):** tipo
+`contratos/comunidad` (enlazado a la vivienda, con coeficientes y un campo
+`analisis`) y tipo de apunte `Recibo` en Contratos. Cada liquidación trimestral =
+un `Recibo` con lo que paga Gonzalo (no el total de la comunidad) + el PDF + su
+**desglose por partidas** (tabla `partidas`, migración 004, `includes/comunidad.php`,
+acción `partidas` de la API). La página `gasto-comunidad.php` (botón en Contratos y
+en la ficha) saca sola, por año, lo que le cuesta cada categoría separando lo
+ordinario de las obras, y la tabla recibo a recibo; las conclusiones escritas
+viven en el campo `analisis` de la ficha. **Por qué así:** Gonzalo quería que el
+análisis viviera en la app y se actualizara con cada factura; los números se
+calculan (no se reescriben) y solo el texto lo pone al día Claude. El procedimiento
+de cada trimestre está en la skill («Liquidación de la comunidad»). Sus
+coeficientes: 8,355 % zona común y 21,230 % escalera A (2º-6ª, José Vilella 7); no
+tiene garaje ni trastero; ascensor, limpieza, luz, agua y piscina se reparten
+50/50 entre escaleras; el garaje no paga piscina. Los PDF están en
+`facturas/comunidad/` y los JSON grabados, en `private/comunidad/`. Informe
+inicial (foto fija de 1T-3T 2026, con fuentes de precios de mercado) en Claude Docs:
+https://claude.ai/code/artifact/bed5a1b2-46db-404b-bbcf-79e190dcb31d.

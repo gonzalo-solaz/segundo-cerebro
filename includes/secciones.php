@@ -263,7 +263,7 @@ function secciones(): array {
         // -------------------------------------------------------------
         'contratos' => [
             'nombre' => 'Contratos', 'icono' => 'contrato', 'color' => '#0ab39c',
-            'descripcion' => 'Suministros, seguros y suscripciones: cuánto cuestan, cuándo renuevan y cuándo acaba la permanencia.',
+            'descripcion' => 'Suministros, seguros, comunidad y suscripciones: cuánto cuestan, cuándo renuevan y cuándo acaba la permanencia.',
             'tipos' => [
                 'suministro' => [
                     'nombre' => 'Suministro', 'ejemplo' => 'Luz de casa', 'persona' => 'opcional', 'persona_etiqueta' => 'Titular',
@@ -298,6 +298,26 @@ function secciones(): array {
                         'telefono_asistencia' => ['etiqueta' => 'Teléfono de asistencia', 'tipo' => 'tel'],
                     ],
                 ],
+                // Cada liquidación trimestral se apunta en el historial como «Recibo»
+                // con lo que paga esta casa (no el total de la comunidad).
+                'comunidad' => [
+                    'nombre' => 'Comunidad de propietarios', 'ejemplo' => 'Comunidad de José Vilella 7', 'persona' => 'opcional',
+                    'persona_etiqueta' => 'Propietario',
+                    'enlace' => ['etiqueta' => 'Vivienda', 'a' => [['vivienda', 'inmueble']]],
+                    'campos' => [
+                        'administrador' => ['etiqueta' => 'Administrador de fincas', 'tipo' => 'texto', 'resumen' => true],
+                        'telefono' => ['etiqueta' => 'Teléfono del administrador', 'tipo' => 'tel'],
+                        'email' => ['etiqueta' => 'Email del administrador', 'tipo' => 'email'],
+                        'coste' => $coste,
+                        'periodicidad' => $periodicidad,
+                        'piso' => ['etiqueta' => 'Piso y escalera', 'tipo' => 'texto', 'ayuda' => 'Como sale en la liquidación. Ej.: 2º-6ª, escalera A.'],
+                        'cuota_participacion' => ['etiqueta' => 'Cuota de participación en el edificio', 'tipo' => 'numero', 'unidad' => '%'],
+                        'cuota_zona' => ['etiqueta' => 'Cuota en su escalera o zona', 'tipo' => 'numero', 'unidad' => '%',
+                            'ayuda' => 'La «recalculada por zonas»: la que se aplica a los gastos de la escalera (ascensor, limpieza…).'],
+                        'analisis' => ['etiqueta' => 'Análisis y preguntas para la junta', 'tipo' => 'area',
+                            'ayuda' => 'Las conclusiones de «Gasto en comunidad». Claude lo pone al día con cada liquidación.'],
+                    ],
+                ],
                 'suscripcion' => [
                     'nombre' => 'Suscripción', 'ejemplo' => 'Netflix', 'persona' => 'opcional', 'persona_etiqueta' => 'A nombre de',
                     'campos' => [
@@ -310,7 +330,7 @@ function secciones(): array {
                 ],
             ],
             'sugerencias' => [['Comparar tarifas de luz y gas', 12, 15]],
-            'registros' => ['tipos' => ['Factura', 'Incidencia', 'Cambio de tarifa', 'Reclamación', 'Parte al seguro', 'Otro'],
+            'registros' => ['tipos' => ['Factura', 'Recibo', 'Incidencia', 'Cambio de tarifa', 'Reclamación', 'Parte al seguro', 'Otro'],
                             'valor' => null, 'unidad' => ''],
         ],
 

@@ -71,6 +71,9 @@ $coste_hijos = 0.0;
 foreach ($hijos as $h) $coste_hijos += coste_mensual($h['datos']);
 
 $acciones = '<a class="btn btn-sutil" href="' . e(url('elemento-editar.php?id=' . $id)) . '">' . icono('editar') . 'Editar</a>';
+if ($el['seccion'] === 'contratos' && $el['tipo'] === 'comunidad') {
+    $acciones = '<a class="btn btn-sutil" href="' . e(url('gasto-comunidad.php?id=' . $id)) . '">' . icono('historial') . 'Gasto por partidas</a>' . $acciones;
+}
 cabecera($el['nombre'], 'seccion:' . $el['seccion']);
 cabecera_pagina($el['nombre'],
     '<a href="' . e(url('seccion.php?s=' . $el['seccion'])) . '">' . e($sec['nombre']) . '</a> · ' . e($def['nombre']),

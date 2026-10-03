@@ -133,23 +133,55 @@ guardar_elemento($pdo, 'contratos', 'seguro', ['nombre' => 'Seguro de hogar', 'e
     'datos' => ['ramo' => 'Hogar', 'coste' => '240', 'periodicidad' => 'Anual']], $id['seguro'], $id['admin']);
 $hijos = array_column(elementos_enlazados($pdo, $id['casa']), 'id');
 sort($hijos);
-comprueba('la casa lista sus dos contratos', $hijos === [min($id['seguro'], $id['luz']), max($id['seguro'], $id['luz'])]);
+$esperados = [$id['seguro'], $id['luz'], $id['comunidad']];
+sort($esperados);
+comprueba('la casa lista sus contratos y su comunidad', $hijos === $esperados);
 comprueba('el contrato sabe a qué casa pertenece', elemento($pdo, $id['luz'])['enlace_nombre'] === 'Casa de prueba');
 $res = resumen_enlazados($pdo);
-comprueba('el resumen cuenta 2 y suma 80 €/mes (60 + 240/12)', $res[$id['casa']]['n'] === 2 && abs($res[$id['casa']]['mensual'] - 80.0) < 0.001, json_encode($res));
-comprueba('la vivienda ofrece añadir suministros y seguros', array_column(tipos_que_enlazan('vivienda', 'inmueble'), 1) === ['suministro', 'seguro']);
+comprueba('el resumen cuenta 3 y suma 80 €/mes (60 + 240/12; la comunidad de prueba no lleva coste)', $res[$id['casa']]['n'] === 3 && abs($res[$id['casa']]['mensual'] - 80.0) < 0.001, json_encode($res));
+comprueba('la vivienda ofrece añadir suministros, seguros y su comunidad', array_column(tipos_que_enlazan('vivienda', 'inmueble'), 1) === ['suministro', 'seguro', 'comunidad']);
 comprueba('un DNI no cuelga de nada', tipos_que_enlazan('documentos', 'dni') === []);
 $e = lanza(static fn() => guardar_elemento($pdo, 'contratos', 'suministro', $sum($id['furgo']), $id['luz'], $id['admin']));
 comprueba('un suministro no se puede enlazar a un vehículo', $e instanceof ErrorValidacion);
 guardar_elemento($pdo, 'contratos', 'seguro', ['nombre' => 'Seguro de la furgo', 'enlace_id' => $id['furgo'], 'datos' => ['ramo' => 'Coche o moto']], null, $id['admin']);
 comprueba('un seguro sí se puede enlazar a un vehículo', count(elementos_enlazados($pdo, $id['furgo'])) === 1);
 cambiar_activo_elemento($pdo, $id['seguro'], false, null);
-comprueba('archivar un contrato lo quita de la ficha de la casa', array_column(elementos_enlazados($pdo, $id['casa']), 'id') === [$id['luz']]);
+$quedan = array_column(elementos_enlazados($pdo, $id['casa']), 'id');
+comprueba('archivar un contrato lo quita de la ficha de la casa', !in_array($id['seguro'], $quedan, true) && in_array($id['luz'], $quedan, true));
 cambiar_activo_elemento($pdo, $id['seguro'], true, null);
 guardar_elemento($pdo, 'vivienda', 'equipo', ['nombre' => 'Caldera', 'enlace_id' => $id['casa'], 'datos' => ['marca' => 'Junkers']], $id['caldera'], $id['admin']);
 comprueba('un tipo sin «enlace» ignora el enlace que le llegue', elemento($pdo, $id['caldera'])['enlace_id'] === null);
 borrar_elemento($pdo, $id['casa'], $id['admin']);
 comprueba('borrar la casa deja sus contratos sin enlace (no huérfanos)', elemento($pdo, $id['luz'])['enlace_id'] === null);
+
+echo "\nComunidad de propietarios\n";
+$an = analisis_comunidad($pdo, $id['comunidad']);
+comprueba('los recibos se agrupan por año, el más reciente primero', array_keys($an['anios']) === [2026, 2025], implode(',', array_keys($an['anios'])));
+$p = partidas_de_registro($pdo, $id['recibo_1t']);
+comprueba('la parte sale de los coeficientes de la ficha (escalera 21,23 %, zona común 8,355 %)',
+    (float)$p[0]['parte'] === 61.65 && (float)$p[1]['parte'] === 23.13, json_encode(array_column($p, 'parte')));
+$pis = $an['anios'][2026]['categorias']['Piscina'];
+comprueba('separa lo ordinario de las obras', abs($pis['ord'] - 123.30) < 0.001 && abs($pis['extra'] - 228.52) < 0.001 && abs($pis['total'] - 351.82) < 0.001, json_encode($pis));
+comprueba('la partida más cara va primero', array_key_first($an['anios'][2026]['categorias']) === 'Piscina');
+comprueba('el año suma lo pagado en los recibos', abs($an['anios'][2026]['pagado'] - 374.95) < 0.001);
+comprueba('el recibo medio sin obras no cuenta la obra', abs($an['anios'][2026]['media_ordinaria'] - round((84.78 + 61.65) / 2, 2)) < 0.001, (string)$an['anios'][2026]['media_ordinaria']);
+comprueba('un recibo sin desglose se cuenta como tal', $an['anios'][2025]['sin_desglose'] === 1 && $an['anios'][2025]['categorias'] === []);
+comprueba('cada recibo lleva su etiqueta de mes', $an['recibos'][$id['recibo_2t']]['etiqueta'] === 'jun 26');
+$r = guardar_partidas($pdo, $id['recibo_1t'], [
+    ['concepto' => 'Mantenimiento piscina', 'categoria' => 'Piscina', 'zona' => 'escalera', 'total' => 290.40],
+    ['concepto' => 'Administrador', 'categoria' => 'Administración', 'zona' => 'comun', 'total' => 276.86],
+], null);
+comprueba('regrabar el desglose lo sustituye (no duplica) y dice si cuadra con el recibo',
+    count(partidas_de_registro($pdo, $id['recibo_1t'])) === 2 && abs($r['diferencia']) < 0.001, json_encode($r));
+$r = guardar_partidas($pdo, $id['recibo_4t25'], [['concepto' => 'Ajuste a mano', 'categoria' => 'Otros', 'total' => 500, 'parte' => 80]], null);
+comprueba('la parte también se puede dar a mano', abs($r['suma_parte'] - 80) < 0.001 && abs($r['diferencia']) < 0.001, json_encode($r));
+$e = lanza(static fn() => guardar_partidas($pdo, $id['registro'], [['concepto' => 'x', 'categoria' => 'Otros', 'total' => 1, 'parte' => 1]], null));
+comprueba('las partidas solo van en recibos de una comunidad', $e instanceof ErrorValidacion);
+$e = lanza(static fn() => guardar_partidas($pdo, $id['recibo_1t'], [['concepto' => 'Jardín', 'categoria' => 'Jardinería', 'zona' => 'comun', 'total' => 10]], null));
+comprueba('una categoría que no está en la lista se rechaza', $e instanceof ErrorValidacion);
+comprueba('y no se pierde lo que había', count(partidas_de_registro($pdo, $id['recibo_1t'])) === 2);
+borrar_registro($pdo, $id['recibo_2t'], $id['comunidad'], null);
+comprueba('borrar un recibo borra sus partidas', partidas_de_registro($pdo, $id['recibo_2t']) === []);
 
 echo "\nPersonas y accesos\n";
 $e = lanza(static fn() => crear_usuario($pdo, ['nombre' => 'Otro', 'email' => 'ADMIN@ejemplo.test']));

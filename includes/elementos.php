@@ -324,6 +324,7 @@ function borrar_elemento(PDO $pdo, int $id, ?int $usuario_id = null): ?string {
     foreach (documentos_de($pdo, $id) as $d) borrar_archivo_documento($d);
     // Se borran los hijos a mano además del ON DELETE CASCADE: si un día las
     // claves foráneas no están activas, no quedan huérfanos.
+    $pdo->prepare('DELETE FROM partidas WHERE registro_id IN (SELECT id FROM registros WHERE elemento_id = ?)')->execute([$id]);
     foreach (['vencimientos', 'registros', 'documentos'] as $tabla) {
         $pdo->prepare("DELETE FROM {$tabla} WHERE elemento_id = ?")->execute([$id]);
     }

@@ -66,6 +66,16 @@ $r = $api('ficha', ['id' => $nuevo]);
 comprueba('ficha trae avisos y documentos', count($r['vencimientos']) === 1 && count($r['documentos']) === 1);
 $r = $api('actividad');
 comprueba('lo hecho por la API queda como de «Claude»', $r['actividad'][0]['quien'] === 'Claude');
+$r = $api('esquema');
+comprueba('el esquema explica las categorías de las partidas', in_array('Piscina', $r['partidas_comunidad']['categorias'], true));
+$r = $api('partidas', ['registro_id' => $id['recibo_2t'], 'partidas' => [
+    ['concepto' => 'Mantenimiento piscina', 'categoria' => 'Piscina', 'zona' => 'escalera', 'total' => 290.40],
+    ['concepto' => 'Obra fuga de la piscina', 'categoria' => 'Piscina', 'zona' => 'comun', 'total' => 2735.10, 'extraordinaria' => true]]]);
+comprueba('la API graba el desglose (números JSON) y cuadra con el recibo', $r['n'] === 2 && abs($r['diferencia']) < 0.001, json_encode($r));
+$r = $api('comunidad', ['id' => $id['comunidad']]);
+comprueba('y devuelve el análisis', abs($r['analisis']['anios'][2026]['categorias']['Piscina']['extra'] - 228.52) < 0.001);
+$e = lanza(static fn() => $api('comunidad', ['id' => $id['luz']]));
+comprueba('el análisis solo es de comunidades', $e instanceof RuntimeException);
 $e = lanza(static fn() => api_ejecutar($pdo, ['accion' => 'borrar-todo']));
 comprueba('acción desconocida → lista las que hay', $e instanceof RuntimeException && str_contains($e->getMessage(), 'estado'));
 $e = lanza(static fn() => api_ejecutar($pdo, ['accion' => 'elemento', 'datos' => '{roto']));
