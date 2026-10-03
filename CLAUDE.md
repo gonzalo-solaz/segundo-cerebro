@@ -398,7 +398,9 @@ copia: pide a su API la acción `panel` (marcado, datos, versión, avisos; siemp
 con la última copia en `private/cache/finanzas-panel.json` si finanzas no contesta) y
 carga sus estáticos de `/finanzas-personales/assets/` (`panel.css`, `panel.js`,
 `chart.umd.min.js`; mismo dominio, así que la CSP `'self'` los admite). El panel se
-cambia en finanzas-personales y se ve igual en los dos sitios. El tema lo pone el botón
+cambia en finanzas-personales y se ve igual en los dos sitios. Aquí NO se pinta la tarjeta
+«Qué mirar» con los avisos de salud (la quitó Gonzalo, 3/10/2026: ya sabe que tiene movimientos
+sin clasificar); siguen en la pantalla Salud de finanzas. El tema lo pone el botón
 de aquí (el panel repinta los gráficos al cambiar `data-theme`). Decidido con Gonzalo:
 un solo código del panel (no fusionar repos: las funciones chocan); las pantallas de
 acción (importar, revisar, movimiento, nómina…) siguen en finanzas, abiertas por el pase,

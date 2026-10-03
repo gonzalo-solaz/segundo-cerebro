@@ -11,6 +11,10 @@
 //  (importar, revisar, nómina…) abren aún sus pantallas, sin contraseña, por
 //  el pase; se irán pasando aquí una a una.
 //
+//  No se pinta «Qué mirar» (los avisos de salud que da la API): Gonzalo lo
+//  quitó el 3/10/2026, ya sabe que tiene movimientos por clasificar. Las
+//  comprobaciones siguen en la pantalla de Salud de finanzas.
+//
 //  El marcado se imprime sin escapar: viene de nuestro propio servidor
 //  (finanzas), con clave, nunca de un usuario.
 // =====================================================================
@@ -27,17 +31,6 @@ cabecera('Finanzas', 'finanzas');
 ?>
 <?php if ($r['error']): ?>
   <div class="flash flash-aviso"><?= e($r['error']) ?><?= $d ? ' Enseño la última copia (' . e(fecha_corta(substr((string)$r['leido_en'], 0, 10)) . ' ' . substr((string)$r['leido_en'], 11, 5)) . ').' : '' ?></div>
-<?php endif; ?>
-
-<?php if (!empty($d['avisos'])): ?>
-  <section class="tarjeta">
-    <div class="tarjeta-cabecera"><h2><?= icono('alerta') ?>Qué mirar</h2></div>
-    <ul class="lista-docs">
-      <?php foreach ($d['avisos'] as $c): ?>
-        <li><strong><?= e($c['titulo']) ?></strong> <span class="tenue"><?= e(is_array($c['detalle']) ? implode(' · ', $c['detalle']) : (string)$c['detalle']) ?></span></li>
-      <?php endforeach; ?>
-    </ul>
-  </section>
 <?php endif; ?>
 
 <?php if (!empty($d['html'])): ?>

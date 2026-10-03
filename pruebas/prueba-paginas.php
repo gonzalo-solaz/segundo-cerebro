@@ -198,7 +198,7 @@ $r = pedir('finanzas.php');
 pinta_bien('Finanzas: monta el panel de finanzas (sus pestañas)', $r, 'id="year-tabs"');
 pinta_bien('con los estilos y el JS de la carpeta de finanzas (mismo dominio)', $r, '/finanzas-personales/assets/panel.js?v=abc123');
 comprueba('y sus datos, sin que un concepto pueda cerrar el script', str_contains($r['html'], '"concepto":"Cierra ') && !str_contains($r['html'], 'Cierra </script>'));
-pinta_bien('y lo que hay que mirar', $r, 'Revolut lleva 20 días sin importar');
+comprueba('y NO pinta «Qué mirar» (lo quitó Gonzalo)', !str_contains($r['html'], 'Qué mirar') && !str_contains($r['html'], 'Revolut lleva 20 días sin importar'));
 pinta_bien('y los botones a finanzas van por el pase', $r, 'finanzas-entrar.php?a=importador.php');
 pinta_bien('si finanzas no contesta, lo dice y enseña la última copia', $r, 'Enseño la última copia');
 @unlink($cache . '/finanzas-panel.json');
