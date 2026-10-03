@@ -373,3 +373,11 @@ body.publica { min-height: 100vh; display: grid; place-items: center; padding: 1
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; }
 }
+
+/* Tarjeta plegada (campos «aparte» de la ficha) */
+details.tarjeta-plegable > summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+details.tarjeta-plegable > summary::-webkit-details-marker { display: none; }
+details.tarjeta-plegable > summary h2 { margin: 0; }
+details.tarjeta-plegable > summary::after { content: "▾"; color: var(--tenue); transition: transform .15s; }
+details.tarjeta-plegable[open] > summary::after { transform: rotate(180deg); }
+details.tarjeta-plegable[open] > summary { margin-bottom: 12px; }
