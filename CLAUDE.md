@@ -305,8 +305,4 @@ los consejos de suspensión/mapas en `notas`; su seguro (contratos, id 12, Quali
 2025/5417233, 262,02 €/año, renovación 11/02/2027, con el histórico de Axa en notas) y
 sus 23 apuntes de historial (registros 28-50: revisiones desde 2016, compra por 27.200 €,
 ITV, neumáticos, refrigerante, batería, AdBlue). No repetir. El historial de Notion no
-trae kilómetros en 2025-12 ni 2026-09, y `km` queda en 219.263 (mayo 2025). **Pendiente:**
-fecha de la próxima ITV (última apuntada: 19/04/2024; no se ha inventado), teléfono de
-asistencia del seguro, y adjuntar los PDF de Notion (factura de compra, Norauto 17/12/2021,
-Manirapid 13/03/2023, pólizas). Los otros dos vehículos de Notion (Allroad C5 4.2 0913CMM,
-VW T4 California 2781KHZ, Opel Astra 2647HJR) siguen sin traer.
+trae kilómetros en 2025-12 ni 2026-09, y `km` queda en 219.263 (mayo 2025). Es un coche importado de Alemania (1.ª matriculación 02/11/2015; España 11/02/2020). ITV del 11/06/2026 apuntada (registro 51) y aviso de la siguiente el 11/06/2027 (deducido: anual por tener más de 10 años; confirmar con la pegatina). Adjuntos a la ficha 11: permiso+ficha técnica (escaneo), factura de compra, Norauto 17/12/2021, Manirapid 13/03/2023 y el plan de mantenimiento Audi; los PDF originales están en `facturas/audi/`. **Pendiente:** teléfono de asistencia del seguro y los PDF de las pólizas (no se han bajado). Ojo: el plan de mantenimiento marca la correa de distribución a 210.000 km y el historial no la muestra claramente. Los otros vehículos de Notion (Allroad C5 4.2 0913CMM, VW T4 California 2781KHZ, Opel Astra 2647HJR) siguen sin traer.
