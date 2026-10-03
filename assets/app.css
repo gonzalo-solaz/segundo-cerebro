@@ -61,7 +61,8 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; }
+a, button, summary, label, select { touch-action: manipulation; }
 body {
   margin: 0;
   background: var(--bg);
@@ -83,12 +84,12 @@ code { background: var(--panel-2); border: 1px solid var(--borde); padding: .08r
 .ico-mini { width: 14px; height: 14px; vertical-align: -2px; }
 
 /* ---------------- Maqueta: barra lateral (la propia), con los estilos de finanzas ---------------- */
-.app { min-height: 100vh; }
+.app { min-height: 100vh; min-height: 100dvh; }
 .lateral {
   position: fixed; inset: 0 auto 0 0; z-index: 40; width: min(84vw, var(--lateral));
   background: var(--panel); border-right: 1px solid var(--borde);
-  display: flex; flex-direction: column; padding: 18px 12px;
-  transform: translateX(-102%); transition: transform .28s var(--ease);
+  display: flex; flex-direction: column; padding: max(18px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+  transform: translateX(-102%); overscroll-behavior: contain; transition: transform .28s var(--ease);
 }
 .menu-abierto .lateral { transform: none; box-shadow: var(--sombra-alta); }
 .velo { display: none; }
@@ -119,18 +120,24 @@ code { background: var(--panel-2); border: 1px solid var(--borde); padding: .08r
 
 .barra-movil {
   position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 8px;
-  padding: 10px 14px; padding-top: max(10px, env(safe-area-inset-top));
+  padding: 10px max(14px, env(safe-area-inset-right)) 10px max(14px, env(safe-area-inset-left)); padding-top: max(10px, env(safe-area-inset-top));
   background: color-mix(in srgb, var(--panel) 88%, transparent); backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--borde);
 }
-.contenido { padding: 18px 14px 64px; max-width: 1280px; margin: 0 auto; min-width: 0; }
+.contenido {
+  padding: 18px max(14px, env(safe-area-inset-right)) calc(64px + env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+  max-width: 1280px; margin: 0 auto; min-width: 0;
+}
 
 @media (min-width: 960px) {
   .lateral { transform: none; width: var(--lateral); }
   .barra-movil, .velo, .menu-abierto .velo { display: none; }
   .principal { margin-left: var(--lateral); }
   .contenido { padding: 28px 32px 64px; }
+  .menu-abierto { overflow: auto; }
 }
+/* Con el menú abierto en el móvil, la página de detrás no se desplaza. */
+.menu-abierto { overflow: hidden; }
 
 /* ---------------- Tema: un icono u otro ---------------- */
 :root[data-theme="dark"] .solo-claro, :root:not([data-theme="dark"]) .solo-oscuro { display: none; }
@@ -244,8 +251,7 @@ a.tarjeta:hover { text-decoration: none; }
 .venc-pronto .venc-cuando { color: var(--ambar); font-weight: 600; }
 .venc-acciones { display: flex; align-items: center; gap: .15rem; }
 .venc-acciones form { margin: 0; }
-.venc-acciones .btn-icono { display: none; }
-@media (min-width: 560px) { .venc-acciones .btn-icono { display: inline-grid; } }
+.venc-acciones { flex: none; }
 .ts-proximo { font-size: .82rem; margin: .6rem 0 0; display: flex; gap: .35rem; align-items: center; color: var(--texto-2); }
 .ts-proximo.venc-vencido { color: var(--rojo); }
 .ts-proximo.venc-pronto { color: var(--ambar); }
@@ -433,7 +439,7 @@ details.desplegable[open] > summary { margin-bottom: .9rem; color: var(--texto);
 .bienvenida li { margin: .2rem 0; }
 
 /* ---------------- Acceso (login) ---------------- */
-body.publica { min-height: 100vh; display: grid; place-items: center; padding: 20px; }
+body.publica { min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: max(20px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom)); }
 .tarjeta-acceso { width: 100%; max-width: 400px; background: var(--panel); border: 1px solid var(--borde); border-radius: var(--radio); padding: 28px 24px; box-shadow: var(--sombra); }
 .acceso-marca { display: flex; align-items: center; gap: 10px; font-weight: 600; margin-bottom: 20px; color: var(--texto-2); }
 .tarjeta-acceso h1 { margin-bottom: 1rem; font-size: 1.2rem; }
@@ -542,3 +548,39 @@ details.tarjeta-plegable[open] > summary { margin-bottom: 12px; }
 
 /* Finanzas: fila de botones bajo las cifras */
 .acciones-fila-pagina { display: flex; flex-wrap: wrap; gap: .5rem; margin: 0 0 1rem; }
+
+/* ---------------- Móvil: dedos y pantallas estrechas ---------------- */
+/* Pantalla táctil: objetivos de al menos 40 px (Apple pide 44, Material 48). */
+@media (pointer: coarse) {
+  .btn { min-height: 40px; }
+  .btn-icono { width: 40px; height: 40px; }
+  .chip-boton, .filtros .chip { min-height: 36px; display: inline-flex; align-items: center; }
+  .menu a { padding: 11px 11px; }
+  .tabla .btn-icono { width: 36px; height: 36px; }
+}
+/* Los botones no se parten en escritorio, pero en un móvil estrecho (320 px) un
+   rótulo largo («Generar códigos de recuperación nuevos») se saldría de la tarjeta. */
+@media (max-width: 480px) {
+  .btn, .chip-boton { white-space: normal; text-align: center; max-width: 100%; }
+  .btn-hecho { white-space: nowrap; }
+  .cabecera-pagina { margin-bottom: 18px; gap: 12px; }
+  .cabecera-pagina .acciones { width: 100%; }
+  .cabecera-pagina .acciones > .btn { flex: 1 1 auto; }
+  h1 { font-size: 1.25rem; overflow-wrap: anywhere; }
+}
+
+/* Tabla que en el móvil se apila: cada fila pasa a ser un bloque, con la etiqueta
+   de cada celda (data-label) delante. Sin scroll lateral para llegar a los botones. */
+@media (max-width: 640px) {
+  .tabla-apilada thead { display: none; }
+  .tabla-apilada, .tabla-apilada tbody, .tabla-apilada tr, .tabla-apilada td { display: block; width: 100%; }
+  .tabla-apilada tr { padding: 12px 0; border-bottom: 1px solid var(--borde); }
+  .tabla-apilada tr:last-child { border-bottom: 0; }
+  .tabla-apilada td { border: 0; padding: 4px 0; display: flex; align-items: center; gap: 12px; min-width: 0; overflow-wrap: anywhere; }
+  .tabla-apilada td[data-label]::before { content: attr(data-label); flex: 0 0 7.2rem; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .04em; color: var(--tenue); }
+  .tabla-apilada td.celda-titulo { display: block; font-size: 15px; padding-bottom: 6px; }
+  .tabla-apilada td .en-linea { flex: 1; min-width: 0; }
+  .tabla-apilada td .en-linea select { width: 100%; }
+  .tabla-apilada td.acciones-fila { display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 8px; padding-top: 8px; white-space: normal; }
+  .tabla-apilada td.acciones-fila .en-linea { flex: none; }
+}

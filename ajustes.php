@@ -91,28 +91,28 @@ cabecera_pagina('Ajustes', 'Accesos de la familia y estado del sistema.', '', 'a
 <section class="tarjeta">
   <div class="tarjeta-cabecera"><h2><?= icono('persona') ?>Accesos</h2></div>
   <div class="tabla-scroll">
-    <table class="tabla">
+    <table class="tabla tabla-apilada">
       <thead><tr><th>Nombre</th><th>Email</th><th>Rol</th><th>Es…</th><th>Último acceso</th><th></th></tr></thead>
       <tbody>
         <?php foreach ($usuarios as $u): ?>
           <?php $yo = (int)$u['id'] === $uid; ?>
           <tr class="<?= $u['estado'] !== 'activo' ? 'apagado' : '' ?>">
-            <td><strong><?= e($u['nombre']) ?></strong><?= $yo ? ' <span class="tenue">(tú)</span>' : '' ?>
+            <td class="celda-titulo"><strong><?= e($u['nombre']) ?></strong><?= $yo ? ' <span class="tenue">(tú)</span>' : '' ?>
               <?php if ($u['estado'] !== 'activo'): ?><span class="chip">suspendido</span><?php endif; ?>
               <?php if ((int)$u['debe_cambiar'] === 1): ?><span class="chip" title="Aún no ha cambiado la contraseña temporal">temporal</span><?php endif; ?>
               <?php if (dos_pasos_activa($u)): ?><span class="chip" title="Verificación en dos pasos activada">2 pasos</span><?php endif; ?></td>
-            <td><?= e($u['email']) ?></td>
-            <td>
+            <td data-label="Email"><?= e($u['email']) ?></td>
+            <td data-label="Rol">
               <?php if ($yo): ?><?= e(roles()[$u['rol']] ?? $u['rol']) ?><?php else: ?>
                 <form method="post" class="en-linea"><?= csrf_input() ?><input type="hidden" name="accion" value="rol"><input type="hidden" name="usuario_id" value="<?= (int)$u['id'] ?>">
                   <select name="rol" data-auto-enviar><?= opciones_html(roles(), $u['rol'], false) ?></select><noscript><button class="btn btn-sutil">Cambiar</button></noscript></form>
               <?php endif; ?>
             </td>
-            <td>
+            <td data-label="Persona">
               <form method="post" class="en-linea"><?= csrf_input() ?><input type="hidden" name="accion" value="persona"><input type="hidden" name="usuario_id" value="<?= (int)$u['id'] ?>">
                 <select name="persona_id" data-auto-enviar><?= opciones_html(array_column($gente, 'nombre', 'id'), $u['persona_id']) ?></select><noscript><button class="btn btn-sutil">Vincular</button></noscript></form>
             </td>
-            <td class="tenue"><?= $u['ultimo_acceso'] ? e(fecha_es(substr($u['ultimo_acceso'], 0, 10))) : 'nunca' ?></td>
+            <td class="tenue" data-label="Último acceso"><?= $u['ultimo_acceso'] ? e(fecha_es(substr($u['ultimo_acceso'], 0, 10))) : 'nunca' ?></td>
             <td class="acciones-fila">
               <form method="post" class="en-linea" data-confirmar="¿Generar una contraseña temporal nueva para <?= e($u['nombre']) ?>? La actual dejará de valer.">
                 <?= csrf_input() ?><input type="hidden" name="accion" value="temporal"><input type="hidden" name="usuario_id" value="<?= (int)$u['id'] ?>">
