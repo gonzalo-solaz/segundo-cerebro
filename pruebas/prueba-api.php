@@ -85,6 +85,8 @@ $e = lanza(static fn() => $api('peso', ['id' => $id['luz']]));
 comprueba('el análisis de peso solo es de controles de peso', $e instanceof RuntimeException);
 $e = lanza(static fn() => api_ejecutar($pdo, ['accion' => 'borrar-todo']));
 comprueba('acción desconocida → lista las que hay', $e instanceof RuntimeException && str_contains($e->getMessage(), 'estado'));
+$c = api_ejecutar($pdo, ['accion' => 'conexiones']);
+comprueba('conexiones: sin clave de finanzas lo dice y no llama', $c['finanzas_api_clave'] === 'FALTA' && $c['pase_clave'] === 'configurada');
 $e = lanza(static fn() => api_ejecutar($pdo, ['accion' => 'elemento', 'datos' => '{roto']));
 comprueba('JSON roto → error claro', $e instanceof RuntimeException && str_contains($e->getMessage(), 'JSON'));
 terminar();

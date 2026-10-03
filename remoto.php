@@ -27,6 +27,7 @@
 //            Un pesaje: registro {"elemento_id":30,"fecha":"2026-10-03","tipo":"Peso","valor":82.4}  (Cintura en cm, Grasa corporal en %)
 //      php remoto.php documento <archivo.pdf> elemento=<id> [titulo="..."]
 //      php remoto.php actividad
+//      php remoto.php conexiones                   ¿Valen todas las claves entre esta app y finanzas? (no las enseña)
 //
 //  Conexión en acceso.json (NO va al repositorio ni al servidor):
 //      {"url": "https://gonzalosolaz.tech/admin", "clave": "la API_CLAVE de config.php"}
@@ -127,6 +128,7 @@ switch ($accion) {
     case 'esquema':
     case 'personas':
     case 'actividad':
+    case 'conexiones':
         mostrar(llamar($accion));
     case 'buscar':
         mostrar(llamar('buscar', ['seccion' => $pos[0] ?? '', 'texto' => $kv['texto'] ?? '', 'archivados' => !empty($kv['archivados'])]));

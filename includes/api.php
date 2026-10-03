@@ -94,8 +94,34 @@ function api_ejecutar(PDO $pdo, array $p, ?array $archivo = null): array {
 
         case 'actividad':
             return ['actividad' => actividad_reciente($pdo, 30)];
+
+        case 'conexiones':
+            return api_conexiones();
     }
-    throw new RuntimeException("Acción desconocida «{$accion}». Las que hay: estado, esquema, personas, buscar, ficha, elemento, vencimiento, hecho, registro, partidas, comunidad, peso, documento, actividad.");
+    throw new RuntimeException("Acción desconocida «{$accion}». Las que hay: estado, esquema, personas, buscar, ficha, elemento, vencimiento, hecho, registro, partidas, comunidad, peso, documento, actividad, conexiones.");
+}
+
+/**
+ * Comprueba de una vez todas las claves entre las dos apps, sin enseñar
+ * ninguna: aquí → finanzas con FINANZAS_API_CLAVE, llevando un pase firmado
+ * con PASE_CLAVE que finanzas verifica con la suya; y finanzas → aquí con
+ * su CEREBRO_API_CLAVE. Solo dice si cada una vale.
+ */
+function api_conexiones(): array {
+    $out = ['pase_clave' => PASE_CLAVE !== '' ? 'configurada' : 'FALTA', 'finanzas_api_clave' => null, 'finanzas' => null];
+    if (!finanzas_configurada()) {
+        $out['finanzas_api_clave'] = 'FALTA';
+        return $out;
+    }
+    try {
+        $r = finanzas_pedir(['accion' => 'conexiones', 'pase' => PASE_CLAVE !== '' ? pase_crear(PASE_CLAVE, ['t' => 'prueba']) : '']);
+        unset($r['ok']);
+        $out['finanzas_api_clave'] = 'ok';
+        $out['finanzas'] = $r;
+    } catch (RuntimeException $ex) {
+        $out['finanzas_api_clave'] = $ex->getMessage();
+    }
+    return $out;
 }
 
 function api_estado(PDO $pdo): array {
