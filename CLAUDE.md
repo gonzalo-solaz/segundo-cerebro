@@ -112,9 +112,12 @@ avisa por correo.
   marino. El verde queda solo como color semántico (bien, conseguido), nunca de marca.
   Los colores de sección de `secciones.php` tienen la misma luminosidad; los de persona
   se guardan con la paleta antigua y `app.css` los remapea al pintarlos (no se tocan
-  los datos). Finanzas (`finanzas.php`) carga su `panel.css`: `app.css` le sobrescribe
-  los tokens (`html:root`) para que salga con esta paleta; si cambian los nombres de sus
-  variables, revisar ese bloque. Antes (hasta 3/10/2026) se copiaban los tokens de
+  los datos). Finanzas (`finanzas.php`) carga su `panel.css` y DESPUÉS `assets/finanzas.css`,
+  que viste el panel con este diseño (cabecera de página, años en píldoras, patrimonio en
+  la banda marino, tarjetas, etiquetas en tipo frase; Gonzalo, 3/10/2026: «finanzas no ha
+  quedado como las otras secciones»). Eligió esto frente a la alternativa de pasar toda la
+  app al estilo de finanzas. Si finanzas renombra clases o variables del panel, revisar
+  `finanzas.css`. Antes (hasta 3/10/2026) se copiaban los tokens de
   finanzas con Poppins.
 - **Probar:** `php pruebas/todas.php` → tiene que dar **5/5** antes de decir que
   algo está listo para subir. Van contra **SQLite** con el esquema real (no hay
