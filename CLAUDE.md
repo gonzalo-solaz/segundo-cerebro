@@ -35,7 +35,7 @@ Si el usuario ya trae un encargo concreto, ve directo a él con la skill.
 
 Gonzalo Solaz. Escríbele en **español de España**; espera análisis directo y
 honesto, con las limitaciones dichas claramente. **No tiene SSH en Hostinger:
-solo FileZilla y hPanel.** Usa también Codex (de ahí `AGENTS.md`).
+solo hPanel (y FileZilla, que ya no se usa para desplegar: se despliega por GitHub).** Usa también Codex (de ahí `AGENTS.md`).
 
 Sus otros proyectos están en `C:\Users\Gonza\projects\` y son la cantera de
 patrones; antes de inventar algo, mirar si ya está resuelto allí:
@@ -117,15 +117,14 @@ avisa por correo.
   (`msedge --headless=new --screenshot`) de HTML bajado con curl; para el móvil,
   dentro de un `<iframe width=390>` (la ventana headless no baja de ~500 px y
   parece que desborda cuando no lo hace).
-- **Desplegar — archivo a archivo, con FileZilla.** Tras editar y pasar las
-  pruebas, di la ruta exacta de cada archivo tocado; el usuario lo arrastra a
-  `segundo-cerebro/` en el servidor. **Nunca se suben**: `pruebas/`,
-  `remoto.php`, `servidor-local.php`, `acceso.json`, `*.md`, `.claude/`,
-  `private/` (salvo `private/.htaccess`). `config.php` se sube a mano y solo si
-  cambia; las constantes nuevas tienen valor por defecto en
-  `includes/config-carga.php`, así que una versión nueva funciona con el
-  `config.php` viejo. Si cambias `assets/app.css` o `app.js`, dile que suba
-  `ASSETS_VERSION` en `config.php` (si no, los móviles siguen con la vieja).
+- **Desplegar — lo haces tú, por GitHub (corrección de Gonzalo, 3/10/2026).** No se
+  sube nada con FileZilla: tras editar y pasar las pruebas (5/5), haces commit y
+  `git push` a `main`; GitHub Actions pasa las pruebas y sube por FTP a Hostinger
+  (ver «Despliegue real»). No empujes sin pruebas verdes ni cambios ajenos
+  (revisa `git status`). El workflow decide qué se sube, no hace falta dar listas
+  de archivos. `config.php` NO viaja: si cambia, avisa a Gonzalo. Si cambias
+  `assets/app.css` o `app.js`, sube tú `ASSETS_VERSION` en `config.php` y avísale
+  de que `config.php` se sube a mano (si no, los móviles siguen con la vieja).
 - **Cambiar el esquema:** `sql/migraciones/NNN-nombre.sql`, idempotente, se aplica
   solo al cargar. Escrito para MySQL pero dentro de lo que traduce
   `sql_traducir()` a SQLite: `CREATE TABLE IF NOT EXISTS` con `KEY` en línea,
@@ -272,3 +271,19 @@ https://claude.ai/code/artifact/bed5a1b2-46db-404b-bbcf-79e190dcb31d.
 **Grabado en producción (3/10/2026):** comunidad = ficha 9 (enlazada a la casa, id 2),
 recibos 1T26/2T26/3T26 = registros 4, 5 y 6 con sus partidas y sus PDF, y el
 campo `analisis` escrito. No repetir. El siguiente es el 4T26.
+
+**Facturas de suministros 2026 completas (3/10/2026, petición de Gonzalo):** grabadas
+en producción las 21 que faltaban de `facturas/` (con su PDF): gas ene-jun (ficha 4,
+registros 7-12), luz ene-jul (ficha 6, registros 13-19) y Pepephone ene-ago (ficha 3,
+registros 20-27). Con las 3 anteriores, el año 2026 queda entero (ene-sep). No repetir.
+La fecha del apunte es la de emisión de la factura. Detalles que conviene saber: el gas
+de marzo (130,12 €) incluye 44,23 € de la inspección periódica de la instalación (IRI) de
+Nedgia; la luz se disparó en julio (611 kWh, 158,85 €); Pepephone subió la tarifa de
+50,90 a 52,90 € en la factura de julio. Para las de octubre en adelante: mismo
+procedimiento (`registro` tipo `Factura` + `documento`).
+
+**Coste de los suministros rellenado (3/10/2026):** `coste` + `Mensual` en producción:
+internet 44,90 € (tarifa actual), gas 66,58 € (media de 7 facturas ene-jul 2026) y luz
+75,69 € (media de 8, ene-ago). Son estimaciones: los de gas y luz hay que recalcularlos
+cuando haya más facturas (el gas de marzo incluye 44,23 € de inspección puntual). El gas
+de enero (160,55 €) está bien: IVA 21 % sobre 132,69 € = 27,86 €.

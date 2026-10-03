@@ -10,8 +10,7 @@ Lo imprescindible, por si solo lees esto:
 1. `php pruebas/todas.php` tiene que dar 5/5 antes de dar algo por bueno.
 2. Las secciones y sus campos se declaran en `includes/secciones.php`; no hay SQL
    por sección.
-3. Despliegue archivo a archivo por FileZilla (el usuario no tiene SSH): di la
-   ruta exacta de cada archivo tocado. Nunca se suben `pruebas/`, `remoto.php`,
-   `servidor-local.php`, `acceso.json`, `*.md` ni `private/`.
+3. Despliegue por GitHub: con pruebas verdes, commit y push a `main`; Actions sube
+   por FTP. Nada de FileZilla. Revisa `git status` antes de empujar.
 4. Nunca inventes fechas, importes ni números de documentos.
 5. Sentencias preparadas, `csrf_ok()` en todo POST, `e()` en todo lo que se imprime.

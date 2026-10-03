@@ -140,7 +140,7 @@ Al terminar, presenta siempre:
 
 1. **Qué se ha hecho**, en 2-4 líneas.
 2. **Si se grabaron datos**: qué elementos, qué avisos se crearon (con fecha) y qué quedó sin rellenar porque el papel no lo decía.
-3. **Si se tocó código**: resultado de las pruebas y la **lista exacta de archivos a subir** con FileZilla a `segundo-cerebro/` (ruta relativa: `includes/secciones.php`, `assets/app.css`…). Aparte, si toca subir `config.php` o cambiar `ASSETS_VERSION`.
+3. **Si se tocó código**: resultado de las pruebas y, con pruebas verdes, **commit y `git push` a `main` tú mismo** (GitHub Actions lo sube a Hostinger; Gonzalo no usa FileZilla). Revisa `git status` para no empujar cambios ajenos. Aparte, avisa si cambió `config.php` (no viaja) o `ASSETS_VERSION`.
 4. **Nunca en la lista**: `pruebas/`, `remoto.php`, `servidor-local.php`, `acceso.json`, `*.md`, `.claude/`, `private/` (salvo `private/.htaccess` en la primera instalación).
 5. Si cambió algo que `CLAUDE.md` debería saber (una decisión, una lección), **actualízalo** con fecha y porqué.
 6. Pregunta si quiere ajustar algo.
