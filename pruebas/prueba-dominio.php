@@ -172,7 +172,7 @@ comprueba('la casa lista sus contratos y su comunidad', $hijos === $esperados);
 comprueba('el contrato sabe a qué casa pertenece', elemento($pdo, $id['luz'])['enlace_nombre'] === 'Casa de prueba');
 $res = resumen_enlazados($pdo);
 comprueba('el resumen cuenta 3 y suma 80 €/mes (60 + 240/12; la comunidad de prueba no lleva coste)', $res[$id['casa']]['n'] === 3 && abs($res[$id['casa']]['mensual'] - 80.0) < 0.001, json_encode($res));
-comprueba('la vivienda ofrece añadir suministros, seguros y su comunidad', array_column(tipos_que_enlazan('vivienda', 'inmueble'), 1) === ['equipo', 'suministro', 'seguro', 'comunidad']);
+comprueba('la vivienda ofrece añadir suministros, seguros, su hipoteca y su comunidad', array_column(tipos_que_enlazan('vivienda', 'inmueble'), 1) === ['equipo', 'suministro', 'seguro', 'hipoteca', 'comunidad']);
 comprueba('un DNI no cuelga de nada', tipos_que_enlazan('documentos', 'dni') === []);
 $e = lanza(static fn() => guardar_elemento($pdo, 'contratos', 'suministro', $sum($id['furgo']), $id['luz'], $id['admin']));
 comprueba('un suministro no se puede enlazar a un vehículo', $e instanceof ErrorValidacion);

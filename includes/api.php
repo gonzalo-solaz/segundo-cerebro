@@ -97,8 +97,21 @@ function api_ejecutar(PDO $pdo, array $p, ?array $archivo = null): array {
 
         case 'conexiones':
             return api_conexiones();
+
+        case 'fichas':
+            // Para finanzas (origen único de los datos): varias fichas de una vez,
+            // con su historial y, si tienen titular, su fecha de nacimiento.
+            $out = [];
+            foreach (array_slice(array_map('intval', (array)($datos['ids'] ?? [])), 0, 50) as $fid) {
+                $el = elemento($pdo, $fid);
+                if (!$el) continue;
+                $p = $el['persona_id'] ? persona($pdo, (int)$el['persona_id']) : null;
+                $out[(string)$fid] = $el + ['registros' => registros_de($pdo, $fid, 50),
+                                            'persona_nacimiento' => $p['fecha_nacimiento'] ?? null];
+            }
+            return ['fichas' => $out];
     }
-    throw new RuntimeException("Acción desconocida «{$accion}». Las que hay: estado, esquema, personas, buscar, ficha, elemento, vencimiento, hecho, registro, partidas, comunidad, peso, documento, actividad, conexiones.");
+    throw new RuntimeException("Acción desconocida «{$accion}». Las que hay: estado, esquema, personas, buscar, ficha, elemento, vencimiento, hecho, registro, partidas, comunidad, peso, documento, actividad, conexiones, fichas.");
 }
 
 /**

@@ -100,18 +100,26 @@ function secciones(): array {
             'nombre' => 'Vivienda', 'icono' => 'casa', 'color' => '#3577f1',
             'descripcion' => 'Casas, instalaciones, garantías y los profesionales de confianza.',
             'tipos' => [
+                // Origen único (3/10/2026): lo que es de la casa vive aquí y finanzas lo
+                // lee (dirección, catastro, compra, titularidad); el valor de mercado y la
+                // deuda pendiente viven en finanzas. La compra es un apunte «Compra o venta».
                 'inmueble' => [
-                    'nombre' => 'Vivienda', 'ejemplo' => 'Casa de Valencia', 'persona' => null,
+                    'nombre' => 'Vivienda', 'ejemplo' => 'Casa de Valencia', 'persona' => 'opcional', 'persona_etiqueta' => 'Titular',
                     'campos' => [
                         'direccion' => ['etiqueta' => 'Dirección', 'tipo' => 'texto', 'resumen' => true],
                         'regimen' => ['etiqueta' => 'Régimen', 'tipo' => 'opcion', 'resumen' => true,
                             'opciones' => ['Propiedad', 'Propiedad con hipoteca', 'Alquiler', 'Otro']],
                         'referencia_catastral' => ['etiqueta' => 'Referencia catastral', 'tipo' => 'texto'],
-                        'superficie' => ['etiqueta' => 'Superficie', 'tipo' => 'numero', 'unidad' => 'm²'],
+                        'superficie' => ['etiqueta' => 'Superficie construida', 'tipo' => 'numero', 'unidad' => 'm²'],
+                        'anio_construccion' => ['etiqueta' => 'Año de construcción', 'tipo' => 'numero'],
                         'fecha_compra' => ['etiqueta' => 'Fecha de compra o de entrada', 'tipo' => 'fecha'],
+                        'porcentaje_propiedad' => ['etiqueta' => 'Parte del titular', 'tipo' => 'numero', 'unidad' => '%',
+                            'ayuda' => 'La parte de la propiedad del titular de arriba. Finanzas la usa para el patrimonio.'],
+                        'copropietarios' => ['etiqueta' => 'Copropietarios', 'tipo' => 'texto', 'ayuda' => 'Ej.: Pilar García Giner (40 %).'],
                         'wifi' => ['etiqueta' => 'Contraseña del WiFi', 'tipo' => 'texto'],
-                        'fin_hipoteca' => ['etiqueta' => 'Fin de la hipoteca o del contrato de alquiler', 'tipo' => 'fecha',
-                            'vence' => 'Fin de hipoteca o alquiler', 'aviso' => 90],
+                        'fin_hipoteca' => ['etiqueta' => 'Fin del contrato de alquiler', 'tipo' => 'fecha',
+                            'vence' => 'Fin de hipoteca o alquiler', 'aviso' => 90,
+                            'ayuda' => 'Si hay hipoteca, va en su propio contrato (Contratos → Hipoteca), enlazado a la casa.'],
                     ],
                 ],
                 'equipo' => [
@@ -132,7 +140,7 @@ function secciones(): array {
                 ['IBI', 12, 30], ['Seguro de hogar', 12, 45], ['Revisión de la caldera', 12, 30],
                 ['Limpieza de filtros del aire acondicionado', 12, 15], ['Inspección periódica del gas', 60, 30],
             ],
-            'registros' => ['tipos' => ['Reparación', 'Mejora o reforma', 'Mantenimiento', 'Lectura de contador', 'Incidencia'],
+            'registros' => ['tipos' => ['Reparación', 'Mejora o reforma', 'Mantenimiento', 'Lectura de contador', 'Incidencia', 'Compra o venta'],
                             'valor' => 'Lectura', 'unidad' => ''],
         ],
 
@@ -361,6 +369,29 @@ function secciones(): array {
                         'telefono_asistencia' => ['etiqueta' => 'Teléfono de asistencia', 'tipo' => 'tel'],
                     ],
                 ],
+                // Los términos de la hipoteca viven aquí (y su cuota cuenta en el gasto
+                // fijo); lo que se va pagando —capital pendiente, cuotas pagadas— vive
+                // en finanzas, que lee estos términos (3/10/2026).
+                'hipoteca' => [
+                    'nombre' => 'Hipoteca o préstamo', 'ejemplo' => 'Hipoteca de casa', 'persona' => 'opcional', 'persona_etiqueta' => 'Titular',
+                    'enlace' => ['etiqueta' => 'Vivienda', 'a' => [['vivienda', 'inmueble']]],
+                    'campos' => [
+                        'compania' => ['etiqueta' => 'Entidad', 'tipo' => 'texto', 'resumen' => true],
+                        'numero_contrato' => ['etiqueta' => 'Número de contrato', 'tipo' => 'texto'],
+                        'coste' => ['etiqueta' => 'Cuota', 'tipo' => 'importe', 'resumen' => true, 'ayuda' => 'La cuota entera, aunque se pague a medias.'],
+                        'periodicidad' => $periodicidad,
+                        'capital_inicial' => ['etiqueta' => 'Capital prestado', 'tipo' => 'importe'],
+                        'interes' => ['etiqueta' => 'Tipo de interés', 'tipo' => 'texto', 'ayuda' => 'Ej.: variable, Euríbor + 0,99 (TAE 3,52 %).'],
+                        'revision_interes' => ['etiqueta' => 'Revisión del interés', 'tipo' => 'opcion',
+                            'opciones' => ['Fijo', 'Mensual', 'Trimestral', 'Semestral', 'Anual']],
+                        'cuotas_totales' => ['etiqueta' => 'Número de cuotas', 'tipo' => 'numero'],
+                        'fecha_inicio' => ['etiqueta' => 'Firma', 'tipo' => 'fecha'],
+                        'fecha_fin' => ['etiqueta' => 'Última cuota', 'tipo' => 'fecha', 'resumen' => true,
+                            'vence' => 'Fin de la hipoteca', 'aviso' => 90],
+                        'titulares' => ['etiqueta' => 'Titulares', 'tipo' => 'texto'],
+                        'porcentaje_pago' => ['etiqueta' => 'Parte de la cuota que paga el titular', 'tipo' => 'numero', 'unidad' => '%'],
+                    ],
+                ],
                 // Cada liquidación trimestral se apunta en el historial como «Recibo»
                 // con lo que paga esta casa (no el total de la comunidad).
                 'comunidad' => [
@@ -406,8 +437,10 @@ function secciones(): array {
                     'nombre' => 'Colegio o estudios', 'ejemplo' => 'Colegio San José', 'persona' => 'obligatoria',
                     'persona_etiqueta' => 'Alumno',
                     'campos' => [
-                        'curso' => ['etiqueta' => 'Curso', 'tipo' => 'texto', 'resumen' => true],
+                        'curso' => ['etiqueta' => 'Curso', 'tipo' => 'texto', 'resumen' => true,
+                            'ayuda' => 'Ej.: 4.º de Primaria · grupo C. Finanzas saca de aquí el curso (4PRI) para el colegio del CEU.'],
                         'tutor' => ['etiqueta' => 'Tutor o tutora', 'tipo' => 'texto', 'resumen' => true],
+                        'acogida' => ['etiqueta' => 'Va a acogida (madrugadores)', 'tipo' => 'opcion', 'opciones' => ['Sí', 'No']],
                         'horario' => ['etiqueta' => 'Horario', 'tipo' => 'texto'],
                         'telefono' => ['etiqueta' => 'Teléfono', 'tipo' => 'tel'],
                         'email' => ['etiqueta' => 'Email', 'tipo' => 'email'],
