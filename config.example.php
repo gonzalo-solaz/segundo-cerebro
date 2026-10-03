@@ -57,3 +57,7 @@ define('API_CLAVE', '');
 // ---- Enlace a la app de finanzas (solo lo ven los administradores) ----
 // Vacío = no se muestra.
 define('FINANZAS_URL', 'https://gonzalosolaz.tech/finanzas-personales/');
+
+// La API_CLAVE de finanzas. Con ella, la ficha de un empleo con «Sus nóminas
+// se llevan en Finanzas» = Sí enseña las nóminas del año. Vacío = no se leen.
+define('FINANZAS_API_CLAVE', '');

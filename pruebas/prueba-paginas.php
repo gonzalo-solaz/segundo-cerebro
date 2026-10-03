@@ -149,6 +149,27 @@ comprueba('un miembro no puede borrar (solo archivar)', elemento($pdo, $id['casa
 $r = pedir('elemento.php', ['id' => (string)$id['casa']], ['accion' => 'archivar'], $id['miembro']);
 comprueba('pero sí archivar', elemento($pdo, $id['casa'])['activo'] === 0);
 
+// Trabajo: el empleo con «nóminas en finanzas» lee la copia de DIR_CACHE (sin red).
+$id['empleo'] = guardar_elemento($pdo, 'trabajo', 'empleo', ['nombre' => 'Universidad de prueba', 'persona_id' => $id['yo'],
+    'datos' => ['puesto' => 'Técnico', 'nominas_finanzas' => 'Sí', 'revision_salarial' => '2027-01-01']]);
+$id['convenio'] = guardar_elemento($pdo, 'trabajo', 'convenio', ['nombre' => 'Convenio de prueba', 'enlace_id' => $id['empleo'],
+    'datos' => ['publicacion' => 'BOE-A-2024-10663']]);
+pinta_bien('sin clave de finanzas, la ficha del empleo lo explica', pedir('elemento.php', ['id' => (string)$id['empleo']]), 'Falta la clave de finanzas');
+pinta_bien('la ficha del empleo lista su convenio', pedir('elemento.php', ['id' => (string)$id['empleo']]), 'Convenio de prueba');
+$cache = sys_get_temp_dir() . '/sc-cache-' . getmypid();
+@mkdir($cache, 0777, true);
+file_put_contents($cache . '/finanzas-nominas.json', json_encode(['t' => time(), 'leido_en' => '2026-10-03 08:00:00', 'anios' => nominas_de_ejemplo()]));
+putenv('SC_CACHE=' . $cache);
+putenv('SC_FINANZAS_CLAVE=clave-de-finanzas');
+$r = pedir('elemento.php', ['id' => (string)$id['empleo']]);
+pinta_bien('con clave, enseña el líquido del año leído de finanzas', $r, '5.700,00');
+pinta_bien('y avisa de la nómina que falta', $r, 'Falta grabar la nómina de septiembre 2026');
+pinta_bien('y del mes en que cambia el cuadre con el banco', $r, 'La diferencia con el banco cambia en agosto 2026');
+putenv('SC_CACHE');
+putenv('SC_FINANZAS_CLAVE');
+@unlink($cache . '/finanzas-nominas.json');
+@rmdir($cache);
+
 // Un POST con token CSRF equivocado no hace nada.
 $f = tempnam(sys_get_temp_dir(), 'sc-pet');
 file_put_contents($f, json_encode(['pagina' => 'personas.php', 'post' => ['accion' => 'guardar', 'nombre' => 'Sin token'], 'csrf' => 'falso']));

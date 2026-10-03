@@ -75,7 +75,14 @@ $contactos_casa = [];
 if ($el['seccion'] === 'vivienda' && $el['tipo'] === 'inmueble') {
     $contactos_casa = array_values(array_filter(elementos_de($pdo, 'vivienda'), static fn($x) => $x['tipo'] === 'contacto'));
 }
-$titulos_hijos = ['contratos' => ['Contratos y seguros', 'contrato'], 'vivienda' => ['Equipamiento y materiales', 'casa']];
+$titulos_hijos = ['contratos' => ['Contratos y seguros', 'contrato'], 'vivienda' => ['Equipamiento y materiales', 'casa'],
+                  'trabajo' => ['Convenio y contactos', 'maletin']];
+// Las nóminas del empleo se leen de finanzas (no se copian aquí): ver includes/finanzas.php.
+$nominas = null;
+if ($el['seccion'] === 'trabajo' && $el['tipo'] === 'empleo' && ($el['datos']['nominas_finanzas'] ?? '') === 'Sí') {
+    $nominas = finanzas_nominas();
+    $nominas['resumen'] = resumen_nominas($nominas['anios'], hoy());
+}
 $grupos_hijos = [];
 foreach ($titulos_hijos as $gs => [$titulo, $icono_g]) {
     $gh = array_values(array_filter($hijos, static fn($h) => $h['seccion'] === $gs));
@@ -151,6 +158,39 @@ cabecera_pagina($el['nombre'],
         <?php endif; ?>
       </details>
     <?php endforeach; ?>
+
+    <?php if ($nominas !== null): $rn = $nominas['resumen']; ?>
+      <section class="tarjeta" id="nominas">
+        <div class="tarjeta-cabecera">
+          <h2><?= icono('cartera') ?>Nóminas<?= $rn ? ' ' . (int)$rn['anio'] : '' ?></h2>
+          <span class="tenue">De la app de finanzas<?= $nominas['leido_en'] ? ' · ' . e(fecha_corta(substr($nominas['leido_en'], 0, 10)) . ' ' . substr($nominas['leido_en'], 11, 5)) : '' ?></span>
+        </div>
+        <?php if ($nominas['error']): ?><div class="flash flash-aviso"><?= e($nominas['error']) ?></div><?php endif; ?>
+        <?php if ($rn): ?>
+          <p>Líquido cobrado: <strong><?= e(eur($rn['liquido'])) ?></strong> en <?= (int)$rn['n'] ?> recibo<?= $rn['n'] === 1 ? '' : 's' ?><?= $rn['pagas'] ? ' de ' . (int)$rn['pagas'] . ' pagas' : '' ?><?php if ($rn['salario_base']): ?> · salario base <?= e(eur($rn['salario_base'])) ?><?php endif; ?>.</p>
+          <?php if ($rn['falta']): ?><div class="flash flash-aviso">Falta grabar la nómina de <?= e(mes_es($rn['falta'])) ?>.</div><?php endif; ?>
+          <?php if ($rn['cambia']): ?><div class="flash flash-aviso">La diferencia con el banco cambia en <?= e(implode(', ', array_map('mes_es', $rn['cambia']))) ?>: mira ese recibo en finanzas.</div><?php endif; ?>
+          <div class="tabla-scroll"><table class="tabla">
+            <thead><tr><th>Mes</th><th class="num">Líquido</th><th class="num">Banco</th><th class="num">Diferencia</th></tr></thead>
+            <tbody>
+              <?php foreach (array_reverse($rn['filas']) as $f): ?>
+                <tr>
+                  <td><?= e(ucfirst(mes_es($f['mes']))) ?><?= ($f['tipo'] ?? '') === 'extra' ? ' <span class="chip">extra</span>' : '' ?></td>
+                  <td class="num"><?= e(eur($f['liquido'])) ?></td>
+                  <td class="num"><?= $f['banco'] !== null ? e(eur($f['banco'])) : '' ?></td>
+                  <td class="num"><?= $f['dif'] !== null ? ($f['cambia'] ? '<strong>' . e(eur($f['dif'])) . '</strong>' : e(eur($f['dif']))) : '' ?></td>
+                </tr>
+              <?php endforeach; ?>
+            </tbody>
+          </table></div>
+        <?php elseif (!$nominas['error']): ?>
+          <p class="vacio-mini">Finanzas aún no tiene ninguna nómina grabada.</p>
+        <?php endif; ?>
+        <?php if (es_admin() && FINANZAS_URL !== ''): ?>
+          <a class="btn btn-sutil" href="<?= e(rtrim(FINANZAS_URL, '/') . '/nomina.php') ?>"><?= icono('externo') ?>Abrir en finanzas</a>
+        <?php endif; ?>
+      </section>
+    <?php endif; ?>
 
     <?php foreach ($grupos_hijos as $gs => $g): ?>
       <section class="tarjeta" id="enlazados-<?= e($gs) ?>">

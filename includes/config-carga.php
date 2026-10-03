@@ -37,7 +37,9 @@ if (!defined('SC_CONFIG_CARGADA')) {
         'CRON_CLAVE'         => '',
         'API_CLAVE'          => '',
         'FINANZAS_URL'       => '',
+        'FINANZAS_API_CLAVE' => '',
         'DIR_ARCHIVOS'       => dirname(__DIR__) . '/private/archivos',
+        'DIR_CACHE'          => dirname(__DIR__) . '/private/cache',
     ];
     foreach ($sc_defectos as $sc_k => $sc_v) {
         if (!defined($sc_k)) define($sc_k, $sc_v);

@@ -409,6 +409,69 @@ function secciones(): array {
             'registros' => ['tipos' => ['Tutoría', 'Notas', 'Incidencia', 'Logro', 'Otro'],
                             'valor' => 'Nota', 'unidad' => ''],
         ],
+        // -------------------------------------------------------------
+        // Los NÚMEROS de las nóminas viven en finanzas (recibo a recibo y
+        // cuadrados con el banco); aquí, la empresa, el contrato, el convenio
+        // y los PDF. La ficha del empleo con «nominas_finanzas» = Sí enseña
+        // lo que hay en finanzas (includes/finanzas.php). Decisión de Gonzalo,
+        // 3/10/2026: no duplicar los recibos.
+        'trabajo' => [
+            'nombre' => 'Trabajo', 'icono' => 'maletin', 'color' => '#299cdb',
+            'descripcion' => 'Empresa, contrato, convenio y nóminas de cada uno.',
+            'tipos' => [
+                'empleo' => [
+                    'nombre' => 'Empleo', 'ejemplo' => 'Universidad CEU Cardenal Herrera', 'persona' => 'obligatoria',
+                    'persona_etiqueta' => 'Quién trabaja',
+                    'campos' => [
+                        'puesto' => ['etiqueta' => 'Puesto', 'tipo' => 'texto', 'resumen' => true],
+                        'categoria' => ['etiqueta' => 'Grupo o categoría del convenio', 'tipo' => 'texto',
+                            'ayuda' => 'Como sale en la nómina o en el contrato. Ej.: PAS · Titulado.'],
+                        'cif' => ['etiqueta' => 'CIF de la empresa', 'tipo' => 'texto'],
+                        'centro' => ['etiqueta' => 'Centro de trabajo', 'tipo' => 'texto'],
+                        'fecha_alta' => ['etiqueta' => 'Fecha de alta (antigüedad)', 'tipo' => 'fecha'],
+                        'contrato' => ['etiqueta' => 'Tipo de contrato', 'tipo' => 'opcion', 'resumen' => true,
+                            'opciones' => ['Indefinido', 'Temporal', 'Fijo discontinuo', 'Prácticas o formación', 'Funcionario', 'Autónomo', 'Otro']],
+                        'jornada' => ['etiqueta' => 'Jornada', 'tipo' => 'texto', 'ayuda' => 'Ej.: completa, 37,5 h a la semana.'],
+                        'bruto_anual' => ['etiqueta' => 'Salario bruto anual', 'tipo' => 'importe'],
+                        'pagas' => ['etiqueta' => 'Número de pagas', 'tipo' => 'numero'],
+                        'nominas_finanzas' => ['etiqueta' => 'Sus nóminas se llevan en Finanzas', 'tipo' => 'opcion', 'opciones' => ['Sí', 'No'],
+                            'ayuda' => 'Con «Sí», la ficha enseña las nóminas del año y el cuadre con el banco, leídos de la app de finanzas.'],
+                        'revision_salarial' => ['etiqueta' => 'Próxima revisión salarial', 'tipo' => 'fecha',
+                            'vence' => 'Revisión salarial', 'aviso' => 30, 'repetir' => 12],
+                        'fin_contrato' => ['etiqueta' => 'Fin del contrato', 'tipo' => 'fecha',
+                            'vence' => 'Fin del contrato', 'aviso' => 60],
+                        'beneficios' => ['etiqueta' => 'Beneficios y retribución flexible', 'tipo' => 'area', 'aparte' => true,
+                            'ayuda' => 'Seguro médico, ticket restaurante, transporte, colegio, guardería…'],
+                        'condiciones' => ['etiqueta' => 'Condiciones y acuerdos', 'tipo' => 'area', 'aparte' => true,
+                            'ayuda' => 'Horario, teletrabajo, vacaciones, lo pactado con RRHH.'],
+                    ],
+                ],
+                'convenio' => [
+                    'nombre' => 'Convenio colectivo', 'ejemplo' => 'XIV Convenio de centros de educación universitaria', 'persona' => null,
+                    'enlace' => ['etiqueta' => 'Empleo', 'a' => [['trabajo', 'empleo']]],
+                    'campos' => [
+                        'ambito' => ['etiqueta' => 'Ámbito', 'tipo' => 'texto', 'resumen' => true, 'ayuda' => 'Estatal, autonómico, de empresa…'],
+                        'publicacion' => ['etiqueta' => 'Publicación', 'tipo' => 'texto', 'resumen' => true, 'ayuda' => 'Ej.: BOE-A-2024-10663.'],
+                        'web' => ['etiqueta' => 'Enlace al texto', 'tipo' => 'texto'],
+                        'vigente_hasta' => ['etiqueta' => 'Vigente hasta', 'tipo' => 'fecha', 'resumen' => true,
+                            'vence' => 'Fin de la vigencia del convenio', 'aviso' => 60,
+                            'ayuda' => 'Suele prorrogarse solo: el aviso es para mirar si hay convenio nuevo o tablas revisadas.'],
+                        'tablas' => ['etiqueta' => 'Tablas salariales', 'tipo' => 'area', 'aparte' => true,
+                            'ayuda' => 'Salario base de la categoría por año, pluses, trienios.'],
+                        'permisos' => ['etiqueta' => 'Vacaciones, permisos y jornada', 'tipo' => 'area', 'aparte' => true],
+                        'analisis' => ['etiqueta' => 'Análisis y preguntas para RRHH', 'tipo' => 'area', 'aparte' => true],
+                    ],
+                ],
+                'contacto' => ['enlace' => ['etiqueta' => 'Empleo', 'a' => [['trabajo', 'empleo']]]]
+                              + tipo_contacto('Contacto del trabajo', 'RRHH · nóminas', 'Departamento o cargo'),
+            ],
+            'sugerencias' => [['Pedir el certificado de retenciones', 12, 15], ['Revisar la nómina de enero (tablas nuevas)', 12, 7]],
+            // El líquido de una nómina va en «Importe», NUNCA en «Coste»: el coste
+            // suma como gasto en la ficha y en el panel.
+            'registros' => ['tipos' => ['Nómina', 'Certificado de retenciones', 'Carta de retribución', 'Subida o cambio de sueldo',
+                                        'Contrato o anexo', 'Evaluación', 'Formación', 'Otro'],
+                            'valor' => 'Importe', 'unidad' => '€'],
+        ],
     ];
     return $s;
 }

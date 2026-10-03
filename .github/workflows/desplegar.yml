@@ -16,6 +16,8 @@
 #    FTP_PROTOCOLO    ftps (por defecto) o ftp
 #    DB_NAME, DB_USER, DB_PASS                   la base de datos de hPanel
 #    EMAIL_AVISOS, API_CLAVE, CRON_CLAVE         opcionales
+#    FINANZAS_API_CLAVE  la API_CLAVE de finanzas: con ella, la ficha del empleo
+#                        enseña las nóminas (opcional)
 #  Sin los secretos de FTP, el flujo solo prueba y avisa de que no despliega.
 # =====================================================================
 name: Probar y desplegar
@@ -101,6 +103,7 @@ jobs:
           EMAIL_AVISOS: ${{ secrets.EMAIL_AVISOS }}
           API_CLAVE: ${{ secrets.API_CLAVE }}
           CRON_CLAVE: ${{ secrets.CRON_CLAVE }}
+          FINANZAS_API_CLAVE: ${{ secrets.FINANZAS_API_CLAVE }}
         run: |
           php -r '
             // var_export: ninguna comilla o barra de una contraseña puede romper el PHP.
@@ -108,7 +111,7 @@ jobs:
                   "DB_PASS" => getenv("DB_PASS"), "BASE_URL" => "/admin",
                   "URL_APP" => "https://gonzalosolaz.tech/admin", "NOMBRE_APP" => "Segundo cerebro",
                   "EMAIL_AVISOS" => (string)getenv("EMAIL_AVISOS"), "API_CLAVE" => (string)getenv("API_CLAVE"),
-                  "CRON_CLAVE" => (string)getenv("CRON_CLAVE"),
+                  "CRON_CLAVE" => (string)getenv("CRON_CLAVE"), "FINANZAS_API_CLAVE" => (string)getenv("FINANZAS_API_CLAVE"),
                   "FINANZAS_URL" => "https://gonzalosolaz.tech/finanzas-personales/"];
             $php = "<?php\n// GENERADO por .github/workflows/desplegar.yml a partir de los secretos de GitHub.\n"
                  . "// No lo edites en el servidor: el próximo despliegue lo sobrescribe. Cambia el secreto.\n"

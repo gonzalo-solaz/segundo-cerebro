@@ -1,6 +1,6 @@
 ---
 name: segundo-cerebro
-description: "Gestiona el Segundo cerebro de Gonzalo (gonzalosolaz.tech/segundo-cerebro): el panel de mandos de la casa con vivienda, vehículos, salud, documentos, contratos y familia. Graba en la app lo que el usuario pasa (pólizas, permisos de circulación, fichas técnicas, ITV, DNI, pasaportes, informes médicos, recetas, facturas, contratos de luz o internet), cuenta qué vence, marca avisos como hechos, añade o cambia secciones y campos, y prepara los cambios de código para subirlos con FileZilla. Usa esta skill siempre que se trabaje en la carpeta segundo-cerebro. Triggers: 'te paso la póliza', 'guarda esto en el segundo cerebro', 'apunta la ITV', 'ha caducado el DNI', 'qué vence este mes', 'qué tengo pendiente', 'renové el seguro', 'he pasado la revisión del coche', 'liquidación de la comunidad', 'recibo de la comunidad', 'gastos de la comunidad', 'añade una sección', 'quiero controlar también X', 'nuevo campo', 'sube los cambios', 'qué archivos subo', 'integrar finanzas', 'dale acceso a mi pareja'."
+description: "Gestiona el Segundo cerebro de Gonzalo (gonzalosolaz.tech/segundo-cerebro): el panel de mandos de la casa con vivienda, vehículos, salud, documentos, contratos y familia. Graba en la app lo que el usuario pasa (pólizas, permisos de circulación, fichas técnicas, ITV, DNI, pasaportes, informes médicos, recetas, facturas, contratos de luz o internet), cuenta qué vence, marca avisos como hechos, añade o cambia secciones y campos, y prepara los cambios de código para subirlos con FileZilla. Usa esta skill siempre que se trabaje en la carpeta segundo-cerebro. Triggers: 'te paso la póliza', 'guarda esto en el segundo cerebro', 'apunta la ITV', 'ha caducado el DNI', 'qué vence este mes', 'qué tengo pendiente', 'renové el seguro', 'he pasado la revisión del coche', 'liquidación de la comunidad', 'recibo de la comunidad', 'te paso la nómina', 'convenio', 'datos de la empresa', 'gastos de la comunidad', 'añade una sección', 'quiero controlar también X', 'nuevo campo', 'sube los cambios', 'qué archivos subo', 'integrar finanzas', 'dale acceso a mi pareja'."
 ---
 
 # Segundo cerebro
@@ -75,6 +75,15 @@ Cuando Gonzalo deje una liquidación nueva en `facturas/comunidad/` (o la pase p
 7. **Coste de la ficha**: si el trimestre fue normal (sin obras) y el recibo cambió, actualiza `coste` (cuenta en el gasto fijo mensual).
 8. **Análisis**: `php remoto.php comunidad <id>` da los números. Reescribe `datos.analisis` de la ficha (`elemento` con `id`) en 10-15 líneas: lo pagado en el año y lo que se estima para el año entero; las 3 partidas que más cuestan; qué ha cambiado respecto al trimestre anterior (la tabla recibo a recibo); y las preguntas abiertas para la junta. Conserva lo que siga valiendo, quita lo resuelto y no inventes precios de mercado: si citas uno, que venga de una fuente abierta en esa misma sesión.
 9. **Cuéntaselo a Gonzalo** en 3-4 líneas: cuánto paga este trimestre, qué ha subido o bajado, y si hay algo que preguntar al administrador.
+
+### Nóminas y papeles del trabajo (sección Trabajo)
+
+Los **números** de la nómina viven en **finanzas**, no aquí (decisión de Gonzalo, 3/10/2026): un recibo se graba UNA vez, en finanzas, y la ficha del empleo de aquí lo enseña leyéndolo de su API. Con una nómina nueva:
+
+1. **Números → finanzas**: en `C:\Users\Gonza\projects\personal\finanzas-personales`, el procedimiento de su `CLAUDE.md` (mapa recibo → campos, `php remoto.php nomina recibo.json`, comprobar que la diferencia con el banco no cambia).
+2. **PDF → aquí**: en la ficha del empleo (`buscar trabajo`), un `registro` tipo `Nómina`, título «Nómina septiembre 2026», fecha = la del recibo, el **líquido en `valor`, nunca en `coste`** (el coste suma como gasto), y el PDF con `documento`. Nada más: ni conceptos ni cuadre, que ya están en finanzas.
+3. Cartas de retribución, certificados de retenciones, contratos y anexos: igual, con su tipo de apunte. Si cambian el puesto, el bruto o la categoría, actualiza la ficha del empleo.
+4. **Convenio**: ficha tipo `convenio` enlazada al empleo. Las tablas salariales van en `tablas`, y las dudas para RRHH, en `analisis`. La tabla que usa finanzas para comparar sigue en `CEU_CONVENIO` de su `dashboard-pie.html`: si cambian las tablas, actualiza las dos (que finanzas la lea de aquí está pendiente).
 
 Sobre el contexto de la casa:
 - Personas: usa las que devuelve `personas`. Si el papel es de alguien que no está, pregunta antes de crearlo.

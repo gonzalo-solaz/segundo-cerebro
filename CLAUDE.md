@@ -15,7 +15,7 @@ concreto, responde:
 > **Segundo cerebro** 🧠
 >
 > Tu panel de mandos de la casa: vivienda, vehículos, salud, documentos,
-> contratos y familia, con avisos de todo lo que vence.
+> contratos, familia y trabajo, con avisos de todo lo que vence.
 >
 > Puedo:
 > - **Grabar lo que me pases**: una póliza, el permiso de circulación, un
@@ -49,8 +49,8 @@ patrones; antes de inventar algo, mirar si ya está resuelto allí:
 ## Qué es
 
 Una intranet privada, para la familia, en `https://gonzalosolaz.tech/segundo-cerebro/`
-(Hostinger, en SUBCARPETA: `BASE_URL = '/segundo-cerebro'`). Seis secciones:
-**Vivienda, Vehículos, Salud, Documentos, Contratos y Familia**. Cada una guarda
+(Hostinger, en SUBCARPETA: `BASE_URL = '/segundo-cerebro'`). Siete secciones:
+**Vivienda, Vehículos, Salud, Documentos, Contratos, Familia y Trabajo**. Cada una guarda
 «cosas» (una casa, un coche, un DNI, un seguro, la ficha médica de un hijo…),
 con sus **avisos** de lo que vence, su **historial** y sus **archivos** (PDF y
 fotos). El panel junta lo que vence de todas.
@@ -164,7 +164,8 @@ Sistema) y, si se quiere el flujo de papeles, `API_CLAVE` + `acceso.json`.
 
 **Ideas para después (no hechas):**
 - **Integrar finanzas.** Paso 1, ya hecho: tarjeta-enlace en el panel (solo
-  admin) vía `FINANZAS_URL`. Paso 2: que los contratos y el historial con coste
+  admin) vía `FINANZAS_URL`. Paso 1 bis, hecho: las nóminas en la ficha del
+  empleo (sección Trabajo, ver abajo). Paso 2: que los contratos y el historial con coste
   se crucen con los movimientos reales de finanzas (p. ej. «el seguro de hogar
   se cobró el 2/11 por 241,30 €»). Paso 3: un solo acceso (mover finanzas a
   `/segundo-cerebro/finanzas` como sección «externa», o compartir sesión;
@@ -318,3 +319,18 @@ trae kilómetros en 2025-12 ni 2026-09, y `km` queda en 219.263 (mayo 2025). Es 
 **Graduación de gafas (3/10/2026, petición de Gonzalo):** tipo `salud/gafas` (una ficha por graduación: esfera, cilindro, eje y adición de cada ojo, DIP, fecha y «próxima revisión» con aviso) para comparar graduaciones y saber si toca cambiar de gafas. Origen: Notion, Personal > Gafas (2024 y 2026, sin día exacto). No inventar fechas ni valores que Notion no da.
 
 **Notas cortas, detalle en campos plegados (3/10/2026, queja de Gonzalo: «tanta información amontonada no la veo útil»).** Las notas de los coches (hasta 3.400 caracteres) mezclaban origen, equipamiento, recambios y papeles. Ahora `vehiculo` tiene tres campos `aparte` con `lista` (tarjetas plegadas pintadas como lista por `lista_campo()`: una línea = un punto, «Grupo:» abre un grupo, «Etiqueta: valor» pone la etiqueta en negrita): `equipamiento` (lo que lleva: motor, caja, ruedas y neumáticos, batería, extras), `recambios` (mantenimiento: aceite, filtros, frenos, plan de mantenimiento, defectos a vigilar; **no** componentes) y `origen` (procedencia, compra, papeles, seguros anteriores). `notas` queda para lo breve y accionable (avería pendiente, baja temporal, importado sin matricular); si pasan de 500 caracteres, la ficha las pliega sola. **Al traer un vehículo de Notion, repartir así, no volcarlo todo en `notas`.** Repartidos en producción los 7 vehículos (ids 11, 13, 15, 17, 18, 19, 24), ya en formato lista; no repetir. Copia de las notas originales en `private/importar-notion/copia-notas/` y script en `repartir-notas-vehiculos.py` (gitignored). Las compras que ya constan en el historial se quitaron de las notas del Mini; el resto del texto se movió tal cual.
+
+**Sección Trabajo y nóminas desde finanzas (3/10/2026, petición de Gonzalo).** Tipos
+`trabajo/empleo` (empresa, puesto, categoría, contrato, bruto, revisión salarial y fin de
+contrato con aviso; beneficios y condiciones plegados), `trabajo/convenio` (enlazado al
+empleo: publicación, vigencia con aviso, tablas, permisos, análisis) y contactos del trabajo
+enlazados al empleo. **Decisiones de Gonzalo:** (1) los números de las nóminas siguen
+viviendo SOLO en finanzas (recibo a recibo y cuadrados con el banco); aquí no se copian.
+La ficha del empleo con `nominas_finanzas` = Sí los **lee** de la API de finanzas
+(`nomina_estado`, `includes/finanzas.php`), con copia de una hora en `private/cache/`, y
+avisa si falta la nómina del mes anterior o si la diferencia con el banco cambia. Hace
+falta el secreto `FINANZAS_API_CLAVE` en GitHub (= la `API_CLAVE` de finanzas); sin él, la
+tarjeta lo dice y no llama. Aquí van los PDF (apunte `Nómina` con el líquido en `valor`,
+nunca en `coste`). (2) Lo ve toda la familia con acceso, como el resto. (3) Que la tabla del
+convenio viva aquí y finanzas la lea (hoy está escrita a mano en `CEU_CONVENIO` de su
+`dashboard-pie.html`) queda para más adelante: si cambian las tablas, se actualizan las dos.

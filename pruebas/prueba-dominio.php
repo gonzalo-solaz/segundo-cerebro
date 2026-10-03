@@ -185,6 +185,19 @@ comprueba('y no se pierde lo que había', count(partidas_de_registro($pdo, $id['
 borrar_registro($pdo, $id['recibo_2t'], $id['comunidad'], null);
 comprueba('borrar un recibo borra sus partidas', partidas_de_registro($pdo, $id['recibo_2t']) === []);
 
+echo "\nNóminas leídas de finanzas\n";
+$anios_fin = nominas_de_ejemplo();
+$rn = resumen_nominas($anios_fin, '2026-10-03');
+comprueba('el resumen es del año más reciente', $rn['anio'] === 2026 && $rn['n'] === 3 && $rn['pagas'] === 15);
+comprueba('suma el líquido del año, extra incluida', abs($rn['liquido'] - 5700.0) < 0.01, (string)$rn['liquido']);
+comprueba('a 3 de octubre falta la de septiembre', $rn['falta'] === '2026-09', (string)$rn['falta']);
+comprueba('a mediados de septiembre no falta ninguna', resumen_nominas($anios_fin, '2026-09-15')['falta'] === null);
+comprueba('marca el mes en que cambia la diferencia con el banco', $rn['cambia'] === ['2026-08']);
+comprueba('el salario base es el del último recibo', $rn['salario_base'] === 1941.45);
+comprueba('sin nóminas no hay resumen', resumen_nominas([], '2026-10-03') === null);
+comprueba('mes_es', mes_es('2026-09') === 'septiembre 2026');
+comprueba('sin clave no se llama a finanzas', !finanzas_configurada() && finanzas_nominas()['error'] !== null);
+
 echo "\nPersonas y accesos\n";
 $e = lanza(static fn() => crear_usuario($pdo, ['nombre' => 'Otro', 'email' => 'ADMIN@ejemplo.test']));
 comprueba('no se repite email (sin distinguir mayúsculas)', $e instanceof ErrorValidacion);
