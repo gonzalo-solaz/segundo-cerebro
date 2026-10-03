@@ -275,11 +275,13 @@ cabecera_pagina($el['nombre'],
               <div class="h-cuerpo">
                 <strong><?= e($r['titulo']) ?></strong>
                 <?php if ($r['tipo'] !== '' && $r['tipo'] !== $r['titulo']): ?><span class="chip"><?= e($r['tipo']) ?></span><?php endif; ?>
-                <div class="tenue">
-                  <?php if ($r['valor'] !== null): ?><?= e(numero_es($r['valor']) . ($r['unidad'] !== '' ? ' ' . $r['unidad'] : '')) ?><?php endif; ?>
-                  <?php if ($r['coste'] !== null): ?> · <?= e(eur($r['coste'])) ?><?php endif; ?>
-                  <?php if ($r['autor']): ?> · <?= e(nombre_corto($r['autor'])) ?><?php else: ?> · Claude<?php endif; ?>
-                </div>
+                <?php // Sin autor = lo grabó Claude por la API: no se rotula (3/10/2026, sobraba en cada apunte). ?>
+                <?php $meta = array_filter([
+                    $r['valor'] !== null ? numero_es($r['valor']) . ($r['unidad'] !== '' ? ' ' . $r['unidad'] : '') : null,
+                    $r['coste'] !== null ? eur($r['coste']) : null,
+                    $r['autor'] ? nombre_corto($r['autor']) : null,
+                ], fn($x) => $x !== null); ?>
+                <?php if ($meta): ?><div class="tenue"><?= e(implode(' · ', $meta)) ?></div><?php endif; ?>
                 <?php if (trim((string)$r['notas']) !== ''): ?><p class="notas"><?= nl2br(e($r['notas'])) ?></p><?php endif; ?>
               </div>
               <form method="post" data-confirmar="¿Borrar este apunte?">
