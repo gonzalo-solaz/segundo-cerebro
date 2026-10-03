@@ -297,3 +297,16 @@ listado (`&lista=1` lo fuerza; el migajas de la ficha lo usa). Los contactos de 
 «Otra vivienda» se añaden desde la tarjeta de contactos de la ficha. Grabado en producción:
 Velux (id 8) enlazado a la casa y «Homestone gris» (id 10, modelo 42HO-38 (07-60), la única
 fila de «Materiales utilizados en casa» en Notion, con la página en blanco). No repetir.
+
+**Audi A6 Allroad C7 traído de Notion (3/10/2026, petición de Gonzalo):** grabado en
+producción el coche (vehículos, id 11, a nombre de Gonzalo, persona 1) con las
+especificaciones, referencias de recambios, la avería pendiente de la cámara ADAS y
+los consejos de suspensión/mapas en `notas`; su seguro (contratos, id 12, Qualitas
+2025/5417233, 262,02 €/año, renovación 11/02/2027, con el histórico de Axa en notas) y
+sus 23 apuntes de historial (registros 28-50: revisiones desde 2016, compra por 27.200 €,
+ITV, neumáticos, refrigerante, batería, AdBlue). No repetir. El historial de Notion no
+trae kilómetros en 2025-12 ni 2026-09, y `km` queda en 219.263 (mayo 2025). **Pendiente:**
+fecha de la próxima ITV (última apuntada: 19/04/2024; no se ha inventado), teléfono de
+asistencia del seguro, y adjuntar los PDF de Notion (factura de compra, Norauto 17/12/2021,
+Manirapid 13/03/2023, pólizas). Los otros dos vehículos de Notion (Allroad C5 4.2 0913CMM,
+VW T4 California 2781KHZ, Opel Astra 2647HJR) siguen sin traer.
