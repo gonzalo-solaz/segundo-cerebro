@@ -51,7 +51,7 @@ $hechos = hechos_recientes($pdo, 20, $filtro ?: null);
 $aqui = 'vencimientos.php' . ($filtro ? '?s=' . $filtro : '');
 
 cabecera('Agenda', 'agenda');
-cabecera_pagina('Agenda', 'Todo lo que vence o toca hacer, de todas las secciones.', '', 'agenda', '#163300');
+cabecera_pagina('Agenda', 'Todo lo que vence o toca hacer, de todas las secciones.', '', 'agenda', '#405189');
 ?>
 
 <?php if ($editar): ?>

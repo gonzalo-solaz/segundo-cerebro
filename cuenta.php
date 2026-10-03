@@ -83,7 +83,7 @@ $codigos = $_SESSION['codigos_mostrar'] ?? null;
 unset($_SESSION['codigos_mostrar']);   // se enseñan UNA vez
 
 cabecera('Mi cuenta', 'cuenta');
-cabecera_pagina('Mi cuenta', e($usuario_actual['email']) . ' · ' . e(roles()[$usuario_actual['rol']] ?? ''), '', 'persona', $usuario_actual['persona_color'] ?? '#163300');
+cabecera_pagina('Mi cuenta', e($usuario_actual['email']) . ' · ' . e(roles()[$usuario_actual['rol']] ?? ''), '', 'persona', $usuario_actual['persona_color'] ?? '#405189');
 ?>
 <?php if ($temporal): ?>
   <div class="flash flash-aviso">Estás entrando con una contraseña temporal. Elige la tuya para seguir.</div>
