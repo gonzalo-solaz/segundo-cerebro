@@ -51,7 +51,7 @@ pinta_bien('panel', pedir('index.php'), 'Lo que viene');
 pinta_bien('el panel enseña el aviso vencido de la ITV', pedir('index.php'), 'Pasar la ITV · Furgo');
 pinta_bien('el panel enseña el gasto fijo', pedir('index.php'), '127,99');
 foreach (array_keys(secciones()) as $s) {
-    pinta_bien("sección {$s}", pedir('seccion.php', ['s' => $s]), e(seccion($s)['nombre']));
+    pinta_bien("sección {$s}", pedir('seccion.php', ['s' => $s, 'lista' => '1']), e(seccion($s)['nombre']));
     pinta_bien("sección {$s} (archivados)", pedir('seccion.php', ['s' => $s, 'archivados' => '1']));
     foreach (array_keys(seccion($s)['tipos']) as $t) {
         pinta_bien("alta de {$s}/{$t}", pedir('elemento-editar.php', ['s' => $s, 't' => $t]), 'Guardar');
@@ -76,7 +76,10 @@ $pdo->prepare('UPDATE elementos SET enlace_id = ? WHERE id IN (?, ?)')->execute(
 pinta_bien('la ficha de la casa lista sus contratos', pedir('elemento.php', ['id' => (string)$id['casa']]), 'Contratos y seguros');
 pinta_bien('y los nombra', pedir('elemento.php', ['id' => (string)$id['casa']]), 'Seguro de hogar');
 pinta_bien('la ficha del contrato enlaza a su casa', pedir('elemento.php', ['id' => (string)$id['luz']]), 'Casa de prueba');
-pinta_bien('el listado de Vivienda resume los contratos de la casa', pedir('seccion.php', ['s' => 'vivienda']), 'Contratos y seguros');
+$r = pedir('seccion.php', ['s' => 'vivienda']);
+comprueba('con una sola vivienda, la sección lleva directa a su ficha', $r['redireccion'] === '/segundo-cerebro/elemento.php?id=' . $id['casa'], (string)$r['redireccion']);
+pinta_bien('el listado de Vivienda (lista=1) resume los contratos de la casa', pedir('seccion.php', ['s' => 'vivienda', 'lista' => '1']), 'Contratos y seguros');
+pinta_bien('la ficha de la casa ofrece equipamiento y contactos', pedir('elemento.php', ['id' => (string)$id['casa']]), 'Equipamiento y materiales');
 pinta_bien('el formulario de un suministro ofrece la vivienda', pedir('elemento-editar.php', ['s' => 'contratos', 't' => 'suministro', 'enlace' => (string)$id['casa']]), 'Casa de prueba');
 pinta_bien('elemento que no existe',pedir('elemento.php', ['id' => '99999']), 'No encontrado');
 pinta_bien('agenda', pedir('vencimientos.php'), 'Toca ya');

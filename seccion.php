@@ -8,6 +8,14 @@ if (!$sec) pagina_error(404, 'No encontrado', 'Esa sección no existe.');
 
 $archivados = !empty($_GET['archivados']);
 $elementos = elementos_de($pdo, $clave, !$archivados);
+
+// Con una sola vivienda, entrar en Vivienda es entrar en su ficha. En cuanto
+// haya otra, sale el listado. «lista=1» fuerza el listado (el contacto de
+// confianza o una vivienda nueva se añaden desde ahí).
+if ($clave === 'vivienda' && !$archivados && empty($_GET['lista'])) {
+    $casas = array_values(array_filter($elementos, static fn($el) => $el['tipo'] === 'inmueble'));
+    if (count($casas) === 1) redirigir('elemento.php?id=' . $casas[0]['id']);
+}
 $avisos = agenda($pdo, 365, $clave);
 $proximo = [];
 foreach ($avisos as $v) {

@@ -53,12 +53,13 @@ function elementos_enlazados(PDO $pdo, int $id): array {
     return array_map('decodificar_elemento', $st->fetchAll());
 }
 
-// Cuántos elementos cuelgan de cada uno y cuánto cuestan al mes:
+// Cuántos contratos y seguros cuelgan de cada uno y cuánto cuestan al mes:
 // [id_padre => ['n' => 5, 'mensual' => 13.54]]. Una sola consulta para
-// pintar el listado de una sección.
+// pintar el listado de una sección. Solo cuenta la sección contratos: el
+// equipamiento de la casa también cuelga de ella pero no es un contrato.
 function resumen_enlazados(PDO $pdo): array {
     $out = [];
-    foreach ($pdo->query('SELECT enlace_id, datos FROM elementos WHERE activo = 1 AND enlace_id IS NOT NULL') as $f) {
+    foreach ($pdo->query("SELECT enlace_id, datos FROM elementos WHERE activo = 1 AND enlace_id IS NOT NULL AND seccion = 'contratos'") as $f) {
         $k = (int)$f['enlace_id'];
         $out[$k] = $out[$k] ?? ['n' => 0, 'mensual' => 0.0];
         $out[$k]['n']++;

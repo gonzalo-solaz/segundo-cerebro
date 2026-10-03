@@ -103,10 +103,11 @@ function secciones(): array {
                     ],
                 ],
                 'equipo' => [
-                    'nombre' => 'Electrodoméstico o instalación', 'ejemplo' => 'Caldera', 'persona' => null,
+                    'nombre' => 'Equipamiento o material', 'ejemplo' => 'Caldera', 'persona' => null,
+                    'enlace' => ['etiqueta' => 'Vivienda', 'a' => [['vivienda', 'inmueble']]],
                     'campos' => [
                         'marca' => ['etiqueta' => 'Marca', 'tipo' => 'texto', 'resumen' => true],
-                        'modelo' => ['etiqueta' => 'Modelo', 'tipo' => 'texto'],
+                        'modelo' => ['etiqueta' => 'Modelo o referencia', 'tipo' => 'texto', 'resumen' => true],
                         'ubicacion' => ['etiqueta' => 'Dónde está', 'tipo' => 'texto'],
                         'fecha_compra' => ['etiqueta' => 'Fecha de compra', 'tipo' => 'fecha'],
                         'garantia_hasta' => ['etiqueta' => 'Garantía hasta', 'tipo' => 'fecha', 'resumen' => true,
@@ -314,7 +315,7 @@ function secciones(): array {
                         'cuota_participacion' => ['etiqueta' => 'Cuota de participación en el edificio', 'tipo' => 'numero', 'unidad' => '%'],
                         'cuota_zona' => ['etiqueta' => 'Cuota en su escalera o zona', 'tipo' => 'numero', 'unidad' => '%',
                             'ayuda' => 'La «recalculada por zonas»: la que se aplica a los gastos de la escalera (ascensor, limpieza…).'],
-                        'analisis' => ['etiqueta' => 'Análisis y preguntas para la junta', 'tipo' => 'area',
+                        'analisis' => ['etiqueta' => 'Análisis y preguntas para la junta', 'tipo' => 'area', 'aparte' => true,
                             'ayuda' => 'Las conclusiones de «Gasto en comunidad». Claude lo pone al día con cada liquidación.'],
                     ],
                 ],

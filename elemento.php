@@ -69,6 +69,19 @@ $hijos = elementos_enlazados($pdo, $id);
 $tipos_hijos = tipos_que_enlazan($el['seccion'], $el['tipo']);
 $coste_hijos = 0.0;
 foreach ($hijos as $h) $coste_hijos += coste_mensual($h['datos']);
+// Lo enlazado se enseña en una tarjeta por sección: los contratos de la casa
+// no se mezclan con su equipamiento.
+$contactos_casa = [];
+if ($el['seccion'] === 'vivienda' && $el['tipo'] === 'inmueble') {
+    $contactos_casa = array_values(array_filter(elementos_de($pdo, 'vivienda'), static fn($x) => $x['tipo'] === 'contacto'));
+}
+$titulos_hijos = ['contratos' => ['Contratos y seguros', 'contrato'], 'vivienda' => ['Equipamiento y materiales', 'casa']];
+$grupos_hijos = [];
+foreach ($titulos_hijos as $gs => [$titulo, $icono_g]) {
+    $gh = array_values(array_filter($hijos, static fn($h) => $h['seccion'] === $gs));
+    $gt = array_values(array_filter($tipos_hijos, static fn($t) => $t[0] === $gs));
+    if ($gh || $gt) $grupos_hijos[$gs] = ['titulo' => $titulo, 'icono' => $icono_g, 'hijos' => $gh, 'tipos' => $gt];
+}
 
 $acciones = '<a class="btn btn-sutil" href="' . e(url('elemento-editar.php?id=' . $id)) . '">' . icono('editar') . 'Editar</a>';
 if ($el['seccion'] === 'contratos' && $el['tipo'] === 'comunidad') {
@@ -76,7 +89,7 @@ if ($el['seccion'] === 'contratos' && $el['tipo'] === 'comunidad') {
 }
 cabecera($el['nombre'], 'seccion:' . $el['seccion']);
 cabecera_pagina($el['nombre'],
-    '<a href="' . e(url('seccion.php?s=' . $el['seccion'])) . '">' . e($sec['nombre']) . '</a> · ' . e($def['nombre']),
+    '<a href="' . e(url('seccion.php?s=' . $el['seccion'] . '&lista=1')) . '">' . e($sec['nombre']) . '</a> · ' . e($def['nombre']),
     $acciones, $sec['icono'], $sec['color']);
 ?>
 <?php if (!$el['activo']): ?>
@@ -90,7 +103,7 @@ cabecera_pagina($el['nombre'],
       <dl class="datos">
         <?php $alguno = false; ?>
         <?php foreach ($def['campos'] as $clave => $c): ?>
-          <?php if (!isset($el['datos'][$clave]) || $el['datos'][$clave] === '') continue; $alguno = true; ?>
+          <?php if (!isset($el['datos'][$clave]) || $el['datos'][$clave] === '' || !empty($c['aparte'])) continue; $alguno = true; ?>
           <div class="<?= $c['tipo'] === 'area' ? 'dato-ancho' : '' ?>">
             <dt><?= e($c['etiqueta']) ?></dt>
             <dd><?php
@@ -118,19 +131,29 @@ cabecera_pagina($el['nombre'],
       <?php endif; ?>
     </section>
 
-    <?php if ($hijos || $tipos_hijos): ?>
-      <section class="tarjeta" id="enlazados">
+    <?php foreach ($def['campos'] as $clave => $c): ?>
+      <?php if (empty($c['aparte']) || trim((string)($el['datos'][$clave] ?? '')) === '') continue; ?>
+      <details class="tarjeta tarjeta-plegable">
+        <summary><h2><?= e($c['etiqueta']) ?></h2></summary>
+        <p class="notas"><?= nl2br(e($el['datos'][$clave])) ?></p>
+      </details>
+    <?php endforeach; ?>
+
+    <?php foreach ($grupos_hijos as $gs => $g): ?>
+      <section class="tarjeta" id="enlazados-<?= e($gs) ?>">
         <div class="tarjeta-cabecera">
-          <h2><?= icono('contrato') ?>Contratos y seguros</h2>
-          <?php if ($coste_hijos > 0): ?><span class="tenue">Suman <strong><?= e(eur($coste_hijos)) ?></strong> al mes</span><?php endif; ?>
+          <h2><?= icono($g['icono']) ?><?= e($g['titulo']) ?></h2>
+          <?php if ($gs === 'contratos' && $coste_hijos > 0): ?><span class="tenue">Suman <strong><?= e(eur($coste_hijos)) ?></strong> al mes</span><?php endif; ?>
         </div>
-        <?php if (!$hijos): ?><p class="vacio-mini">Aún no hay nada enlazado a esta ficha.</p><?php endif; ?>
+        <?php if (!$g['hijos']): ?><p class="vacio-mini">Aún no hay nada enlazado a esta ficha.</p><?php endif; ?>
         <ul class="lista-docs">
-          <?php foreach ($hijos as $h): ?>
+          <?php foreach ($g['hijos'] as $h): ?>
             <?php
               $hd = tipo_def($h['seccion'], $h['tipo']);
               $linea = [];
               if (!empty($h['datos']['compania'])) $linea[] = $h['datos']['compania'];
+              if (!empty($h['datos']['marca'])) $linea[] = $h['datos']['marca'];
+              if (!empty($h['datos']['modelo'])) $linea[] = $h['datos']['modelo'];
               if (isset($h['datos']['coste'])) $linea[] = eur($h['datos']['coste']) . (!empty($h['datos']['periodicidad']) ? ' (' . $h['datos']['periodicidad'] . ')' : '');
               $prox = agenda($pdo, 36500, null, $h['id'])[0] ?? null;
               if ($prox) $linea[] = fecha_corta($prox['fecha']) . ' (' . relativo($prox['dias']) . ')';
@@ -141,9 +164,26 @@ cabecera_pagina($el['nombre'],
             </li>
           <?php endforeach; ?>
         </ul>
-        <?php foreach ($tipos_hijos as [$ts, $tt, $tn]): ?>
+        <?php foreach ($g['tipos'] as [$ts, $tt, $tn]): ?>
           <a class="btn btn-sutil" href="<?= e(url('elemento-editar.php?s=' . $ts . '&t=' . $tt . '&enlace=' . $id)) ?>"><?= icono('mas') ?><?= e($tn) ?></a>
         <?php endforeach; ?>
+      </section>
+    <?php endforeach; ?>
+
+    <?php if ($el['seccion'] === 'vivienda' && $el['tipo'] === 'inmueble'): ?>
+      <section class="tarjeta" id="contactos">
+        <div class="tarjeta-cabecera"><h2><?= icono('persona') ?>Contactos de confianza</h2></div>
+        <?php if (!$contactos_casa): ?><p class="vacio-mini">Fontanero, electricista, administrador de fincas…</p><?php endif; ?>
+        <ul class="lista-docs">
+          <?php foreach ($contactos_casa as $c): ?>
+            <li>
+              <a href="<?= e(url('elemento.php?id=' . $c['id'])) ?>"><?= e($c['nombre']) ?></a>
+              <span class="tenue"><?= e(implode(' · ', array_filter([$c['datos']['oficio'] ?? '', $c['datos']['telefono'] ?? '']))) ?></span>
+            </li>
+          <?php endforeach; ?>
+        </ul>
+        <a class="btn btn-sutil" href="<?= e(url('elemento-editar.php?s=vivienda&t=contacto')) ?>"><?= icono('mas') ?>Contacto de confianza</a>
+        <a class="btn btn-sutil" href="<?= e(url('elemento-editar.php?s=vivienda&t=inmueble')) ?>"><?= icono('mas') ?>Otra vivienda</a>
       </section>
     <?php endif; ?>
 
