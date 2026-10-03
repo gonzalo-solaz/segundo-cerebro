@@ -179,16 +179,33 @@ pinta_bien('sin clave de finanzas, la ficha del empleo lo explica', pedir('eleme
 pinta_bien('la ficha del empleo lista su convenio', pedir('elemento.php', ['id' => (string)$id['empleo']]), 'Convenio de prueba');
 $cache = sys_get_temp_dir() . '/sc-cache-' . getmypid();
 @mkdir($cache, 0777, true);
-file_put_contents($cache . '/finanzas-nominas.json', json_encode(['t' => time(), 'leido_en' => '2026-10-03 08:00:00', 'anios' => nominas_de_ejemplo()]));
+file_put_contents($cache . '/finanzas-nomina_estado.json', json_encode(['t' => time(), 'leido_en' => '2026-10-03 08:00:00', 'datos' => ['anios' => nominas_de_ejemplo()]]));
 putenv('SC_CACHE=' . $cache);
 putenv('SC_FINANZAS_CLAVE=clave-de-finanzas');
 $r = pedir('elemento.php', ['id' => (string)$id['empleo']]);
 pinta_bien('con clave, enseña el líquido del año leído de finanzas', $r, '5.700,00');
 pinta_bien('y avisa de la nómina que falta', $r, 'Falta grabar la nómina de septiembre 2026');
 pinta_bien('y del mes en que cambia el cuadre con el banco', $r, 'La diferencia con el banco cambia en agosto 2026');
+file_put_contents($cache . '/finanzas-resumen.json', json_encode(['t' => time(), 'leido_en' => '2026-10-03 08:00:00', 'datos' => [
+    'pendientes' => 7, 'actualizado' => '2026-10-01',
+    'saldos' => [['cuenta' => 'Mediolanum', 'saldo' => 1234.5, 'banco' => 'Mediolanum', 'cuadra' => true, 'activa' => true, 'ultimo_movimiento' => '2026-09-30'],
+                 ['cuenta' => 'Vieja', 'saldo' => 10, 'banco' => 'X', 'cuadra' => null, 'activa' => false, 'ultimo_movimiento' => '']],
+    'comprobaciones' => ['atraso' => ['estado' => 'aviso', 'titulo' => 'Revolut lleva 20 días sin importar', 'detalle' => 'Último: 13/09']],
+    'gasto' => ['ultimo_completo' => '2026-09', 'meses' => [['mes' => '2026-08', 'gasto' => 1000, 'ingreso' => 2500],
+        ['mes' => '2026-09', 'gasto' => 1500, 'ingreso' => 2600], ['mes' => '2026-10', 'gasto' => 100, 'ingreso' => 0]],
+        'categorias' => [['categoria' => 'Supermercado', 'mes' => 420.3, 'media' => 380]]]]]));
+$r = pedir('finanzas.php');
+pinta_bien('Finanzas: la liquidez suma solo las cuentas activas', $r, '1.234,50');
+pinta_bien('y el gasto del último mes completo frente a la media', $r, 'media 1.000,00');
+pinta_bien('y lo que hay que mirar', $r, 'Revolut lleva 20 días sin importar');
+pinta_bien('y las categorías', $r, 'Supermercado');
+pinta_bien('y los botones a finanzas van por el pase', $r, 'finanzas-entrar.php?a=importador.php');
+@unlink($cache . '/finanzas-resumen.json');
 putenv('SC_CACHE');
 putenv('SC_FINANZAS_CLAVE');
-@unlink($cache . '/finanzas-nominas.json');
+pinta_bien('sin clave de finanzas, la página lo explica', pedir('finanzas.php'), 'Falta la clave de finanzas');
+pinta_bien('un miembro no ve Finanzas', pedir('finanzas.php', [], null, $id['miembro']), 'Solo administradores');
+@unlink($cache . '/finanzas-nomina_estado.json');
 @rmdir($cache);
 
 // Dos pasos y un solo acceso con finanzas.
@@ -214,7 +231,7 @@ preg_match('#/finanzas-personales/entrar\.php\?pase=([^&\s]+)#', (string)$r['red
 $datos = isset($m[1]) ? pase_leer(PASE_CLAVE, rawurldecode($m[1]), 'entrar') : null;
 comprueba('Finanzas: el admin sale con un pase firmado a su página', ($datos['e'] ?? '') === 'admin@ejemplo.test' && ($datos['a'] ?? '') === 'nomina.php', (string)$r['redireccion']);
 pinta_bien('un miembro no entra en finanzas', pedir('finanzas-entrar.php', [], null, $id['miembro']), 'Solo administradores');
-pinta_bien('el menú del admin lleva a finanzas por el pase', pedir('index.php'), 'finanzas-entrar.php');
+pinta_bien('el menú del admin lleva a la sección Finanzas', pedir('index.php'), 'finanzas.php');
 $r = pedir('logout.php', [], []);
 comprueba('Salir pasa por finanzas para cerrar también aquella', str_contains((string)$r['redireccion'], '/finanzas-personales/salir.php?pase='), (string)$r['redireccion']);
 $r = pedir('logout.php', ['pase' => pase_crear(PASE_CLAVE, ['t' => 'salir'])]);

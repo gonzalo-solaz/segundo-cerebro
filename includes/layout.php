@@ -60,7 +60,7 @@ function cabecera(string $titulo, string $activa = ''): void {
       <?php if (es_admin()): ?>
         <div class="menu-separador"></div>
         <?php if (FINANZAS_URL !== ''): ?>
-          <a href="<?= e(url_finanzas()) ?>" style="--c:#405189"><?= icono('cartera') ?><span>Finanzas</span><?= PASE_CLAVE === '' ? icono('externo', 'ico ico-mini') : '' ?></a>
+          <a href="<?= e(url('finanzas.php')) ?>" class="<?= $activa === 'finanzas' ? 'activo' : '' ?>" style="--c:#405189"><?= icono('cartera') ?><span>Finanzas</span></a>
         <?php endif; ?>
         <a href="<?= e(url('ajustes.php')) ?>" class="<?= $activa === 'ajustes' ? 'activo' : '' ?>"><?= icono('ajustes') ?><span>Ajustes</span></a>
       <?php endif; ?>

@@ -19,8 +19,8 @@ function finanzas_configurada(): bool {
     return FINANZAS_URL !== '' && FINANZAS_API_CLAVE !== '';
 }
 
-function finanzas_ruta_cache(): string {
-    return DIR_CACHE . '/finanzas-nominas.json';
+function finanzas_ruta_cache(string $accion): string {
+    return DIR_CACHE . '/finanzas-' . $accion . '.json';
 }
 
 // POST a la API de finanzas. Devuelve el JSON decodificado o lanza
@@ -52,28 +52,41 @@ function finanzas_pedir(array $campos): array {
 }
 
 /**
- * Las nóminas de finanzas: ['anios' => [...] (tal cual las da nomina_estado),
- * 'leido_en' => 'AAAA-MM-DD HH:MM:SS', 'error' => ?string]. Sin configurar,
- * o sin copia y con finanzas caído, 'anios' viene vacío y 'error' lo explica.
+ * Lee una acción de la API de finanzas con copia de una hora:
+ * ['datos' => array, 'leido_en' => 'AAAA-MM-DD HH:MM:SS', 'error' => ?string].
+ * Sin configurar, o sin copia y con finanzas caído, 'datos' viene vacío y
+ * 'error' lo explica; con copia vieja, se enseña la copia y el error.
  */
-function finanzas_nominas(bool $forzar = false): array {
+function finanzas_leer(string $accion, bool $forzar = false): array {
     if (!finanzas_configurada()) {
-        return ['anios' => [], 'leido_en' => null, 'error' => 'Falta la clave de finanzas (secreto FINANZAS_API_CLAVE).'];
+        return ['datos' => [], 'leido_en' => null, 'error' => 'Falta la clave de finanzas (secreto FINANZAS_API_CLAVE).'];
     }
-    $ruta = finanzas_ruta_cache();
+    $ruta = finanzas_ruta_cache($accion);
     $copia = is_file($ruta) ? json_array((string)@file_get_contents($ruta)) : [];
     if (!$forzar && $copia && time() - (int)($copia['t'] ?? 0) < FINANZAS_CACHE_SEGUNDOS) {
-        return ['anios' => $copia['anios'] ?? [], 'leido_en' => $copia['leido_en'] ?? null, 'error' => null];
+        return ['datos' => $copia['datos'] ?? [], 'leido_en' => $copia['leido_en'] ?? null, 'error' => null];
     }
     try {
-        $datos = finanzas_pedir(['accion' => 'nomina_estado']);
-        $nueva = ['t' => time(), 'leido_en' => ahora(), 'anios' => $datos['anios'] ?? []];
+        $datos = finanzas_pedir(['accion' => $accion]);
+        unset($datos['ok']);
+        $nueva = ['t' => time(), 'leido_en' => ahora(), 'datos' => $datos];
         if (!is_dir(dirname($ruta))) @mkdir(dirname($ruta), 0750, true);
         @file_put_contents($ruta, json_texto($nueva), LOCK_EX);
-        return ['anios' => $nueva['anios'], 'leido_en' => $nueva['leido_en'], 'error' => null];
+        return ['datos' => $datos, 'leido_en' => $nueva['leido_en'], 'error' => null];
     } catch (RuntimeException $ex) {
-        return ['anios' => $copia['anios'] ?? [], 'leido_en' => $copia['leido_en'] ?? null, 'error' => $ex->getMessage()];
+        return ['datos' => $copia['datos'] ?? [], 'leido_en' => $copia['leido_en'] ?? null, 'error' => $ex->getMessage()];
     }
+}
+
+/** Las nóminas (acción nomina_estado): como finanzas_leer, con 'anios' en vez de 'datos'. */
+function finanzas_nominas(bool $forzar = false): array {
+    $r = finanzas_leer('nomina_estado', $forzar);
+    return ['anios' => $r['datos']['anios'] ?? [], 'leido_en' => $r['leido_en'], 'error' => $r['error']];
+}
+
+/** Saldos, salud, pendientes y gasto por mes y categoría (acción resumen, para finanzas.php). */
+function finanzas_resumen(bool $forzar = false): array {
+    return finanzas_leer('resumen', $forzar);
 }
 
 function mes_es(string $mes): string {

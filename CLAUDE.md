@@ -368,3 +368,10 @@ valor de mercado, capital pendiente) vive en finanzas, que lee estas fichas con 
   Un solo «Salir» encadenado en los dos sentidos (`logout.php` ↔ `salir.php` de finanzas).
   Sin `PASE_CLAVE`, todo sigue como antes (enlace externo, login propio de finanzas).
 - `ASSETS_VERSION` la pone ahora el workflow (el commit): ya no hay que subirla a mano.
+- **Fase 3 hecha:** `finanzas.php` (menú «Finanzas», solo admin) enseña lo que da la
+  acción `resumen` de la API de finanzas (saldos, salud, pendientes, gasto e ingreso de
+  13 meses y categorías del último mes completo frente a su media, con las MISMAS reglas
+  que el dashboard: gasto = |suma de los de tipo gasto|, los reembolsos restan, las
+  transferencias no cuentan) y las nóminas. Copia de una hora por acción en
+  `private/cache/finanzas-<acción>.json` («Actualizar» la fuerza). Los botones llevan a
+  cada pantalla de finanzas por el pase.

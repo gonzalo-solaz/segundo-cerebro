@@ -488,3 +488,6 @@ details.tarjeta-plegable[open] > summary { margin-bottom: 12px; }
 .clave-totp { display: inline-block; font-size: 1.05rem; letter-spacing: .06em; padding: .4rem .6rem; user-select: all; word-break: break-all; }
 .codigos-recuperacion { display: grid; grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr)); gap: .4rem; list-style: none; padding: 0; margin: 0; }
 .codigos-recuperacion code { font-size: 1rem; letter-spacing: .04em; }
+
+/* Finanzas: fila de botones bajo las cifras */
+.acciones-fila-pagina { display: flex; flex-wrap: wrap; gap: .5rem; margin: 0 0 1rem; }
