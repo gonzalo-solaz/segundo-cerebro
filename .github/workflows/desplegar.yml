@@ -52,8 +52,16 @@ jobs:
         id: listo
         env:
           FTP_SERVIDOR: ${{ secrets.FTP_SERVIDOR }}
+          FTP_CARPETA: ${{ secrets.FTP_CARPETA }}
           DB_PASS: ${{ secrets.DB_PASS }}
         run: |
+          # FRENO (3/10/2026): la primera vez, sin FTP_CARPETA, se subió TODO a la raíz
+          # del dominio y pisó la web que vive allí. Ahora el destino es obligatorio y
+          # tiene que terminar en segundo-cerebro/: nunca se sube a ciegas a ./
+          if [ -n "$FTP_SERVIDOR" ] && ! printf %s "$FTP_CARPETA" | grep -qE 'segundo-cerebro/?$'; then
+            echo "::error::FTP_CARPETA falta o no termina en segundo-cerebro/. No se despliega."
+            exit 1
+          fi
           if [ -z "$FTP_SERVIDOR" ]; then
             echo "::warning::Sin el secreto FTP_SERVIDOR no se despliega (las pruebas sí han pasado)."
             echo "listo=no" >> "$GITHUB_OUTPUT"
@@ -118,6 +126,6 @@ jobs:
           username: ${{ secrets.FTP_USUARIO }}
           password: ${{ secrets.FTP_CONTRASENA }}
           protocol: ${{ secrets.FTP_PROTOCOLO || 'ftps' }}
-          server-dir: ${{ secrets.FTP_CARPETA || './' }}
+          server-dir: ${{ secrets.FTP_CARPETA }}
           local-dir: ./_despliegue/
           log-level: standard
