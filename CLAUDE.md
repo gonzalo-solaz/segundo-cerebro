@@ -99,19 +99,17 @@ avisa por correo.
 - **Archivos en `private/archivos/AAAA/`** con nombre aleatorio; solo se sirven
   por `archivo.php` (con sesión). El tipo se decide por los bytes, no por la
   extensión, y así no hace falta la extensión fileinfo.
-- **Diseño = el de finanzas (3/10/2026, petición de Gonzalo: «quiero que se vea
-  toda la app como se ve finanzas-personales»).** Mismos tokens de color (Velzon,
-  valores exactos de `vistas/dashboard-cabecera.html`), **Poppins** 400/500/600 en
-  `assets/fuentes/` (local: cero recursos externos, hay datos de salud), logo
-  `gonzalosolaz*.png` arriba con los botones cuadrados de icono (usuario, tema,
-  salir) y las secciones como **pestañas** con el activo subrayado (una fila que se
-  desliza en el móvil; `app.js` centra la activa). Ya no hay menú lateral. Tema
-  oscuro por defecto si el sistema no dice lo contrario, como finanzas. Si cambia el
-  CSS de finanzas, cambiar aquí los tokens de `assets/app.css`. Las fuentes
-  `hanken-grotesk` y `plex-mono` de `assets/fuentes/` no las usa nadie.
-
-## Cómo se trabaja aquí
-
+- **Diseño: estilos y colores de finanzas, disposición propia (3/10/2026).** Gonzalo
+  quería «los estilos y colores de finanzas-personales» pero conservando la
+  disposición: barra lateral a la izquierda con sus iconos y el color de cada
+  sección, la marca del segundo cerebro y la barra del móvil. Un primer intento
+  copió también la maqueta de finanzas (logo arriba y secciones en pestañas) y lo
+  descartó: «era solo cambiar estilos y colores». De finanzas se toman los tokens
+  de color (valores exactos de su `vistas/dashboard-cabecera.html`, oscuro y
+  claro), **Poppins** 400/500/600 en `assets/fuentes/` (local: cero recursos
+  externos, hay datos de salud) y el aspecto de tarjetas, tablas, botones,
+  formularios y etiquetas. El tema sigue al del sistema. Si cambia el CSS de
+  finanzas, cambiar aquí los tokens de `assets/app.css`, no la maqueta.
 - **Probar:** `php pruebas/todas.php` → tiene que dar **5/5** antes de decir que
   algo está listo para subir. Van contra **SQLite** con el esquema real (no hay
   base simulada a mano como en finanzas) y no necesitan `private/` ni MySQL, así

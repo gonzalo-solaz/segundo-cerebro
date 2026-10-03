@@ -34,7 +34,7 @@
   --hover: rgba(255, 255, 255, .03);
   --sombra: 0 1px 2px rgba(0, 0, 0, .30);
   --sombra-alta: 0 8px 20px rgba(0, 0, 0, .35);
-  --logo: url("gonzalosolaz-blancoverde.png");
+  --lateral: 250px;
   --radio: .5rem;
   --radio-sm: 8px;
   --radio-md: 10px;
@@ -57,7 +57,6 @@
   --hover: rgba(64, 81, 137, .04);
   --sombra: 0 1px 2px rgba(56, 65, 74, .15);
   --sombra-alta: 0 8px 20px rgba(56, 65, 74, .14);
-  --logo: url("gonzalosolaz.png");
   color-scheme: light;
 }
 
@@ -83,68 +82,55 @@ code { background: var(--panel-2); border: 1px solid var(--borde); padding: .08r
 .ico { width: 18px; height: 18px; flex: none; vertical-align: -3px; }
 .ico-mini { width: 14px; height: 14px; vertical-align: -2px; }
 
-/* ---------------- Maqueta (la de finanzas: logo + botones + pestañas) ---------------- */
-.wrap { max-width: 1280px; margin: 0 auto; padding: 24px 16px 64px; }
-@media (min-width: 640px) { .wrap { padding: 32px 24px 64px; } }
+/* ---------------- Maqueta: barra lateral (la propia), con los estilos de finanzas ---------------- */
+.app { min-height: 100vh; }
+.lateral {
+  position: fixed; inset: 0 auto 0 0; z-index: 40; width: min(84vw, var(--lateral));
+  background: var(--panel); border-right: 1px solid var(--borde);
+  display: flex; flex-direction: column; padding: 18px 12px;
+  transform: translateX(-102%); transition: transform .28s var(--ease);
+}
+.menu-abierto .lateral { transform: none; box-shadow: var(--sombra-alta); }
+.velo { display: none; }
+.menu-abierto .velo { display: block; position: fixed; inset: 0; z-index: 30; background: rgba(0, 0, 0, .5); }
 
-.topbar { margin-bottom: 24px; }
-.topbar-fila { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
-.marca { display: flex; align-items: center; gap: 16px; min-width: 0; color: var(--texto); }
+.marca { display: flex; align-items: center; gap: 10px; font-weight: 600; color: var(--texto); font-size: 15px; padding: 4px 8px; }
 .marca:hover { text-decoration: none; }
-.brand-logo { display: block; height: 40px; width: 230px; max-width: 58vw; background: var(--logo) no-repeat left center / contain; flex: none; }
-.marca-app {
-  display: none; font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em;
-  color: var(--tenue); line-height: 1.2; padding-left: 16px; border-left: 1px solid var(--borde);
-}
-@media (min-width: 640px) {
-  .brand-logo { height: 56px; width: 320px; }
-  .marca-app { display: block; }
-}
+.marca-icono { display: grid; place-items: center; width: 34px; height: 34px; border-radius: var(--radio-sm); background: var(--acento); color: #fff; }
+.marca-icono .ico { width: 20px; height: 20px; }
 
-.topbar-acciones { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-.topbar-acciones form { margin: 0; }
-.theme-toggle {
-  background: var(--panel-2); border: 1px solid var(--borde); color: var(--texto-2);
-  width: 38px; height: 38px; border-radius: var(--radio-md); cursor: pointer; padding: 0; font: inherit;
-  display: inline-flex; align-items: center; justify-content: center; flex: none;
-  transition: background .15s var(--ease), color .15s var(--ease), border-color .15s var(--ease), transform .12s var(--ease);
+.menu { display: flex; flex-direction: column; gap: 2px; margin-top: 18px; overflow-y: auto; flex: 1; }
+.menu a {
+  --c: var(--acento);
+  display: flex; align-items: center; gap: 11px; padding: 9px 11px; border-radius: var(--radio-sm);
+  color: var(--texto-2); font-weight: 500; transition: background .15s, color .15s;
 }
-.theme-toggle:hover { text-decoration: none; }
-@media (hover: hover) and (pointer: fine) { .theme-toggle:hover { color: var(--texto); border-color: var(--tenue); } }
-.theme-toggle:active { transform: scale(.94); }
-.theme-toggle:focus-visible { outline: none; border-color: var(--acento); box-shadow: 0 0 0 3px color-mix(in srgb, var(--acento) 25%, transparent); }
-.theme-toggle .ico { width: 18px; height: 18px; vertical-align: 0; }
+.menu a .ico { color: var(--c); }
+.menu a:hover { background: var(--panel-2); color: var(--texto); text-decoration: none; }
+.menu a.activo { background: color-mix(in srgb, var(--c) 14%, transparent); color: var(--texto); font-weight: 600; }
+.menu .ico-mini { margin-left: auto; color: var(--tenue); }
+.menu-separador { height: 1px; background: var(--borde); margin: 10px 8px; }
 
-/* Quién soy: avatar y, si cabe, el nombre */
-.usuario {
-  display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 4px; flex: none;
-  background: var(--panel-2); border: 1px solid var(--borde); border-radius: var(--radio-md);
-  color: var(--texto-2); font-size: 13px; font-weight: 500;
+.lateral-pie { display: flex; align-items: center; gap: 6px; border-top: 1px solid var(--borde); padding-top: 12px; margin-top: 8px; }
+.lateral-pie form { margin: 0; }
+.usuario { display: flex; align-items: center; gap: 9px; flex: 1; min-width: 0; padding: 5px 6px; border-radius: var(--radio-sm); color: var(--texto); font-weight: 600; }
+.usuario:hover, .usuario.activo { background: var(--panel-2); text-decoration: none; }
+.usuario span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.barra-movil {
+  position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px; padding-top: max(10px, env(safe-area-inset-top));
+  background: color-mix(in srgb, var(--panel) 88%, transparent); backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--borde);
 }
-.usuario:hover { text-decoration: none; }
-@media (hover: hover) and (pointer: fine) { .usuario:hover { color: var(--texto); border-color: var(--tenue); } }
-.usuario.activo { border-color: var(--acento); }
-.usuario .avatar { width: 28px; height: 28px; font-size: .72rem; }
-.usuario span:last-child { display: none; max-width: 9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-@media (min-width: 640px) { .usuario { padding: 4px 12px 4px 4px; } .usuario span:last-child { display: block; } }
+.contenido { padding: 18px 14px 64px; max-width: 1280px; margin: 0 auto; min-width: 0; }
 
-/* Pestañas: una sola fila que se desliza en el móvil (nada se pierde); la línea
-   de abajo es una sombra interior para que el subrayado del activo la tape. */
-.tabs { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; box-shadow: inset 0 -1px 0 var(--borde); }
-.tabs::-webkit-scrollbar { display: none; }
-.tab {
-  flex: none; padding: 10px 16px; color: var(--tenue); font-size: 13px; font-weight: 500; white-space: nowrap;
-  border-bottom: 2px solid transparent;
-  transition: color .15s var(--ease), border-color .15s var(--ease), transform .12s var(--ease);
+@media (min-width: 960px) {
+  .lateral { transform: none; width: var(--lateral); }
+  .barra-movil, .velo, .menu-abierto .velo { display: none; }
+  .principal { margin-left: var(--lateral); }
+  .contenido { padding: 28px 32px 64px; }
 }
-.tab:hover { text-decoration: none; }
-@media (hover: hover) and (pointer: fine) { .tab:hover { color: var(--texto-2); } }
-.tab:active { transform: scale(.97); }
-.tab:focus-visible { outline: none; color: var(--texto); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--acento) 40%, transparent); border-radius: 6px 6px 0 0; }
-.tab.active { color: var(--acento); border-bottom-color: var(--acento); }
-@media (min-width: 640px) { .tab { padding: 10px 18px; } }
-
-.contenido { min-width: 0; }
 
 /* ---------------- Tema: un icono u otro ---------------- */
 :root[data-theme="dark"] .solo-claro, :root:not([data-theme="dark"]) .solo-oscuro { display: none; }
@@ -449,9 +435,7 @@ details.desplegable[open] > summary { margin-bottom: .9rem; color: var(--texto);
 /* ---------------- Acceso (login) ---------------- */
 body.publica { min-height: 100vh; display: grid; place-items: center; padding: 20px; }
 .tarjeta-acceso { width: 100%; max-width: 400px; background: var(--panel); border: 1px solid var(--borde); border-radius: var(--radio); padding: 28px 24px; box-shadow: var(--sombra); }
-.acceso-marca { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; margin-bottom: 20px; padding-bottom: 18px; border-bottom: 1px solid var(--borde); }
-.acceso-marca .brand-logo { height: 44px; width: 240px; }
-.acceso-marca .marca-app { display: block; border: 0; padding: 0; }
+.acceso-marca { display: flex; align-items: center; gap: 10px; font-weight: 600; margin-bottom: 20px; color: var(--texto-2); }
 .tarjeta-acceso h1 { margin-bottom: 1rem; font-size: 1.2rem; }
 .form-acceso label { display: block; font-size: 11px; font-weight: 600; color: var(--tenue); text-transform: uppercase; letter-spacing: .05em; margin: .8rem 0 .3rem; }
 
