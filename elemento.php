@@ -125,7 +125,7 @@ cabecera_pagina($el['nombre'],
         <?php endif; ?>
       </dl>
       <?php if (!$alguno): ?><p class="vacio-mini">Sin datos todavía. <a href="<?= e(url('elemento-editar.php?id=' . $id)) ?>">Complétalos</a>.</p><?php endif; ?>
-      <?php $notas_largas = longitud(trim((string)$el['notas'])) > 280; ?>
+      <?php $notas_largas = longitud(trim((string)$el['notas'])) > 500; ?>
       <?php if (trim((string)$el['notas']) !== '' && !$notas_largas): ?>
         <h3 class="subtitulo">Notas</h3>
         <p class="notas"><?= nl2br(e($el['notas'])) ?></p>
