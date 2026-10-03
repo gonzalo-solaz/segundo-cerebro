@@ -99,7 +99,7 @@ cabecera_pagina(saludo() . ', ' . nombre_corto($usuario_actual['nombre']), e(ucf
     </a>
   <?php endforeach; ?>
   <?php if (es_admin() && FINANZAS_URL !== ''): ?>
-    <a class="tarjeta tarjeta-seccion" href="<?= e(url('finanzas.php')) ?>" style="--c:#405189">
+    <a class="tarjeta tarjeta-seccion" href="<?= e(url('finanzas.php')) ?>" style="--c:#5f8a1c">
       <div class="ts-cabecera">
         <span class="icono-grande"><?= icono('cartera') ?></span>
         <div><h3>Finanzas</h3><span class="tenue">Cuentas, gasto del mes y nóminas</span></div>

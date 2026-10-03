@@ -73,7 +73,7 @@ $migraciones = migraciones_aplicadas($pdo);
 $ruta_cron = str_replace('\\', '/', (string)realpath(__DIR__ . '/cron/diario.php'));
 
 cabecera('Ajustes', 'ajustes');
-cabecera_pagina('Ajustes', 'Accesos de la familia y estado del sistema.', '', 'ajustes', '#405189');
+cabecera_pagina('Ajustes', 'Accesos de la familia y estado del sistema.', '', 'ajustes', '#163300');
 ?>
 
 <?php if ($clave_nueva): ?>

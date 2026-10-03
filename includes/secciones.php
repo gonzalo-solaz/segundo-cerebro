@@ -97,7 +97,7 @@ function secciones(): array {
     $s = [
         // -------------------------------------------------------------
         'vivienda' => [
-            'nombre' => 'Vivienda', 'icono' => 'casa', 'color' => '#3577f1',
+            'nombre' => 'Vivienda', 'icono' => 'casa', 'color' => '#2c6fae',
             'descripcion' => 'Casas, instalaciones, garantías y los profesionales de confianza.',
             'tipos' => [
                 // Origen único (3/10/2026): lo que es de la casa vive aquí y finanzas lo
@@ -146,7 +146,7 @@ function secciones(): array {
 
         // -------------------------------------------------------------
         'vehiculos' => [
-            'nombre' => 'Vehículos', 'icono' => 'coche', 'color' => '#e0991a',
+            'nombre' => 'Vehículos', 'icono' => 'coche', 'color' => '#b0761a',
             'descripcion' => 'ITV, revisiones, kilómetros y lo que se ha gastado en cada vehículo.',
             'tipos' => [
                 'vehiculo' => [
@@ -189,7 +189,7 @@ function secciones(): array {
 
         // -------------------------------------------------------------
         'salud' => [
-            'nombre' => 'Salud', 'icono' => 'salud', 'color' => '#f06548',
+            'nombre' => 'Salud', 'icono' => 'salud', 'color' => '#c4453c',
             'descripcion' => 'Fichas médicas, tratamientos, especialistas e historial de cada persona.',
             'tipos' => [
                 'ficha' => [
@@ -283,7 +283,7 @@ function secciones(): array {
 
         // -------------------------------------------------------------
         'documentos' => [
-            'nombre' => 'Documentos', 'icono' => 'documento', 'color' => '#6559cc',
+            'nombre' => 'Documentos', 'icono' => 'documento', 'color' => '#6c56b0',
             'descripcion' => 'DNI, pasaportes, carnets y tarjetas de cada uno, con su caducidad y su copia.',
             'tipos' => [
                 'dni' => [
@@ -333,7 +333,7 @@ function secciones(): array {
 
         // -------------------------------------------------------------
         'contratos' => [
-            'nombre' => 'Contratos', 'icono' => 'contrato', 'color' => '#0ab39c',
+            'nombre' => 'Contratos', 'icono' => 'contrato', 'color' => '#1f8a64',
             'descripcion' => 'Suministros, seguros, comunidad y suscripciones: cuánto cuestan, cuándo renuevan y cuándo acaba la permanencia.',
             'tipos' => [
                 'suministro' => [
@@ -430,7 +430,7 @@ function secciones(): array {
 
         // -------------------------------------------------------------
         'familia' => [
-            'nombre' => 'Familia', 'icono' => 'familia', 'color' => '#e83e8c',
+            'nombre' => 'Familia', 'icono' => 'familia', 'color' => '#b8457c',
             'descripcion' => 'Colegio, actividades y fechas importantes de cada uno.',
             'tipos' => [
                 'colegio' => [
@@ -480,7 +480,7 @@ function secciones(): array {
         // lo que hay en finanzas (includes/finanzas.php). Decisión de Gonzalo,
         // 3/10/2026: no duplicar los recibos.
         'trabajo' => [
-            'nombre' => 'Trabajo', 'icono' => 'maletin', 'color' => '#299cdb',
+            'nombre' => 'Trabajo', 'icono' => 'maletin', 'color' => '#1d8291',
             'descripcion' => 'Empresa, contrato, convenio y nóminas de cada uno.',
             'tipos' => [
                 'empleo' => [

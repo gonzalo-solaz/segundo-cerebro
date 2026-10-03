@@ -3,8 +3,8 @@
 //  Maqueta y piezas de interfaz compartidas.
 //  El diseño vive en assets/app.css (tokens en :root, tema claro/oscuro).
 //  Nada externo: ni fuentes de Google ni CDN (regla de van4ever, y aquí
-//  hay datos de salud): Poppins (la de finanzas) se sirve desde assets/fuentes.
-//  Estilos y colores de finanzas; la disposición (barra lateral) es la propia.
+//  hay datos de salud): Inter se sirve desde assets/fuentes.
+//  Lenguaje visual de Wise (bosque + lima); la disposición (barra lateral) es la propia.
 // =====================================================================
 
 function menu_principal(): array {
@@ -15,7 +15,7 @@ function menu_principal(): array {
     }
     // Finanzas vive dentro (3/10/2026): entre Trabajo y Agenda, solo para administradores.
     if (es_admin() && FINANZAS_URL !== '') {
-        $m[] = ['clave' => 'finanzas', 'url' => 'finanzas.php', 'texto' => 'Finanzas', 'icono' => 'cartera', 'color' => '#405189'];
+        $m[] = ['clave' => 'finanzas', 'url' => 'finanzas.php', 'texto' => 'Finanzas', 'icono' => 'cartera', 'color' => '#5f8a1c'];
     }
     $m[] = ['clave' => 'agenda', 'url' => 'vencimientos.php', 'texto' => 'Agenda', 'icono' => 'agenda'];
     $m[] = ['clave' => 'personas', 'url' => 'personas.php', 'texto' => 'Personas', 'icono' => 'persona'];
@@ -40,10 +40,10 @@ function cabeza_html(string $titulo): void {
 <script src="<?= e(asset('tema.js')) ?>"></script>
 <link rel="stylesheet" href="<?= e(asset('app.css')) ?>">
 <link rel="icon" href="<?= e(asset('icono.svg')) ?>" type="image/svg+xml">
-<link rel="manifest" href="<?= e(url('manifest.json') . '?v=cerebro-1') ?>">
-<link rel="apple-touch-icon" href="<?= e(url('assets/icon-apple-touch.png') . '?v=cerebro-1') ?>" sizes="180x180">
-<meta name="theme-color" content="#f3f3f9" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#1a1d21" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="<?= e(url('manifest.json') . '?v=cerebro-2') ?>">
+<link rel="apple-touch-icon" href="<?= e(url('assets/icon-apple-touch.png') . '?v=cerebro-2') ?>" sizes="180x180">
+<meta name="theme-color" content="#163300" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111a0a" media="(prefers-color-scheme: dark)">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -117,8 +117,9 @@ function cabecera_publica(string $titulo): void {
     cabeza_html($titulo);
     ?>
 <body class="publica">
+<div class="acceso">
+  <div class="acceso-marca"><span class="marca-icono"><?= icono('cerebro') ?></span><span><?= e(NOMBRE_APP) ?></span></div>
   <main class="tarjeta-acceso">
-    <div class="acceso-marca"><span class="marca-icono"><?= icono('cerebro') ?></span><span><?= e(NOMBRE_APP) ?></span></div>
     <h1><?= e($titulo) ?></h1>
 <?php
 }
@@ -126,6 +127,8 @@ function cabecera_publica(string $titulo): void {
 function pie_publico(): void {
     ?>
   </main>
+  <p class="acceso-pie">Lo de casa, en un solo sitio.</p>
+</div>
 </body>
 </html>
 <?php
@@ -153,7 +156,7 @@ function exigir_admin(): void {
 //  Piezas
 // ---------------------------------------------------------------------
 function avatar(string $nombre, ?string $color = null, string $clase = 'avatar'): string {
-    return '<span class="' . e($clase) . '" style="--c:' . e($color ?: '#405189') . '">' . e(iniciales($nombre)) . '</span>';
+    return '<span class="' . e($clase) . '" style="--c:' . e($color ?: '#4a5a8f') . '">' . e(iniciales($nombre)) . '</span>';
 }
 
 function chip_seccion(string $clave): string {
@@ -165,14 +168,14 @@ function chip_seccion(string $clave): string {
 
 function chip_persona(?string $nombre, ?string $color): string {
     if (!$nombre) return '';
-    return '<span class="chip chip-persona" style="--c:' . e($color ?: '#405189') . '">' . e($nombre) . '</span>';
+    return '<span class="chip chip-persona" style="--c:' . e($color ?: '#4a5a8f') . '">' . e($nombre) . '</span>';
 }
 
 function cabecera_pagina(string $titulo, string $antetitulo = '', string $acciones = '', ?string $icono = null, ?string $color = null): void {
     ?>
     <div class="cabecera-pagina">
       <div class="cabecera-titulo">
-        <?php if ($icono): ?><span class="icono-grande" style="--c:<?= e($color ?: '#405189') ?>"><?= icono($icono) ?></span><?php endif; ?>
+        <?php if ($icono): ?><span class="icono-grande" style="--c:<?= e($color ?: '#163300') ?>"><?= icono($icono) ?></span><?php endif; ?>
         <div>
           <?php if ($antetitulo !== ''): ?><p class="antetitulo"><?= $antetitulo ?></p><?php endif; ?>
           <h1><?= e($titulo) ?></h1>

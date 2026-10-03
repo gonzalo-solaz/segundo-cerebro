@@ -99,17 +99,21 @@ avisa por correo.
 - **Archivos en `private/archivos/AAAA/`** con nombre aleatorio; solo se sirven
   por `archivo.php` (con sesión). El tipo se decide por los bytes, no por la
   extensión, y así no hace falta la extensión fileinfo.
-- **Diseño: estilos y colores de finanzas, disposición propia (3/10/2026).** Gonzalo
-  quería «los estilos y colores de finanzas-personales» pero conservando la
-  disposición: barra lateral a la izquierda con sus iconos y el color de cada
-  sección, la marca del segundo cerebro y la barra del móvil. Un primer intento
-  copió también la maqueta de finanzas (logo arriba y secciones en pestañas) y lo
-  descartó: «era solo cambiar estilos y colores». De finanzas se toman los tokens
-  de color (valores exactos de su `vistas/dashboard-cabecera.html`, oscuro y
-  claro), **Poppins** 400/500/600 en `assets/fuentes/` (local: cero recursos
-  externos, hay datos de salud) y el aspecto de tarjetas, tablas, botones,
-  formularios y etiquetas. El tema sigue al del sistema. Si cambia el CSS de
-  finanzas, cambiar aquí los tokens de `assets/app.css`, no la maqueta.
+- **Diseño: lenguaje visual de Wise, disposición propia (3/10/2026, rama
+  `diseno-wise`).** Gonzalo pasó como referencia el sistema de Wise
+  (styles.refero.design) y pidió que todas las secciones fueran homogéneas. Se
+  conserva la disposición (barra lateral con iconos y color de cada sección, barra
+  del móvil); cambian tokens y componentes: verde bosque `#163300` + lima `#9fe870`,
+  **Inter** variable en `assets/fuentes/inter-var.woff2` (local: cero recursos
+  externos), titulares muy pesados con tracking apretado, botones y etiquetas en
+  píldora, tarjetas planas de 24 px sin sombras, y las cifras (`.kpis`) en una banda
+  bosque. El lima solo para la acción principal y lo activo, nunca como texto sobre
+  claro. Los colores de sección de `secciones.php` tienen la misma luminosidad; los
+  de persona se guardan con la paleta antigua y `app.css` los remapea al pintarlos
+  (no se tocan los datos). Finanzas (`finanzas.php`) carga su `panel.css`: `app.css`
+  le sobrescribe los tokens (`html:root`) para que salga con esta paleta; si cambian
+  los nombres de sus variables, revisar ese bloque. Antes (hasta 3/10/2026) el diseño
+  copiaba los tokens de finanzas con Poppins.
 - **Probar:** `php pruebas/todas.php` → tiene que dar **5/5** antes de decir que
   algo está listo para subir. Van contra **SQLite** con el esquema real (no hay
   base simulada a mano como en finanzas) y no necesitan `private/` ni MySQL, así

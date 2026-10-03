@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $todas = personas($pdo, false);
 cabecera('Personas', 'personas');
-cabecera_pagina('Personas', 'La familia. Cada uno tiene sus documentos, su salud y sus cosas; no todos necesitan acceso a la app.', '', 'familia', '#e83e8c');
+cabecera_pagina('Personas', 'La familia. Cada uno tiene sus documentos, su salud y sus cosas; no todos necesitan acceso a la app.', '', 'familia', '#b8457c');
 ?>
 <?php if ($errores): ?>
   <div class="flash flash-error" role="alert"><ul><?php foreach ($errores as $err): ?><li><?= e($err) ?></li><?php endforeach; ?></ul></div>
