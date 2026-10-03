@@ -98,6 +98,7 @@ function secciones(): array {
                         'referencia_catastral' => ['etiqueta' => 'Referencia catastral', 'tipo' => 'texto'],
                         'superficie' => ['etiqueta' => 'Superficie', 'tipo' => 'numero', 'unidad' => 'm²'],
                         'fecha_compra' => ['etiqueta' => 'Fecha de compra o de entrada', 'tipo' => 'fecha'],
+                        'wifi' => ['etiqueta' => 'Contraseña del WiFi', 'tipo' => 'texto'],
                         'fin_hipoteca' => ['etiqueta' => 'Fin de la hipoteca o del contrato de alquiler', 'tipo' => 'fecha',
                             'vence' => 'Fin de hipoteca o alquiler', 'aviso' => 90],
                     ],
