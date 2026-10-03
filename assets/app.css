@@ -481,3 +481,10 @@ details.tarjeta-plegable[open] > summary { margin-bottom: 12px; }
 .pauta[open] summary::after { transform: rotate(180deg); }
 .pauta ul { margin: 0 0 .8rem; padding-left: 1.1rem; font-size: .9rem; color: var(--texto-2); }
 .pauta li { margin: .3rem 0; }
+
+/* Mi cuenta: verificación en dos pasos */
+.pasos { padding-left: 1.2rem; margin: 0 0 1rem; }
+.pasos li { margin: .4rem 0; }
+.clave-totp { display: inline-block; font-size: 1.05rem; letter-spacing: .06em; padding: .4rem .6rem; user-select: all; word-break: break-all; }
+.codigos-recuperacion { display: grid; grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr)); gap: .4rem; list-style: none; padding: 0; margin: 0; }
+.codigos-recuperacion code { font-size: 1rem; letter-spacing: .04em; }

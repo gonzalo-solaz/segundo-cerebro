@@ -21,12 +21,12 @@ $_SERVER['REQUEST_METHOD'] = isset($pet['post']) ? 'POST' : 'GET';
 $_SERVER['SCRIPT_NAME'] = BASE_URL . '/' . $pet['pagina'];
 $_SERVER['REMOTE_ADDR'] = '127.0.0.1';
 $_SERVER['HTTP_HOST'] = 'ejemplo.test';
-$_SESSION = [
+$_SESSION = $pet['sesion'] ?? [
     'usuario_id' => (int)($pet['usuario'] ?? 1),
-    'csrf' => 'csrf-de-pruebas',
     'inicio_sesion' => time(),
     'ultima_actividad' => time(),
 ];
+$_SESSION['csrf'] = 'csrf-de-pruebas';
 if (isset($pet['post'])) $_POST['csrf'] = $pet['csrf'] ?? 'csrf-de-pruebas';
 
 register_shutdown_function(static function (): void {

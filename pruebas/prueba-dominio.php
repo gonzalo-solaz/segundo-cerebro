@@ -231,6 +231,47 @@ comprueba('sin nóminas no hay resumen', resumen_nominas([], '2026-10-03') === n
 comprueba('mes_es', mes_es('2026-09') === 'septiembre 2026');
 comprueba('sin clave no se llama a finanzas', !finanzas_configurada() && finanzas_nominas()['error'] !== null);
 
+echo "\nVerificación en dos pasos\n";
+$rfc = base32_codificar('12345678901234567890');   // la semilla del RFC 6238
+comprueba('base32 de ida y vuelta', $rfc === 'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ' && base32_decodificar($rfc) === '12345678901234567890');
+comprueba('TOTP = vectores del RFC 6238', totp_codigo($rfc, intdiv(59, 30), 8) === '94287082'
+    && totp_codigo($rfc, intdiv(1111111109, 30), 8) === '07081804' && totp_codigo($rfc, intdiv(2000000000, 30), 8) === '69279037');
+comprueba('6 cifras con ceros a la izquierda', totp_codigo($rfc, intdiv(1234567890, 30)) === '005924');
+$t = 1900000000;
+comprueba('vale el código de ahora', totp_paso_valido($rfc, totp_codigo($rfc, intdiv($t, 30)), null, $t) === intdiv($t, 30));
+comprueba('y el de hace 30 s (reloj desfasado)', totp_paso_valido($rfc, totp_codigo($rfc, intdiv($t, 30) - 1), null, $t) !== null);
+comprueba('pero no el de hace un minuto y medio', totp_paso_valido($rfc, totp_codigo($rfc, intdiv($t, 30) - 3), null, $t) === null);
+comprueba('ni uno ya usado', totp_paso_valido($rfc, totp_codigo($rfc, intdiv($t, 30)), intdiv($t, 30), $t) === null);
+$adm = usuario($pdo, $id['admin']);
+comprueba('el admin de pruebas la tiene; un miembro no está obligado', dos_pasos_activa($adm) && dos_pasos_obligatoria($adm)
+    && !dos_pasos_obligatoria(usuario($pdo, $id['miembro'])));
+$e = lanza(static fn() => activar_dos_pasos($pdo, $id['miembro'], $rfc, '000000'));
+comprueba('activar con un código malo no activa', $e instanceof ErrorValidacion && !dos_pasos_activa(usuario($pdo, $id['miembro'])));
+$cods = activar_dos_pasos($pdo, $id['miembro'], $rfc, totp_codigo($rfc, intdiv(time(), 30)));
+comprueba('activar da 8 códigos de recuperación', count($cods) === 8 && dos_pasos_activa(usuario($pdo, $id['miembro'])));
+comprueba('el mismo código de la app no vale dos veces', comprobar_segundo_paso($pdo, usuario($pdo, $id['miembro']), totp_codigo($rfc, intdiv(time(), 30))) === null);
+comprueba('un código de recuperación entra', comprobar_segundo_paso($pdo, usuario($pdo, $id['miembro']), strtoupper($cods[0])) === 'recuperacion');
+comprueba('y se gasta', comprobar_segundo_paso($pdo, usuario($pdo, $id['miembro']), $cods[0]) === null
+    && codigos_recuperacion_restantes(usuario($pdo, $id['miembro'])) === 7);
+quitar_dos_pasos($pdo, $id['miembro'], $id['admin']);
+comprueba('quitarla la deja sin semilla ni códigos', !dos_pasos_activa(usuario($pdo, $id['miembro'])) && codigos_recuperacion_restantes(usuario($pdo, $id['miembro'])) === 0);
+
+echo "\nPase entre el segundo cerebro y finanzas\n";
+// El mismo pase de ejemplo está en las pruebas de finanzas: si los dos pase.php
+// dejan de coincidir, falla una de las dos.
+comprueba('pase de ejemplo compartido', pase_crear('clave-compartida', ['t' => 'entrar', 'e' => 'yo@ejemplo.test', 'a' => 'nomina.php', 'x' => 1900000000, 'n' => 'abc123'])
+    === 'eyJ0IjoiZW50cmFyIiwiZSI6InlvQGVqZW1wbG8udGVzdCIsImEiOiJub21pbmEucGhwIiwieCI6MTkwMDAwMDAwMCwibiI6ImFiYzEyMyJ9.KuBBKoNzEXd0-IhDTOo9ZXH2JvMW-xSpT9D38prqGII');
+$p = pase_crear('k', ['t' => 'entrar', 'e' => 'yo@ejemplo.test']);
+comprueba('se lee con la misma clave', (pase_leer('k', $p, 'entrar')['e'] ?? '') === 'yo@ejemplo.test');
+comprueba('no con otra clave', pase_leer('otra', $p, 'entrar') === null);
+comprueba('ni como otro tipo', pase_leer('k', $p, 'salir') === null);
+comprueba('ni tocado', pase_leer('k', 'x' . $p, 'entrar') === null && pase_leer('k', $p . 'x', 'entrar') === null);
+comprueba('ni caducado', pase_leer('k', $p, 'entrar', time() + 61) === null);
+comprueba('ni con clave vacía', pase_leer('', $p, 'entrar') === null);
+comprueba('destino: solo páginas de la app', pase_destino_valido('nomina.php') === 'nomina.php'
+    && pase_destino_valido('revisar.php?mes=2026-09') === 'revisar.php?mes=2026-09'
+    && pase_destino_valido('https://malo.example/') === 'index.php' && pase_destino_valido('../config.php') === 'index.php');
+
 echo "\nPersonas y accesos\n";
 $e = lanza(static fn() => crear_usuario($pdo, ['nombre' => 'Otro', 'email' => 'ADMIN@ejemplo.test']));
 comprueba('no se repite email (sin distinguir mayúsculas)', $e instanceof ErrorValidacion);

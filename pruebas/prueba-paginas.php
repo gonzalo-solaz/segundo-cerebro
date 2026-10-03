@@ -38,6 +38,17 @@ function pedir(string $pagina, array $get = [], ?array $post = null, int $usuari
     return ['codigo' => $codigo, 'html' => $txt, 'redireccion' => $m[1] ?? null];
 }
 
+function pedir_con_sesion(string $pagina, array $get, ?array $post, array $sesion): array {
+    $f = tempnam(sys_get_temp_dir(), 'sc-pet');
+    file_put_contents($f, json_encode(['pagina' => $pagina, 'get' => $get, 'post' => $post, 'sesion' => (object)$sesion]));
+    $salida = [];
+    exec(cli_php() . ' ' . escapeshellarg(__DIR__ . '/render.php') . ' ' . escapeshellarg($f) . ' 2>&1', $salida, $codigo);
+    @unlink($f);
+    $txt = implode("\n", $salida);
+    preg_match('/\[\[REDIRECCION:([^\]]*)\]\]/', $txt, $m);
+    return ['codigo' => $codigo, 'html' => $txt, 'redireccion' => $m[1] ?? null];
+}
+
 function pinta_bien(string $que, array $r, string $debe_contener = ''): void {
     $limpio = $r['codigo'] === 0
         && str_contains($r['html'], '</html>')
@@ -179,6 +190,37 @@ putenv('SC_CACHE');
 putenv('SC_FINANZAS_CLAVE');
 @unlink($cache . '/finanzas-nominas.json');
 @rmdir($cache);
+
+// Dos pasos y un solo acceso con finanzas.
+$r = pedir('login.php', [], ['email' => 'admin@ejemplo.test', 'password' => 'una-contraseña-larga'], 0);
+comprueba('con dos pasos, la contraseña lleva al código, no dentro', str_contains((string)$r['redireccion'], '/verificar.php'), (string)$r['redireccion'] . $r['html']);
+$pend = ['pendiente_2p' => $id['admin'], 'pendiente_2p_desde' => time()];
+$r = pedir_con_sesion('verificar.php', [], ['codigo' => '000000'], $pend);
+pinta_bien('un código malo no entra', $r, 'Ese código no vale');
+$r = pedir_con_sesion('verificar.php', ['volver' => 'vencimientos.php'], ['codigo' => totp_codigo(TOTP_PRUEBAS, intdiv(time(), 30))], $pend);
+comprueba('el código bueno entra y vuelve adonde iba', str_ends_with((string)$r['redireccion'], '/vencimientos.php'), (string)$r['redireccion'] . $r['html']);
+$r = pedir_con_sesion('verificar.php', [], null, ['pendiente_2p' => $id['admin'], 'pendiente_2p_desde' => time() - 600]);
+comprueba('pasados 5 minutos, otra vez la contraseña', str_contains((string)$r['redireccion'], '/login.php'), (string)$r['redireccion']);
+$r = pedir_con_sesion('vencimientos.php', ['dias' => '30'], null, []);
+comprueba('sin sesión, al login recordando la página', str_contains((string)$r['redireccion'], 'login.php?volver=vencimientos.php'), (string)$r['redireccion']);
+[$id['admin2']] = crear_usuario($pdo, ['nombre' => 'Otra admin', 'email' => 'admin2@ejemplo.test', 'password' => 'una-contraseña-larga', 'rol' => 'admin']);
+$r = pedir('index.php', [], null, $id['admin2']);
+comprueba('un admin sin dos pasos va a activarlos', str_ends_with((string)$r['redireccion'], '/cuenta.php#dos-pasos'), (string)$r['redireccion']);
+pinta_bien('«Mi cuenta» le da la clave para la app', pedir('cuenta.php', [], null, $id['admin2']), 'clave-totp');
+pinta_bien('un miembro sin dos pasos entra normal', pedir('index.php', [], null, $id['miembro']), 'Lo que viene');
+pinta_bien('Ajustes deja quitar los dos pasos a otro admin', pedir('ajustes.php'), '2 pasos');
+$r = pedir('finanzas-entrar.php', ['a' => 'nomina.php']);
+preg_match('#/finanzas-personales/entrar\.php\?pase=([^&\s]+)#', (string)$r['redireccion'], $m);
+$datos = isset($m[1]) ? pase_leer(PASE_CLAVE, rawurldecode($m[1]), 'entrar') : null;
+comprueba('Finanzas: el admin sale con un pase firmado a su página', ($datos['e'] ?? '') === 'admin@ejemplo.test' && ($datos['a'] ?? '') === 'nomina.php', (string)$r['redireccion']);
+pinta_bien('un miembro no entra en finanzas', pedir('finanzas-entrar.php', [], null, $id['miembro']), 'Solo administradores');
+pinta_bien('el menú del admin lleva a finanzas por el pase', pedir('index.php'), 'finanzas-entrar.php');
+$r = pedir('logout.php', [], []);
+comprueba('Salir pasa por finanzas para cerrar también aquella', str_contains((string)$r['redireccion'], '/finanzas-personales/salir.php?pase='), (string)$r['redireccion']);
+$r = pedir('logout.php', ['pase' => pase_crear(PASE_CLAVE, ['t' => 'salir'])]);
+comprueba('el «Salir» de finanzas cierra esta y acaba en el login', str_ends_with((string)$r['redireccion'], '/login.php?motivo=salida'), (string)$r['redireccion']);
+$r = pedir('logout.php', ['pase' => pase_crear('otra-clave', ['t' => 'salir'])]);
+comprueba('con un pase falso no se sale', str_ends_with((string)$r['redireccion'], '/index.php'), (string)$r['redireccion']);
 
 // Un POST con token CSRF equivocado no hace nada.
 $f = tempnam(sys_get_temp_dir(), 'sc-pet');

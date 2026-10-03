@@ -42,6 +42,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pdo->prepare('UPDATE usuarios SET rol = ? WHERE id = ?')->execute([$rol, $obj]);
                 flash('ok', 'Rol cambiado.');
                 redirigir('ajustes.php');
+            case 'quitar-2p':
+                // Para quien ha perdido el móvil y los códigos: al volver a entrar
+                // (con la contraseña) se le pide configurarla de nuevo si es admin.
+                if ($obj === $uid) throw new RuntimeException('La tuya se cambia en «Mi cuenta».');
+                quitar_dos_pasos($pdo, $obj, $uid);
+                flash('ok', 'Verificación en dos pasos quitada.');
+                redirigir('ajustes.php');
             case 'persona':
                 $pid = (int)($_POST['persona_id'] ?? 0) ?: null;
                 if ($pid && !persona($pdo, $pid)) throw new RuntimeException('Esa persona no existe.');
@@ -92,7 +99,8 @@ cabecera_pagina('Ajustes', 'Accesos de la familia y estado del sistema.', '', 'a
           <tr class="<?= $u['estado'] !== 'activo' ? 'apagado' : '' ?>">
             <td><strong><?= e($u['nombre']) ?></strong><?= $yo ? ' <span class="tenue">(tú)</span>' : '' ?>
               <?php if ($u['estado'] !== 'activo'): ?><span class="chip">suspendido</span><?php endif; ?>
-              <?php if ((int)$u['debe_cambiar'] === 1): ?><span class="chip" title="Aún no ha cambiado la contraseña temporal">temporal</span><?php endif; ?></td>
+              <?php if ((int)$u['debe_cambiar'] === 1): ?><span class="chip" title="Aún no ha cambiado la contraseña temporal">temporal</span><?php endif; ?>
+              <?php if (dos_pasos_activa($u)): ?><span class="chip" title="Verificación en dos pasos activada">2 pasos</span><?php endif; ?></td>
             <td><?= e($u['email']) ?></td>
             <td>
               <?php if ($yo): ?><?= e(roles()[$u['rol']] ?? $u['rol']) ?><?php else: ?>
@@ -109,6 +117,11 @@ cabecera_pagina('Ajustes', 'Accesos de la familia y estado del sistema.', '', 'a
               <form method="post" class="en-linea" data-confirmar="¿Generar una contraseña temporal nueva para <?= e($u['nombre']) ?>? La actual dejará de valer.">
                 <?= csrf_input() ?><input type="hidden" name="accion" value="temporal"><input type="hidden" name="usuario_id" value="<?= (int)$u['id'] ?>">
                 <button class="btn-icono" title="Nueva contraseña temporal"><?= icono('llave') ?></button></form>
+              <?php if (!$yo && dos_pasos_activa($u)): ?>
+                <form method="post" class="en-linea" data-confirmar="¿Quitar la verificación en dos pasos de <?= e($u['nombre']) ?>? Úsalo si ha perdido el móvil.">
+                  <?= csrf_input() ?><input type="hidden" name="accion" value="quitar-2p"><input type="hidden" name="usuario_id" value="<?= (int)$u['id'] ?>">
+                  <button class="btn btn-sutil">Quitar 2 pasos</button></form>
+              <?php endif; ?>
               <?php if (!$yo): ?>
                 <form method="post" class="en-linea"<?= $u['estado'] === 'activo' ? ' data-confirmar="¿Suspender el acceso de ' . e($u['nombre']) . '?"' : '' ?>>
                   <?= csrf_input() ?><input type="hidden" name="accion" value="estado"><input type="hidden" name="usuario_id" value="<?= (int)$u['id'] ?>">

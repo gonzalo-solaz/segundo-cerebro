@@ -17,6 +17,12 @@ function menu_principal(): array {
     return $m;
 }
 
+// Adónde lleva «Finanzas»: con el pase configurado, se entra sin contraseña
+// (finanzas-entrar.php); sin él, a la app aparte, con su propio acceso.
+function url_finanzas(string $pagina = 'index.php'): string {
+    return PASE_CLAVE !== '' ? url('finanzas-entrar.php?a=' . rawurlencode($pagina)) : FINANZAS_URL;
+}
+
 function cabeza_html(string $titulo): void {
     ?><!doctype html>
 <html lang="es">
@@ -54,7 +60,7 @@ function cabecera(string $titulo, string $activa = ''): void {
       <?php if (es_admin()): ?>
         <div class="menu-separador"></div>
         <?php if (FINANZAS_URL !== ''): ?>
-          <a href="<?= e(FINANZAS_URL) ?>" style="--c:#405189"><?= icono('cartera') ?><span>Finanzas</span><?= icono('externo', 'ico ico-mini') ?></a>
+          <a href="<?= e(url_finanzas()) ?>" style="--c:#405189"><?= icono('cartera') ?><span>Finanzas</span><?= PASE_CLAVE === '' ? icono('externo', 'ico ico-mini') : '' ?></a>
         <?php endif; ?>
         <a href="<?= e(url('ajustes.php')) ?>" class="<?= $activa === 'ajustes' ? 'activo' : '' ?>"><?= icono('ajustes') ?><span>Ajustes</span></a>
       <?php endif; ?>

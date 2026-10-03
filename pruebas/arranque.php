@@ -72,6 +72,9 @@ function nominas_de_ejemplo(): array {
     ];
 }
 
+// La semilla de los dos pasos del admin de pruebas.
+const TOTP_PRUEBAS = 'JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP';
+
 function sembrar(PDO $pdo): array {
     $id = [];
     $id['yo']   = guardar_persona($pdo, ['nombre' => 'Gonzalo Prueba', 'relacion' => 'Yo', 'fecha_nacimiento' => '1980-06-15']);
@@ -82,6 +85,8 @@ function sembrar(PDO $pdo): array {
                                             'rol' => 'admin', 'persona_id' => $id['yo']]);
     [$id['miembro']] = crear_usuario($pdo, ['nombre' => 'Ana', 'email' => 'ana@ejemplo.test', 'password' => 'otra-contraseña-larga',
                                             'rol' => 'miembro', 'persona_id' => $id['ana']]);
+
+    $pdo->prepare('UPDATE usuarios SET totp_secreto = ? WHERE id = ?')->execute([TOTP_PRUEBAS, $id['admin']]);
 
     $g = static fn(string $s, string $t, array $e) => guardar_elemento($pdo, $s, $t, $e, null, $id['admin']);
     $id['casa']      = $g('vivienda', 'inmueble', ['nombre' => 'Casa de prueba', 'datos' => ['direccion' => 'Calle Mayor 1', 'regimen' => 'Propiedad', 'superficie' => '95,5']]);

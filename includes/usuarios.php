@@ -31,7 +31,7 @@ function es_admin(): bool {
 }
 
 // 12 y no 8: es la única puerta de una web con la salud y los papeles de
-// la familia, publicada en internet y sin segundo factor.
+// la familia (y, para los administradores, de finanzas), publicada en internet.
 function problema_password(string $pass): ?string {
     if (strlen($pass) < PASSWORD_MINIMO) return 'La contraseña debe tener al menos ' . PASSWORD_MINIMO . ' caracteres.';
     return null;
@@ -66,6 +66,17 @@ function crear_usuario(PDO $pdo, array $u, ?int $usuario_id = null): array {
     $id = (int)$pdo->lastInsertId();
     anotar($pdo, $usuario_id, "dio acceso a {$nombre}");
     return [$id, $pass];
+}
+
+// Abre la sesión de un usuario ya comprobado (contraseña y, si la tiene, el
+// código de la app). Sesión NUEVA: un identificador plantado antes deja de valer.
+function abrir_sesion(PDO $pdo, array $u): void {
+    if (session_status() === PHP_SESSION_ACTIVE) session_regenerate_id(true);
+    unset($_SESSION['pendiente_2p'], $_SESSION['pendiente_2p_desde']);
+    $_SESSION['usuario_id'] = (int)$u['id'];
+    $_SESSION['inicio_sesion'] = time();
+    $_SESSION['ultima_actividad'] = time();
+    $pdo->prepare('UPDATE usuarios SET ultimo_acceso = ? WHERE id = ?')->execute([ahora(), $u['id']]);
 }
 
 function cambiar_password(PDO $pdo, int $id, string $nueva, bool $temporal = false): void {

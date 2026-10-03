@@ -18,6 +18,8 @@
 #    EMAIL_AVISOS, API_CLAVE, CRON_CLAVE         opcionales
 #    FINANZAS_API_CLAVE  la API_CLAVE de finanzas: con ella, la ficha del empleo
 #                        enseña las nóminas (opcional)
+#    PASE_CLAVE          la misma que en finanzas-personales: firma el pase con
+#                        el que se entra en finanzas sin otra contraseña
 #  Sin los secretos de FTP, el flujo solo prueba y avisa de que no despliega.
 # =====================================================================
 name: Probar y desplegar
@@ -104,12 +106,14 @@ jobs:
           API_CLAVE: ${{ secrets.API_CLAVE }}
           CRON_CLAVE: ${{ secrets.CRON_CLAVE }}
           FINANZAS_API_CLAVE: ${{ secrets.FINANZAS_API_CLAVE }}
+          PASE_CLAVE: ${{ secrets.PASE_CLAVE }}
         run: |
           php -r '
             // var_export: ninguna comilla o barra de una contraseña puede romper el PHP.
             $c = ["DB_HOST" => "localhost", "DB_NAME" => getenv("DB_NAME"), "DB_USER" => getenv("DB_USER"),
                   "DB_PASS" => getenv("DB_PASS"), "BASE_URL" => "/admin",
                   "URL_APP" => "https://gonzalosolaz.tech/admin", "NOMBRE_APP" => "Segundo cerebro",
+                  "ASSETS_VERSION" => substr((string)getenv("GITHUB_SHA"), 0, 8), "PASE_CLAVE" => (string)getenv("PASE_CLAVE"),
                   "EMAIL_AVISOS" => (string)getenv("EMAIL_AVISOS"), "API_CLAVE" => (string)getenv("API_CLAVE"),
                   "CRON_CLAVE" => (string)getenv("CRON_CLAVE"), "FINANZAS_API_CLAVE" => (string)getenv("FINANZAS_API_CLAVE"),
                   "FINANZAS_URL" => "https://gonzalosolaz.tech/finanzas-personales/"];

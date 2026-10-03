@@ -7,7 +7,9 @@ require_once __DIR__ . '/includes/antiabuso.php';
 enviar_cabeceras_seguridad();
 esquema_al_dia($pdo);
 
-if (!empty($_SESSION['usuario_id'])) redirigir('index.php');
+// Adónde volver después de entrar (lo pone auth.php: «finanzas-entrar.php?a=nomina.php»).
+$volver = volver_seguro($_GET['volver'] ?? ($_POST['volver'] ?? ''));
+if (!empty($_SESSION['usuario_id'])) redirigir($volver);
 
 // Sin ningún usuario todavía, lo único que tiene sentido es crear el primero.
 if ((int)$pdo->query('SELECT COUNT(*) FROM usuarios')->fetchColumn() === 0) redirigir('crear-admin.php');
@@ -31,15 +33,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($u['estado'] !== 'activo') {
                 $error = 'Este acceso está suspendido. Habla con quien administra la app.';
             } else {
-                // Sesión NUEVA tras autenticarse: un identificador plantado
-                // antes del login deja de valer.
-                if (session_status() === PHP_SESSION_ACTIVE) session_regenerate_id(true);
-                $_SESSION['usuario_id'] = (int)$u['id'];
-                $_SESSION['inicio_sesion'] = time();
-                $_SESSION['ultima_actividad'] = time();
                 limite_limpiar($clave_limite);
-                $pdo->prepare('UPDATE usuarios SET ultimo_acceso = ? WHERE id = ?')->execute([ahora(), $u['id']]);
-                redirigir((int)$u['debe_cambiar'] === 1 ? 'cuenta.php' : 'index.php');
+                if (dos_pasos_activa($u)) {
+                    // Contraseña buena, pero aún NO hay sesión: falta el código de la app.
+                    if (session_status() === PHP_SESSION_ACTIVE) session_regenerate_id(true);
+                    $_SESSION['pendiente_2p'] = (int)$u['id'];
+                    $_SESSION['pendiente_2p_desde'] = time();
+                    redirigir('verificar.php?volver=' . rawurlencode($volver));
+                }
+                abrir_sesion($pdo, $u);
+                redirigir((int)$u['debe_cambiar'] === 1 ? 'cuenta.php' : $volver);
             }
         } else {
             // Mismo mensaje falle el email o la contraseña: decir cuál
@@ -61,6 +64,7 @@ cabecera_publica('Entrar');
     <?php if ($error): ?><div class="flash flash-error"><?= e($error) ?></div><?php endif; ?>
     <form method="post" class="form-acceso">
       <?= csrf_input() ?>
+      <input type="hidden" name="volver" value="<?= e($volver) ?>">
       <label for="email">Email</label>
       <input type="email" id="email" name="email" value="<?= e($email) ?>" required autofocus autocomplete="username">
       <label for="password">Contraseña</label>

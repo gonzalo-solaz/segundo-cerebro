@@ -12,7 +12,16 @@ require_once __DIR__ . '/app.php';
 
 enviar_cabeceras_seguridad();
 
-if (empty($_SESSION['usuario_id'])) redirigir('login.php');
+// Sin sesión, al login recordando la página (GET) para volver a ella después.
+function al_login(string $motivo = ''): void {
+    $pagina = basename((string)($_SERVER['SCRIPT_NAME'] ?? ''));
+    $q = (string)($_SERVER['QUERY_STRING'] ?? '');
+    $volver = ($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' ? volver_seguro($pagina . ($q !== '' ? '?' . $q : ''), '') : '';
+    $p = array_filter(['motivo' => $motivo, 'volver' => $volver]);
+    redirigir('login.php' . ($p ? '?' . http_build_query($p) : ''));
+}
+
+if (empty($_SESSION['usuario_id'])) al_login();
 
 $ahora = time();
 $expirada =
@@ -20,7 +29,7 @@ $expirada =
     || (!empty($_SESSION['inicio_sesion']) && $ahora - $_SESSION['inicio_sesion'] > SESION_MAXIMA);
 if ($expirada) {
     cerrar_sesion();
-    redirigir('login.php?motivo=expirada');
+    al_login('expirada');
 }
 $_SESSION['ultima_actividad'] = $ahora;
 if (empty($_SESSION['inicio_sesion'])) $_SESSION['inicio_sesion'] = $ahora;
@@ -38,4 +47,11 @@ if (!$usuario_actual || $usuario_actual['estado'] !== 'activo') {
 if ((int)$usuario_actual['debe_cambiar'] === 1
     && !in_array(basename((string)($_SERVER['SCRIPT_NAME'] ?? '')), ['cuenta.php', 'logout.php'], true)) {
     redirigir('cuenta.php');
+}
+
+// Los administradores, con la verificación en dos pasos sí o sí (abren también
+// finanzas): sin ella, solo pueden ir a «Mi cuenta» a activarla.
+if (dos_pasos_obligatoria($usuario_actual) && !dos_pasos_activa($usuario_actual)
+    && !in_array(basename((string)($_SERVER['SCRIPT_NAME'] ?? '')), ['cuenta.php', 'logout.php'], true)) {
+    redirigir('cuenta.php#dos-pasos');
 }

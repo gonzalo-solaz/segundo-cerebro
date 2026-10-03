@@ -348,3 +348,23 @@ tarjeta lo dice y no llama. Aquí van los PDF (apunte `Nómina` con el líquido 
 nunca en `coste`). (2) Lo ve toda la familia con acceso, como el resto. (3) Que la tabla del
 convenio viva aquí y finanzas la lea (hoy está escrita a mano en `CEU_CONVENIO` de su
 `dashboard-pie.html`) queda para más adelante: si cambian las tablas, se actualizan las dos.
+
+**Un solo acceso con finanzas y verificación en dos pasos (3/10/2026, decisión de
+Gonzalo: «que finanzas sea una sección; no quiero validarme en otra app; cada dato con
+un solo origen»).** Plan por fases: (1) finanzas se despliega por GitHub; (2) acceso
+único + 2FA; (3) página «Finanzas» aquí con su resumen, leído de su API; (4) unificar
+datos: la cosa y sus papeles (casa, vehículo, empleo, convenio, hijos, colegio, términos
+de la hipoteca) viven AQUÍ; el dinero que se mueve o se valora (movimientos, nóminas,
+valor de mercado, capital pendiente) vive en finanzas, que lee estas fichas con su
+`CEREBRO_API_CLAVE`; (5) cruzar contratos con movimientos. **Fase 2 hecha:**
+- **2FA (TOTP, `includes/dos-pasos.php`, migración 005)** obligatoria para los admin
+  (`auth.php` los manda a «Mi cuenta» hasta activarla), opcional para miembros. Sin QR
+  ni librerías: clave en base32 + enlace `otpauth://`. 8 códigos de recuperación de un
+  uso; otro admin puede quitarla desde Ajustes. Login: contraseña → `verificar.php`
+  (5 min, 5 intentos por cuenta y cuarto de hora, un código no vale dos veces).
+- **Pase a finanzas (`includes/pase.php`, idéntico en las dos apps; las pruebas de
+  ambas comprueban el mismo pase de ejemplo):** `finanzas-entrar.php` (solo admin) firma
+  con `PASE_CLAVE` un pase de 1 minuto y un solo uso; finanzas abre su sesión por email.
+  Un solo «Salir» encadenado en los dos sentidos (`logout.php` ↔ `salir.php` de finanzas).
+  Sin `PASE_CLAVE`, todo sigue como antes (enlace externo, login propio de finanzas).
+- `ASSETS_VERSION` la pone ahora el workflow (el commit): ya no hay que subirla a mano.

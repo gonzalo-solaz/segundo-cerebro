@@ -38,6 +38,7 @@ if (!defined('SC_CONFIG_CARGADA')) {
         'API_CLAVE'          => '',
         'FINANZAS_URL'       => '',
         'FINANZAS_API_CLAVE' => '',
+        'PASE_CLAVE'         => '',
         'DIR_ARCHIVOS'       => dirname(__DIR__) . '/private/archivos',
         'DIR_CACHE'          => dirname(__DIR__) . '/private/cache',
     ];

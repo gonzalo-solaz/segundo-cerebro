@@ -99,10 +99,10 @@ cabecera_pagina(saludo() . ', ' . nombre_corto($usuario_actual['nombre']), e(ucf
     </a>
   <?php endforeach; ?>
   <?php if (es_admin() && FINANZAS_URL !== ''): ?>
-    <a class="tarjeta tarjeta-seccion" href="<?= e(FINANZAS_URL) ?>" style="--c:#405189">
+    <a class="tarjeta tarjeta-seccion" href="<?= e(url_finanzas()) ?>" style="--c:#405189">
       <div class="ts-cabecera">
         <span class="icono-grande"><?= icono('cartera') ?></span>
-        <div><h3>Finanzas <?= icono('externo', 'ico ico-mini') ?></h3><span class="tenue">App aparte, con su propio acceso</span></div>
+        <div><h3>Finanzas<?= PASE_CLAVE === '' ? ' ' . icono('externo', 'ico ico-mini') : '' ?></h3><span class="tenue"><?= PASE_CLAVE === '' ? 'App aparte, con su propio acceso' : 'Con tu mismo acceso' ?></span></div>
       </div>
       <p class="ts-kpi">Movimientos, nóminas y patrimonio</p>
     </a>
