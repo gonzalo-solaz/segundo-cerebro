@@ -75,7 +75,7 @@ cabecera_pagina($sec['nombre'], e($sec['descripcion']), $botones, $sec['icono'],
             <?php endif; ?>
           </a>
         <?php endforeach; ?>
-        <?php if (!$suyos): ?><p class="vacio-mini">Todavía sin colegio ni actividades.</p><?php endif; ?>
+        <?php if (!$suyos): ?><p class="vacio-mini"><?= ($ed ?? null) !== null && $ed >= 18 ? 'Nada apuntado.' : 'Todavía sin colegio ni actividades.' ?></p><?php endif; ?>
         <footer class="fp-pie">
           <?php foreach (['colegio' => 'Colegio', 'actividad' => 'Actividad', 'fecha' => 'Fecha'] as $t => $txt): ?>
             <a class="chip chip-boton" href="<?= e(url('elemento-editar.php?s=familia&t=' . $t . '&persona=' . $p['id'])) ?>"><?= icono('mas', 'ico ico-mini') ?><?= e($txt) ?></a>
