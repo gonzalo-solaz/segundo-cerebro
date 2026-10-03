@@ -43,18 +43,73 @@ cabecera($sec['nombre'], 'seccion:' . $clave);
 cabecera_pagina($sec['nombre'], e($sec['descripcion']), $botones, $sec['icono'], $sec['color']);
 ?>
 
-<?php if ($clave === 'familia'): ?>
-  <?php $gente = personas($pdo); ?>
-  <section class="personas-tira">
+<?php if ($clave === 'familia' && !$archivados): ?>
+  <?php
+  $gente = personas($pdo);
+  $de_persona = [];
+  foreach ($elementos as $el) $de_persona[(int)$el['persona_id']][] = $el;
+  ?>
+  <div class="familia-rejilla">
     <?php foreach ($gente as $p): ?>
-      <a class="persona-mini" href="<?= e(url('personas.php?editar=' . $p['id'])) ?>">
-        <?= avatar($p['nombre'], $p['color']) ?>
-        <span><strong><?= e($p['nombre']) ?></strong><small class="tenue"><?= e($p['relacion']) ?><?= ($ed = edad($p['fecha_nacimiento'])) !== null ? ' · ' . $ed . ' años' : '' ?></small></span>
-      </a>
+      <?php $suyos = $de_persona[$p['id']] ?? []; ?>
+      <article class="tarjeta familia-persona">
+        <header class="fp-cabecera">
+          <?= avatar($p['nombre'], $p['color'], 'avatar avatar-grande') ?>
+          <div>
+            <h2><a href="<?= e(url('personas.php?editar=' . $p['id'])) ?>"><?= e($p['nombre']) ?></a></h2>
+            <p class="tenue"><?= e($p['relacion']) ?><?= ($ed = edad($p['fecha_nacimiento'])) !== null ? ' · ' . $ed . ' años' : '' ?></p>
+          </div>
+        </header>
+        <?php foreach ($suyos as $el): ?>
+          <?php $prox = $proximo[$el['id']] ?? null; ?>
+          <a class="fp-elemento" href="<?= e(url('elemento.php?id=' . $el['id'])) ?>">
+            <span class="fp-tipo"><?= e($sec['tipos'][$el['tipo']]['nombre'] ?? $el['tipo']) ?></span>
+            <strong><?= e($el['nombre']) ?></strong>
+            <dl class="resumen">
+              <?php foreach (resumen_elemento($el) as [$etq, $val]): ?>
+                <div><dt><?= e($etq) ?></dt><dd><?= e(recortar($val, 80)) ?></dd></div>
+              <?php endforeach; ?>
+            </dl>
+            <?php if ($prox): ?>
+              <span class="ts-proximo venc-<?= e($prox['situacion']) ?>"><?= icono('reloj', 'ico ico-mini') ?><?= e(fecha_corta($prox['fecha'])) ?> · <?= e(relativo($prox['dias'])) ?></span>
+            <?php endif; ?>
+          </a>
+        <?php endforeach; ?>
+        <?php if (!$suyos): ?><p class="vacio-mini">Todavía sin colegio ni actividades.</p><?php endif; ?>
+        <footer class="fp-pie">
+          <?php foreach (['colegio' => 'Colegio', 'actividad' => 'Actividad', 'fecha' => 'Fecha'] as $t => $txt): ?>
+            <a class="chip chip-boton" href="<?= e(url('elemento-editar.php?s=familia&t=' . $t . '&persona=' . $p['id'])) ?>"><?= icono('mas', 'ico ico-mini') ?><?= e($txt) ?></a>
+          <?php endforeach; ?>
+        </footer>
+      </article>
     <?php endforeach; ?>
-    <a class="persona-mini persona-nueva" href="<?= e(url('personas.php')) ?>"><?= icono('mas') ?><span>Gestionar personas</span></a>
-  </section>
+  </div>
+  <p class="pie-seccion"><a class="enlace-tenue" href="<?= e(url('personas.php')) ?>"><?= icono('mas', 'ico ico-mini') ?>Gestionar personas</a></p>
 <?php endif; ?>
+
+<?php if ($clave === 'familia' && !$archivados): ?>
+<div class="seccion-rejilla">
+  <div>
+    <?php $sin_persona = array_filter($elementos, static fn($el) => !$el['persona_id']); ?>
+    <?php if ($sin_persona): ?>
+      <h2 class="titulo-bloque">Sin persona asignada</h2>
+      <div class="rejilla rejilla-elementos">
+        <?php foreach ($sin_persona as $el): ?>
+          <a class="tarjeta tarjeta-elemento" href="<?= e(url('elemento.php?id=' . $el['id'])) ?>"><div class="te-cabecera"><h3><?= e($el['nombre']) ?></h3></div>
+            <dl class="resumen"><?php foreach (resumen_elemento($el) as [$etq, $val]): ?><div><dt><?= e($etq) ?></dt><dd><?= e(recortar($val, 80)) ?></dd></div><?php endforeach; ?></dl></a>
+        <?php endforeach; ?>
+      </div>
+    <?php endif; ?>
+    <p class="pie-seccion"><a class="enlace-tenue" href="<?= e(url('seccion.php?s=familia&archivados=1')) ?>"><?= icono('archivar', 'ico ico-mini') ?>Ver archivados</a></p>
+  </div>
+  <aside class="tarjeta">
+    <div class="tarjeta-cabecera"><h2><?= icono('agenda') ?>Avisos de <?= e($sec['nombre']) ?></h2></div>
+    <?php if (!$avisos): ?><p class="vacio-mini">Nada en los próximos 12 meses.</p><?php endif; ?>
+    <?php foreach ($avisos as $v) fila_vencimiento($v, $volver, false); ?>
+    <?php formulario_vencimiento($clave, null, $volver); ?>
+  </aside>
+</div>
+<?php pie(); return; endif; ?>
 
 <div class="seccion-rejilla">
   <div>
