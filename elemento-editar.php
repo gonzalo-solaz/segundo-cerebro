@@ -49,7 +49,7 @@ $titulo = $el ? 'Editar «' . $el['nombre'] . '»' : 'Nuevo: ' . mb_minusculas_i
 $volver_a = $el ? 'elemento.php?id=' . $el['id'] : 'seccion.php?s=' . $s;
 
 cabecera($titulo, 'seccion:' . $s);
-cabecera_pagina($titulo, '<a href="' . e(url('seccion.php?s=' . $s)) . '">' . e($sec['nombre']) . '</a>', '', $sec['icono'], $sec['color']);
+cabecera_pagina($titulo, '<a href="' . e(url('seccion.php?s=' . $s)) . '">' . e($sec['nombre']) . '</a>', '', $sec['emoji'], $sec['color']);
 ?>
 <?php if ($errores): ?>
   <div class="flash flash-error" role="alert">

@@ -10,7 +10,7 @@ function menu_principal(): array {
     $m = [['clave' => 'index', 'url' => 'index.php', 'texto' => 'Panel', 'icono' => 'panel']];
     foreach (secciones() as $k => $s) {
         $m[] = ['clave' => 'seccion:' . $k, 'url' => 'seccion.php?s=' . $k, 'texto' => $s['nombre'],
-                'icono' => $s['icono'], 'color' => $s['color']];
+                'icono' => $s['icono'], 'emoji' => $s['emoji'], 'color' => $s['color']];
     }
     $m[] = ['clave' => 'agenda', 'url' => 'vencimientos.php', 'texto' => 'Agenda', 'icono' => 'agenda'];
     $m[] = ['clave' => 'personas', 'url' => 'personas.php', 'texto' => 'Personas', 'icono' => 'persona'];
@@ -48,7 +48,7 @@ function cabecera(string $titulo, string $activa = ''): void {
     <nav class="menu" aria-label="Secciones">
       <?php foreach (menu_principal() as $i): ?>
         <a href="<?= e(url($i['url'])) ?>" class="<?= $activa === $i['clave'] ? 'activo' : '' ?>"<?= isset($i['color']) ? ' style="--c:' . e($i['color']) . '"' : '' ?>>
-          <?= icono($i['icono']) ?><span><?= e($i['texto']) ?></span>
+          <?= isset($i['emoji']) ? emoji($i['emoji']) : icono($i['icono']) ?><span><?= e($i['texto']) ?></span>
         </a>
       <?php endforeach; ?>
       <?php if (es_admin()): ?>
@@ -136,6 +136,13 @@ function exigir_admin(): void {
 // ---------------------------------------------------------------------
 //  Piezas
 // ---------------------------------------------------------------------
+// El «icono de página» de una sección, como en Notion. aria-hidden: el nombre
+// de la sección ya va escrito al lado; el lector de pantalla no tiene que
+// leer «casa con jardín» cada vez.
+function emoji(string $e, string $clase = 'emoji'): string {
+    return '<span class="' . e($clase) . '" aria-hidden="true">' . e($e) . '</span>';
+}
+
 function avatar(string $nombre, ?string $color = null, string $clase = 'avatar'): string {
     return '<span class="' . e($clase) . '" style="--c:' . e($color ?: '#405189') . '">' . e(iniciales($nombre)) . '</span>';
 }
@@ -144,7 +151,7 @@ function chip_seccion(string $clave): string {
     $s = seccion($clave);
     if (!$s) return '';
     return '<a class="chip" href="' . e(url('seccion.php?s=' . $clave)) . '" style="--c:' . e($s['color']) . '">'
-         . icono($s['icono'], 'ico ico-mini') . e($s['nombre']) . '</a>';
+         . emoji($s['emoji'], 'emoji emoji-mini') . e($s['nombre']) . '</a>';
 }
 
 function chip_persona(?string $nombre, ?string $color): string {
@@ -156,7 +163,8 @@ function cabecera_pagina(string $titulo, string $antetitulo = '', string $accion
     ?>
     <div class="cabecera-pagina">
       <div class="cabecera-titulo">
-        <?php if ($icono): ?><span class="icono-grande" style="--c:<?= e($color ?: '#405189') ?>"><?= icono($icono) ?></span><?php endif; ?>
+        <?php if ($icono && !preg_match('/^[a-z\-]+$/', $icono)): ?><span class="emoji-pagina"><?= e($icono) ?></span>
+        <?php elseif ($icono): ?><span class="icono-grande" style="--c:<?= e($color ?: '#37352F') ?>"><?= icono($icono) ?></span><?php endif; ?>
         <div>
           <?php if ($antetitulo !== ''): ?><p class="antetitulo"><?= $antetitulo ?></p><?php endif; ?>
           <h1><?= e($titulo) ?></h1>

@@ -37,8 +37,10 @@
 //    nombre_auto   Si se deja el nombre en blanco: «DNI de {persona}».
 //    campos        Los campos (ver arriba).
 //
-//  Sección — además: sugerencias de recordatorios típicos (solo rellenan el
-//  título y la repetición; la fecha SIEMPRE la pone el usuario: no se
+//  Sección — además: emoji (su «icono de página», como en Notion: es la
+//  marca de la sección en el menú, las fichas y la agenda), color (de la
+//  paleta de bloques de Notion; el fondo suave se deriva en el CSS),
+//  sugerencias de recordatorios típicos (solo rellenan el título y la repetición; la fecha SIEMPRE la pone el usuario: no se
 //  inventan fechas) y la configuración del historial (registros).
 // =====================================================================
 
@@ -82,7 +84,7 @@ function secciones(): array {
     $s = [
         // -------------------------------------------------------------
         'vivienda' => [
-            'nombre' => 'Vivienda', 'icono' => 'casa', 'color' => '#3577f1',
+            'nombre' => 'Vivienda', 'icono' => 'casa', 'emoji' => '🏠', 'color' => '#337EA9',
             'descripcion' => 'Casas, instalaciones, garantías y los profesionales de confianza.',
             'tipos' => [
                 'inmueble' => [
@@ -121,7 +123,7 @@ function secciones(): array {
 
         // -------------------------------------------------------------
         'vehiculos' => [
-            'nombre' => 'Vehículos', 'icono' => 'coche', 'color' => '#e0991a',
+            'nombre' => 'Vehículos', 'icono' => 'coche', 'emoji' => '🚗', 'color' => '#D9730D',
             'descripcion' => 'ITV, revisiones, kilómetros y lo que se ha gastado en cada vehículo.',
             'tipos' => [
                 'vehiculo' => [
@@ -156,7 +158,7 @@ function secciones(): array {
 
         // -------------------------------------------------------------
         'salud' => [
-            'nombre' => 'Salud', 'icono' => 'salud', 'color' => '#f06548',
+            'nombre' => 'Salud', 'icono' => 'salud', 'emoji' => '🩺', 'color' => '#D44C47',
             'descripcion' => 'Fichas médicas, tratamientos, especialistas e historial de cada persona.',
             'tipos' => [
                 'ficha' => [
@@ -208,7 +210,7 @@ function secciones(): array {
 
         // -------------------------------------------------------------
         'documentos' => [
-            'nombre' => 'Documentos', 'icono' => 'documento', 'color' => '#6559cc',
+            'nombre' => 'Documentos', 'icono' => 'documento', 'emoji' => '🪪', 'color' => '#9065B0',
             'descripcion' => 'DNI, pasaportes, carnets y tarjetas de cada uno, con su caducidad y su copia.',
             'tipos' => [
                 'dni' => [
@@ -258,7 +260,7 @@ function secciones(): array {
 
         // -------------------------------------------------------------
         'contratos' => [
-            'nombre' => 'Contratos', 'icono' => 'contrato', 'color' => '#0ab39c',
+            'nombre' => 'Contratos', 'icono' => 'contrato', 'emoji' => '📑', 'color' => '#448361',
             'descripcion' => 'Suministros, seguros y suscripciones: cuánto cuestan, cuándo renuevan y cuándo acaba la permanencia.',
             'tipos' => [
                 'suministro' => [
@@ -310,7 +312,7 @@ function secciones(): array {
 
         // -------------------------------------------------------------
         'familia' => [
-            'nombre' => 'Familia', 'icono' => 'familia', 'color' => '#e83e8c',
+            'nombre' => 'Familia', 'icono' => 'familia', 'emoji' => '👨‍👩‍👧', 'color' => '#C14C8A',
             'descripcion' => 'Colegio, actividades y fechas importantes de cada uno.',
             'tipos' => [
                 'colegio' => [

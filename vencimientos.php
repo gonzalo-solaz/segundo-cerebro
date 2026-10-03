@@ -90,7 +90,7 @@ cabecera_pagina('Agenda', 'Todo lo que vence o toca hacer, de todas las seccione
 <nav class="filtros">
   <a class="chip <?= $filtro === '' ? 'chip-activo' : '' ?>" href="<?= e(url('vencimientos.php')) ?>">Todo</a>
   <?php foreach (secciones() as $k => $s): ?>
-    <a class="chip <?= $filtro === $k ? 'chip-activo' : '' ?>" style="--c:<?= e($s['color']) ?>" href="<?= e(url('vencimientos.php?s=' . $k)) ?>"><?= icono($s['icono'], 'ico ico-mini') ?><?= e($s['nombre']) ?></a>
+    <a class="chip <?= $filtro === $k ? 'chip-activo' : '' ?>" style="--c:<?= e($s['color']) ?>" href="<?= e(url('vencimientos.php?s=' . $k)) ?>"><?= emoji($s['emoji'], 'emoji emoji-mini') ?><?= e($s['nombre']) ?></a>
   <?php endforeach; ?>
 </nav>
 

@@ -70,7 +70,7 @@ $acciones = '<a class="btn btn-sutil" href="' . e(url('elemento-editar.php?id=' 
 cabecera($el['nombre'], 'seccion:' . $el['seccion']);
 cabecera_pagina($el['nombre'],
     '<a href="' . e(url('seccion.php?s=' . $el['seccion'])) . '">' . e($sec['nombre']) . '</a> · ' . e($def['nombre']),
-    $acciones, $sec['icono'], $sec['color']);
+    $acciones, $sec['emoji'], $sec['color']);
 ?>
 <?php if (!$el['activo']): ?>
   <div class="flash flash-aviso">Este elemento está archivado: sus avisos no salen en la agenda.</div>

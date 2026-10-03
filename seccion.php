@@ -24,7 +24,7 @@ foreach ($sec['tipos'] as $t => $def) {
 }
 
 cabecera($sec['nombre'], 'seccion:' . $clave);
-cabecera_pagina($sec['nombre'], e($sec['descripcion']), $botones, $sec['icono'], $sec['color']);
+cabecera_pagina($sec['nombre'], e($sec['descripcion']), $botones, $sec['emoji'], $sec['color']);
 ?>
 
 <?php if ($clave === 'familia'): ?>
