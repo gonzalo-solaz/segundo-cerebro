@@ -148,6 +148,13 @@ function secciones(): array {
                             'vence' => 'Pasar la ITV', 'aviso' => 30],
                         'proxima_revision' => ['etiqueta' => 'Próxima revisión del taller', 'tipo' => 'fecha',
                             'vence' => 'Revisión en el taller', 'aviso' => 21],
+                        // Plegados (3/10/2026): las notas de los coches acabaron siendo un muro de texto.
+                        // Las notas quedan para lo breve (avería pendiente, baja temporal...).
+                        'equipamiento' => ['etiqueta' => 'Equipamiento y extras', 'tipo' => 'area', 'aparte' => true],
+                        'recambios' => ['etiqueta' => 'Recambios y mantenimiento', 'tipo' => 'area', 'aparte' => true,
+                            'ayuda' => 'Referencias de filtros, aceite, neumáticos, batería, defectos a vigilar.'],
+                        'origen' => ['etiqueta' => 'Origen e historia', 'tipo' => 'area', 'aparte' => true,
+                            'ayuda' => 'Procedencia, propietarios, papeles, seguros anteriores.'],
                     ],
                 ],
                 'contacto' => tipo_contacto('Taller o contacto', 'Taller de confianza', 'Especialidad'),
