@@ -40,6 +40,14 @@ function cabeza_html(string $titulo): void {
 <script src="<?= e(asset('tema.js')) ?>"></script>
 <link rel="stylesheet" href="<?= e(asset('app.css')) ?>">
 <link rel="icon" href="<?= e(asset('icono.svg')) ?>" type="image/svg+xml">
+<link rel="manifest" href="<?= e(url('manifest.json') . '?v=cerebro-1') ?>">
+<link rel="apple-touch-icon" href="<?= e(url('assets/icon-apple-touch.png') . '?v=cerebro-1') ?>" sizes="180x180">
+<meta name="theme-color" content="#f3f3f9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1a1d21" media="(prefers-color-scheme: dark)">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Cerebro">
 <script src="<?= e(asset('app.js')) ?>" defer></script>
 </head>
 <?php

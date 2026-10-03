@@ -42,6 +42,16 @@
 <FilesMatch "\.php\.">
     Require all denied
 </FilesMatch>
+# Excepción: el manifest de la PWA (el filtro *.json de arriba lo bloquea). Va
+# DESPUÉS de ese filtro: en Apache, la última sección que coincide gana. Sin
+# caché, para que un cambio de nombre o de icono llegue (van4ever: Hostinger
+# le ponía una semana de caché a los estáticos).
+<Files "manifest.json">
+    Require all granted
+    <IfModule mod_headers.c>
+        Header set Cache-Control "no-cache"
+    </IfModule>
+</Files>
 # Herramientas de este ordenador que no pintan nada en el servidor (por si
 # se suben sin querer: ya se niegan a correr fuera de la línea de
 # comandos, pero mejor que ni respondan).

@@ -60,4 +60,29 @@
       setTimeout(function () { el.classList.add('flash-fuera'); }, 4500);
     });
   });
+
+  // App instalada (PWA): los enlaces internos con target="_blank" se abren en la
+  // propia app. En iOS el visor que abre un _blank usa OTRO almacén de cookies y
+  // llega sin sesión (lección de van4ever; afecta a archivo.php). Los externos
+  // siguen abriéndose fuera.
+  var instalada = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
+               || window.navigator.standalone === true;
+  if (instalada) {
+    document.addEventListener('click', function (ev) {
+      var a = ev.target.closest ? ev.target.closest('a[target="_blank"]') : null;
+      if (!a || !a.href) return;
+      var destino;
+      try { destino = new URL(a.href, location.href); } catch (e) { return; }
+      if (destino.origin !== location.origin) return;
+      ev.preventDefault();
+      location.href = a.href;
+    });
+  }
+
+  // Service worker: solo para que el navegador ofrezca «Instalar». No cachea nada.
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('sw.js').catch(function () { /* sin PWA, la web va igual */ });
+    });
+  }
 })();

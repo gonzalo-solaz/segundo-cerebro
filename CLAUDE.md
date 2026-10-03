@@ -116,6 +116,16 @@ avisa por correo.
   que dan 5/5 en cualquier ordenador. El PHP de este equipo (winget, sin
   php.ini) no carga pdo_sqlite: `includes/cli.php` relanza el script con
   `-d extension=pdo_sqlite` solo. No tocar la instalación de PHP.
+- **PWA instalable (3/10/2026, petición de Gonzalo, copiada de van4ever).**
+  `manifest.json` (con excepción en `.htaccess`: el filtro `*.json` lo bloquea),
+  `sw.js` SIN caché y SIN listener de `fetch` (hay datos de salud y todo va
+  `no-store`; solo sirve para que sea instalable), iconos PNG en `assets/`
+  (192/512, maskable y Apple 180, sacados de `icono.svg`) y etiquetas en
+  `cabeza_html()`. En la app instalada, `app.js` abre en la propia app los
+  `target="_blank"` del mismo origen (iOS los abriría con otro almacén de cookies
+  y sin sesión: afecta a `archivo.php`). Si cambia el icono o el nombre, subir el
+  `?v=cerebro-N` del manifest y de `layout.php`. Sin avisos push (van4ever los
+  tiene; aquí los avisos van por correo).
 - **Ver la app en local:** `php servidor-local.php` → http://127.0.0.1:8090
   (SQLite en `private/local.sqlite`, datos de juguete). Para mirar el diseño sin
   sesión en el navegador de Claude: capturas con Edge headless
