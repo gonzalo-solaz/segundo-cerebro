@@ -128,6 +128,8 @@ function secciones(): array {
                         'fin_hipoteca' => ['etiqueta' => 'Fin del contrato de alquiler', 'tipo' => 'fecha',
                             'vence' => 'Fin de hipoteca o alquiler', 'aviso' => 90,
                             'ayuda' => 'Si hay hipoteca, va en su propio contrato (Contratos → Hipoteca), enlazado a la casa.'],
+                        'escritura' => ['etiqueta' => 'Escritura y registro', 'tipo' => 'area', 'aparte' => true, 'lista' => true,
+                            'ayuda' => 'Lo que dice la escritura: notaría y protocolo, vendedor, registro y finca, descripción, superficies, servidumbres. Una línea por punto.'],
                     ],
                 ],
                 'equipo' => [
