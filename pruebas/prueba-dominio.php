@@ -154,13 +154,16 @@ comprueba('sin renovación: el último recibo + su periodicidad (aproximado)', $
 $c = fechas_de_cargo([], 3, '2026-01-31', '2026-01-01', '2026-12-31');
 comprueba('sin arrastrar el fin de mes', $c['fechas'] === ['2026-04-30', '2026-07-31', '2026-10-31'], implode(',', $c['fechas']));
 comprueba('sin ancla no se inventa la fecha', fechas_de_cargo([], 12, null, '2026-10-01', '2027-09-30') === null);
-$hip = ['id' => 90, 'seccion' => 'contratos', 'tipo' => 'hipoteca', 'nombre' => 'Hipoteca', 'enlace_id' => 2, 'enlace_nombre' => 'Casa', 'persona_nombre' => null,
+$hip = ['id' => 90, 'seccion' => 'contratos', 'tipo' => 'hipoteca', 'nombre' => 'Hipoteca', 'enlace_id' => 2, 'enlace_nombre' => 'Casa', 'persona_id' => 1, 'persona_nombre' => 'Gonzalo',
         'datos' => ['coste' => 600, 'periodicidad' => 'Mensual', 'porcentaje_pago' => 60, 'fecha_fin' => '2042-11-07', 'revision_interes' => 'Trimestral']];
-$an = analisis_gastos_fijos([$hip], [], '2026-10-04');
+$an = analisis_gastos_fijos([$hip], [], '2026-10-04', 1);
 $r = $an['revisar'][0];
-comprueba('la hipoteca: su peso, lo que queda y tu parte', $r['titulo'] === 'La hipoteca es el 100 % del gasto fijo'
-    && str_contains($r['texto'], 'Quedan 16 años y 1 mes') && str_contains($r['texto'], 'tu parte (60 %) son 360,00 €'), $r['titulo'] . ' / ' . $r['texto']);
-$corta = analisis_gastos_fijos([array_replace_recursive($hip, ['datos' => ['fecha_fin' => '2027-03-07']])], [], '2026-10-04');
+comprueba('la hipoteca: su peso, lo que queda y tu parte', $r['titulo'] === 'La hipoteca es el 100 % de tu gasto fijo'
+    && str_contains($r['texto'], 'Quedan 16 años y 1 mes') && str_contains($r['texto'], 'Pagas el 60 %: 360,00 € de los 600,00 €'), $r['titulo'] . ' / ' . $r['texto']);
+comprueba('lo tuyo y lo de la casa', abs($an['tuyo'] - 360) < 0.001 && abs($an['total'] - 600) < 0.001 && $an['a_medias']);
+$casa = analisis_gastos_fijos([$hip], [], '2026-10-04');
+comprueba('sin decir quién mira, la casa entera (como la API y los usuarios sin persona)', abs($casa['tuyo'] - 600) < 0.001 && !$casa['a_medias']);
+$corta = analisis_gastos_fijos([array_replace_recursive($hip, ['datos' => ['fecha_fin' => '2027-03-07', 'porcentaje_pago' => 100]])], [], '2026-10-04', 1);
 comprueba('tras la última cuota, la hipoteca deja de contar', $corta['calendario'][5]['total'] == 600 && $corta['calendario'][6]['total'] == 0);
 $meses_fin = [];
 for ($i = 0; $i < 12; $i++) $meses_fin[] = ['mes' => substr(sumar_meses('2025-10-01', $i), 0, 7), 'gasto' => 2500, 'ingreso' => 3000];
@@ -173,9 +176,37 @@ $res = ['saldos' => [['saldo' => 5000, 'activa' => true], ['saldo' => 900, 'acti
 $sf = salud_finanzas($res, $an, '2026-10-04');
 comprueba('finanzas: la media de los 12 meses completos, sin el actual', $sf['meses'] === 12 && abs($sf['ingreso'] - 3000) < 0.001 && abs($sf['gasto'] - 2500) < 0.001);
 comprueba('ahorro del 16,7 % y colchón de 2 meses (solo las cuentas activas)', abs($sf['ahorro_pct'] - 50 / 3) < 0.001 && abs($sf['colchon_meses'] - 2) < 0.001);
-comprueba('la hipoteca, por tu parte: 360 de 3.000 = 12 %, holgado', $sf['hipoteca_tuya'] && abs($sf['hipoteca_pct'] - 12) < 0.001 && $sf['cifras'][2]['nivel'] === 'bien');
+comprueba('la hipoteca, por tu parte: 360 de 3.000 = 12 %, holgado', $sf['hipoteca_tuya'] && abs($sf['hipoteca_pct'] - 12) < 0.001 && $sf['cifras'][3]['nivel'] === 'bien');
+comprueba('tus gastos fijos frente a tus ingresos: 360 de 3.000 = 12 %, y lo que queda del 50 %', abs($sf['fijos_pct'] - 12) < 0.001
+    && $sf['cifras'][0]['nivel'] === 'bien' && str_contains($sf['cifras'][0]['texto'], '1.140,00 €'));
 comprueba('lo que se repite en el banco y aquí no está: garaje y suscripciones, no la hipoteca',
     array_column($sf['repetidos'], 'categoria') === ['Garaje', 'Suscripciones'], implode(',', array_column($sf['repetidos'], 'categoria')));
+// Quién paga qué (Gonzalo = 1, Pilar = 2): la parte del titular, el resto si el titular es el otro.
+$el = static fn(?int $titular, $pct, string $s = 'contratos') => ['seccion' => $s, 'persona_id' => $titular, 'datos' => $pct === null ? [] : ['porcentaje_pago' => $pct]];
+comprueba('el titular paga su %', parte_que_pagas($el(1, 60), 1) === 60.0);
+comprueba('si el titular es otro, el resto', parte_que_pagas($el(1, 60), 2) === 40.0);
+comprueba('si otro lo paga entero, nada', parte_que_pagas($el(2, null), 1) === 0.0 && parte_que_pagas($el(2, 100), 1) === 0.0);
+comprueba('sin titular, el % es de quien mira', parte_que_pagas($el(null, 50), 1) === 50.0 && parte_que_pagas($el(null, null), 1) === 100.0);
+comprueba('en una actividad, la persona es quien va: el % es de quien mira', parte_que_pagas($el(4, 50, 'familia'), 1) === 50.0);
+comprueba('sin saber quién mira, todo', parte_que_pagas($el(2, 30), null) === 100.0);
+// El agua: recibos cada 3 meses en una ficha «Mensual» (lo que pasó en producción el 4/10/2026).
+comprueba('las facturas llegan cada 3 meses', intervalo_facturas(['2026-02-06', '2026-05-07', '2026-08-06']) === 3);
+comprueba('una factura sin apuntar no alarga el ritmo', intervalo_facturas(['2025-12-09', '2026-08-09', '2026-09-09']) === 1);
+comprueba('dos facturas en un mes siguen siendo mensuales', intervalo_facturas(['2026-06-08', '2026-06-29', '2026-07-20', '2026-08-19']) === 1);
+$agua = ['id' => 91, 'seccion' => 'contratos', 'tipo' => 'suministro', 'nombre' => 'Agua', 'persona_id' => null, 'persona_nombre' => null,
+         'datos' => ['coste' => 38.74, 'periodicidad' => 'Mensual', 'porcentaje_pago' => 50]];
+$ha = [91 => ['ultimo' => '2026-08-06', 'n' => 3, 'total' => 348.63, 'max' => 118.97, 'min' => 113.07, 'fechas' => ['2026-02-06', '2026-05-07', '2026-08-06'], 'otros' => 0.0]];
+$aa = analisis_gastos_fijos([$agua], $ha, '2026-10-04', 1);
+comprueba('el agua real: 348,63 € en 3 recibos trimestrales = 38,74 € al mes, no 116', abs($aa['items'][0]['real']['mensual'] - 348.63 / 9) < 0.001 && $aa['items'][0]['real']['cada'] === 3);
+comprueba('y no dice que no cuadra; dice que se cobra cada 3 meses', !array_filter($aa['revisar'], static fn($r) => str_contains($r['titulo'], 'no cuadra'))
+    && (bool)array_filter($aa['revisar'], static fn($r) => $r['titulo'] === '«Agua» se cobra cada 3 meses' && str_contains($r['texto'], '«Trimestral»')));
+comprueba('el agua a medias: 19,37 € de 38,74 €', abs($aa['tuyo'] - 19.37) < 0.001 && abs($aa['total'] - 38.74) < 0.001);
+$garaje = ['id' => 92, 'seccion' => 'contratos', 'tipo' => 'alquiler', 'nombre' => 'Plaza de garaje', 'persona_id' => 1, 'persona_nombre' => 'Gonzalo',
+           'datos' => ['que' => 'Garaje', 'coste' => 113.63, 'periodicidad' => 'Mensual']];
+$ag = analisis_gastos_fijos([$hip, $garaje], [], '2026-10-04', 1);
+comprueba('el alquiler va en su partida, junto a la hipoteca', array_keys($ag['partidas']) === ['hipoteca', 'alquiler']);
+comprueba('un contrato suelto es su propia cosa: la plaza de garaje', in_array('Plaza de garaje', array_column($ag['cosas'], 'nombre'), true));
+comprueba('y con él, el garaje del banco ya está recogido', array_column(salud_finanzas($res, $ag, '2026-10-04')['repetidos'], 'categoria') === ['Suscripciones']);
 comprueba('con menos de 6 meses de finanzas no se opina', salud_finanzas(['gasto' => ['meses' => [['mes' => '2026-09', 'gasto' => 1, 'ingreso' => 1]]]], $an, '2026-10-04') === null);
 
 echo "\nControl de peso\n";
@@ -224,7 +255,7 @@ comprueba('la casa lista sus contratos y su comunidad', $hijos === $esperados);
 comprueba('el contrato sabe a qué casa pertenece', elemento($pdo, $id['luz'])['enlace_nombre'] === 'Casa de prueba');
 $res = resumen_enlazados($pdo);
 comprueba('el resumen cuenta 3 y suma 80 €/mes (60 + 240/12; la comunidad de prueba no lleva coste)', $res[$id['casa']]['n'] === 3 && abs($res[$id['casa']]['mensual'] - 80.0) < 0.001, json_encode($res));
-comprueba('la vivienda ofrece añadir suministros, seguros, su hipoteca y su comunidad', array_column(tipos_que_enlazan('vivienda', 'inmueble'), 1) === ['equipo', 'suministro', 'seguro', 'hipoteca', 'comunidad']);
+comprueba('la vivienda ofrece añadir suministros, seguros, su hipoteca, su comunidad y alquileres', array_column(tipos_que_enlazan('vivienda', 'inmueble'), 1) === ['equipo', 'suministro', 'seguro', 'hipoteca', 'comunidad', 'alquiler']);
 comprueba('un DNI no cuelga de nada', tipos_que_enlazan('documentos', 'dni') === []);
 $e = lanza(static fn() => guardar_elemento($pdo, 'contratos', 'suministro', $sum($id['furgo']), $id['luz'], $id['admin']));
 comprueba('un suministro no se puede enlazar a un vehículo', $e instanceof ErrorValidacion);

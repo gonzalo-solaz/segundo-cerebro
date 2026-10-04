@@ -96,6 +96,14 @@ pinta_bien('…y lo que cuesta cada cosa', $r, 'Lo que cuesta cada cosa');
 comprueba('…sin finanzas configurada no lo intenta', !str_contains($r['html'], 'Frente a tus ingresos'));
 pinta_bien('un miembro también ve los gastos fijos', pedir('gastos-fijos.php', [], null, $id['miembro']), 'A dónde va');
 pinta_bien('Contratos enlaza a los gastos fijos', pedir('seccion.php', ['s' => 'contratos']), 'gastos-fijos.php');
+// La luz a medias (sin titular, el 50 % es de quien mira): 30 de 60 € → 97,99 € de 127,99 €.
+cambiar_dato_elemento($pdo, $id['luz'], 'porcentaje_pago', 50);
+pinta_bien('a medias, el panel enseña tu parte', pedir('index.php'), '97,99 €');
+pinta_bien('…con el total de la casa en pequeño', pedir('index.php'), 'de 127,99 € de la casa');
+$r = pedir('gastos-fijos.php');
+pinta_bien('y el desglose, cuánto pagas de cada cosa', $r, 'pagas el 50 %');
+pinta_bien('…con el total en pequeño', $r, 'de 60,00 €');
+cambiar_dato_elemento($pdo, $id['luz'], 'porcentaje_pago', null);
 pinta_bien('sección que no existe → página de error', pedir('seccion.php', ['s' => 'nada']), 'Esa sección no existe');
 foreach (['furgo', 'casa', 'ficha_leo', 'dni', 'seguro', 'netflix', 'cole', 'cumple', 'fontanero', 'trat'] as $k) {
     pinta_bien("ficha de {$k}", pedir('elemento.php', ['id' => (string)$id[$k]]), 'Avisos');

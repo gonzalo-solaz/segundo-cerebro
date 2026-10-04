@@ -85,7 +85,7 @@ function borrar_registro(PDO $pdo, int $id, int $elemento_id, ?int $usuario_id =
  * Lo que dice el historial de cada elemento para los gastos fijos, en una
  * sola consulta: [elemento_id => ['ultimo' => fecha del último cargo
  * («Factura» o «Recibo» con coste: de ahí sale cuándo toca el siguiente),
- * 'n', 'total', 'max', 'min' => los cargos de los últimos 12 meses,
+ * 'n', 'total', 'max', 'min', 'fechas' => los cargos de los últimos 12 meses,
  * 'otros' => lo demás gastado en 12 meses (taller, ITV, reparaciones…; sin
  * «Compra o venta», que no es mantener)]].
  */
@@ -94,7 +94,7 @@ function historial_de_gastos(PDO $pdo, string $hoy): array {
     $out = [];
     foreach ($pdo->query('SELECT elemento_id, fecha, tipo, coste FROM registros WHERE coste IS NOT NULL ORDER BY fecha, id') as $f) {
         $o = &$out[(int)$f['elemento_id']];
-        $o ??= ['ultimo' => null, 'n' => 0, 'total' => 0.0, 'max' => null, 'min' => null, 'otros' => 0.0];
+        $o ??= ['ultimo' => null, 'n' => 0, 'total' => 0.0, 'max' => null, 'min' => null, 'fechas' => [], 'otros' => 0.0];
         $c = (float)$f['coste'];
         $cargo = in_array($f['tipo'], ['Factura', 'Recibo'], true);
         if ($cargo) $o['ultimo'] = $f['fecha'];
@@ -104,6 +104,7 @@ function historial_de_gastos(PDO $pdo, string $hoy): array {
                 $o['total'] += $c;
                 $o['max'] = max($o['max'] ?? $c, $c);
                 $o['min'] = min($o['min'] ?? $c, $c);
+                $o['fechas'][] = $f['fecha'];
             } elseif ($f['tipo'] !== 'Compra o venta') {
                 $o['otros'] += $c;
             }

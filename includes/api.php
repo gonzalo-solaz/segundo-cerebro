@@ -78,8 +78,9 @@ function api_ejecutar(PDO $pdo, array $p, ?array $archivo = null): array {
 
         case 'gastos':
             // A dónde va el gasto fijo (lo de gastos-fijos.php, sin finanzas):
-            // partidas, cosas, calendario de 12 meses y «Qué revisar».
-            $an = analisis_gastos_fijos(elementos_con_coste($pdo), historial_de_gastos($pdo, hoy()), hoy());
+            // partidas, cosas, calendario de 12 meses y «Qué revisar». Con
+            // persona_id, por lo que paga esa persona («tuyo»); sin él, la casa.
+            $an = analisis_gastos_fijos(elementos_con_coste($pdo), historial_de_gastos($pdo, hoy()), hoy(), (int)($datos['persona_id'] ?? 0) ?: null);
             $quitar = static fn(array $i): array => array_diff_key($i, ['datos' => 0]);
             $an['items'] = array_map($quitar, $an['items']);
             foreach ($an['partidas'] as &$p) $p['items'] = array_map($quitar, $p['items']);

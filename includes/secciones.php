@@ -93,6 +93,14 @@ function secciones(): array {
 
     $periodicidad = ['etiqueta' => 'Periodicidad del pago', 'tipo' => 'opcion', 'opciones' => array_keys(periodicidades())];
     $coste = ['etiqueta' => 'Coste por pago', 'tipo' => 'importe', 'resumen' => true];
+    // Lo que se paga a medias (4/10/2026, Gonzalo: «la hipoteca el 60 %; suministros, seguro de
+    // hogar y comunidad, el 50 % con Pilar»). gastos-fijos.php y el panel enseñan la parte de
+    // quien mira: la del titular si es él; el resto si el titular es otro; sin titular, este %.
+    $parte = ['etiqueta' => 'Parte que paga el titular', 'tipo' => 'numero', 'unidad' => '%',
+              'ayuda' => 'Si lo pagáis entre dos: el % que paga el titular (sin titular, el tuyo). Vacío = lo paga entero.'];
+    // En las actividades, la persona es quien va (un hijo), no quien paga.
+    $parte_tuya = ['etiqueta' => 'Parte que pagas tú', 'tipo' => 'numero', 'unidad' => '%',
+                   'ayuda' => 'Si lo pagáis entre dos: el % que pagas tú. Vacío = lo pagas entero.'];
 
     $s = [
         // -------------------------------------------------------------
@@ -345,6 +353,7 @@ function secciones(): array {
                         'compania' => ['etiqueta' => 'Compañía', 'tipo' => 'texto', 'resumen' => true],
                         'coste' => $coste,
                         'periodicidad' => $periodicidad,
+                        'porcentaje_pago' => $parte,
                         'numero_contrato' => ['etiqueta' => 'Número de contrato o CUPS', 'tipo' => 'texto'],
                         'telefono' => ['etiqueta' => 'Teléfono de atención', 'tipo' => 'tel'],
                         'permanencia_hasta' => ['etiqueta' => 'Permanencia hasta', 'tipo' => 'fecha',
@@ -363,6 +372,7 @@ function secciones(): array {
                         'numero_poliza' => ['etiqueta' => 'Número de póliza', 'tipo' => 'texto'],
                         'coste' => $coste,
                         'periodicidad' => $periodicidad,
+                        'porcentaje_pago' => $parte,
                         'renovacion' => ['etiqueta' => 'Renovación', 'tipo' => 'fecha', 'resumen' => true,
                             'vence' => 'Renovación del seguro', 'aviso' => 45, 'repetir' => 12,
                             'ayuda' => 'Avisa con 45 días: para cambiar de compañía suele haber que avisar con un mes.'],
@@ -404,6 +414,7 @@ function secciones(): array {
                         'email' => ['etiqueta' => 'Email del administrador', 'tipo' => 'email'],
                         'coste' => $coste,
                         'periodicidad' => $periodicidad,
+                        'porcentaje_pago' => $parte,
                         'piso' => ['etiqueta' => 'Piso y escalera', 'tipo' => 'texto', 'ayuda' => 'Como sale en la liquidación. Ej.: 2º-6ª, escalera A.'],
                         'cuota_participacion' => ['etiqueta' => 'Cuota de participación en el edificio', 'tipo' => 'numero', 'unidad' => '%'],
                         'cuota_zona' => ['etiqueta' => 'Cuota en su escalera o zona', 'tipo' => 'numero', 'unidad' => '%',
@@ -417,9 +428,33 @@ function secciones(): array {
                     'campos' => [
                         'coste' => $coste,
                         'periodicidad' => $periodicidad,
+                        'porcentaje_pago' => $parte,
                         'renovacion' => ['etiqueta' => 'Próxima renovación', 'tipo' => 'fecha', 'resumen' => true,
                             'vence' => 'Se renueva', 'aviso' => 7, 'repetir' => 'periodicidad'],
                         'cuenta' => ['etiqueta' => 'Cuenta o email de acceso', 'tipo' => 'texto'],
+                    ],
+                ],
+                // Una plaza de garaje, un trastero, un local o la vivienda (4/10/2026: el garaje de
+                // Gonzalo, que sale en finanzas cada mes y aquí no contaba).
+                'alquiler' => [
+                    'nombre' => 'Alquiler', 'ejemplo' => 'Plaza de garaje', 'persona' => 'opcional', 'persona_etiqueta' => 'Inquilino',
+                    'enlace' => ['etiqueta' => 'Vivienda', 'a' => [['vivienda', 'inmueble']]],
+                    'campos' => [
+                        'que' => ['etiqueta' => 'Qué se alquila', 'tipo' => 'opcion', 'resumen' => true,
+                            'opciones' => ['Garaje', 'Trastero', 'Vivienda', 'Local', 'Otro']],
+                        'arrendador' => ['etiqueta' => 'Arrendador', 'tipo' => 'texto', 'resumen' => true],
+                        'direccion' => ['etiqueta' => 'Dirección', 'tipo' => 'texto'],
+                        'coste' => ['etiqueta' => 'Renta', 'tipo' => 'importe', 'resumen' => true],
+                        'periodicidad' => $periodicidad,
+                        'porcentaje_pago' => $parte,
+                        'fianza' => ['etiqueta' => 'Fianza', 'tipo' => 'importe'],
+                        'fecha_inicio' => ['etiqueta' => 'Desde', 'tipo' => 'fecha'],
+                        'fin_contrato' => ['etiqueta' => 'Fin del contrato', 'tipo' => 'fecha',
+                            'vence' => 'Fin del alquiler', 'aviso' => 60],
+                        'revision_precio' => ['etiqueta' => 'Próxima revisión de la renta', 'tipo' => 'fecha',
+                            'vence' => 'Revisión de la renta', 'aviso' => 30, 'repetir' => 12,
+                            'ayuda' => 'Suele ser anual, con el IPC: comprueba que la subida es la que toca.'],
+                        'telefono' => ['etiqueta' => 'Teléfono del arrendador', 'tipo' => 'tel'],
                     ],
                 ],
             ],
@@ -454,6 +489,7 @@ function secciones(): array {
                         'lugar' => ['etiqueta' => 'Dónde', 'tipo' => 'texto'],
                         'coste' => $coste,
                         'periodicidad' => $periodicidad,
+                        'porcentaje_pago' => $parte_tuya,
                         'contacto' => ['etiqueta' => 'Contacto (monitor, club...)', 'tipo' => 'texto'],
                     ],
                 ],

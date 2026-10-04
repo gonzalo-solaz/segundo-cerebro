@@ -10,6 +10,10 @@
 //  finanzas (solo admin), ahorro, colchón y gastos del banco que aquí no
 //  están. Petición de Gonzalo, 4/10/2026: «saber a dónde se va el gasto».
 //
+//  Lo que se paga a medias (la hipoteca al 60 %, los suministros al 50 %…)
+//  se ve por la parte de quien mira (parte_que_pagas): la cifra grande es
+//  lo suyo y el total de la casa va en pequeño (Gonzalo, 4/10/2026).
+//
 //  Funciones puras (los datos entran, el análisis sale) para probarlas sin
 //  base de datos. Las lecturas son elementos_con_coste() (elementos.php) e
 //  historial_de_gastos() (registros.php).
@@ -17,21 +21,61 @@
 
 // Las partidas, en orden FIJO: el de la barra apilada y el de sus colores
 // (--serie-N en assets/app.css, validados para que dos vecinas se distingan
-// también con daltonismo). El color sigue a la partida, no a su tamaño.
-// Lo que no encaja va a «otros», en gris.
+// también con daltonismo; si se añade una, revalidar). El color sigue a la
+// partida, no a su tamaño. Lo que no encaja va a «otros», en gris.
 function partidas_gasto(): array {
     return [
         'hipoteca'    => ['nombre' => 'Hipoteca', 'serie' => 1],
-        'suministro'  => ['nombre' => 'Suministros', 'serie' => 2],
-        'seguro'      => ['nombre' => 'Seguros', 'serie' => 3],
-        'comunidad'   => ['nombre' => 'Comunidad', 'serie' => 4],
-        'suscripcion' => ['nombre' => 'Suscripciones', 'serie' => 5],
+        'alquiler'    => ['nombre' => 'Alquileres', 'serie' => 2],
+        'suministro'  => ['nombre' => 'Suministros', 'serie' => 3],
+        'seguro'      => ['nombre' => 'Seguros', 'serie' => 4],
+        'comunidad'   => ['nombre' => 'Comunidad', 'serie' => 5],
+        'suscripcion' => ['nombre' => 'Suscripciones', 'serie' => 6],
         'otros'       => ['nombre' => 'Actividades y otros', 'serie' => 0],
     ];
 }
 
 function partida_de(array $el): string {
     return $el['seccion'] === 'contratos' && $el['tipo'] !== 'otros' && isset(partidas_gasto()[$el['tipo']]) ? $el['tipo'] : 'otros';
+}
+
+/**
+ * El % de un gasto que paga quien mira (la persona de su usuario):
+ *  - sin persona (o sin decir quién mira): 100, el gasto entero;
+ *  - en Contratos, la persona es el titular y «porcentaje_pago» es SU parte:
+ *    si el titular es quien mira, ese %; si es otro, el resto (lo pagáis a
+ *    medias) o nada (si el otro lo paga entero); sin titular, ese %;
+ *  - fuera de Contratos (las actividades: la persona es quien va), el % es
+ *    el de quien mira.
+ * Vacío = 100. Ej.: hipoteca de Gonzalo al 60 % → 60 para él, 40 para Pilar.
+ */
+function parte_que_pagas(array $el, ?int $persona): float {
+    $p = $el['datos']['porcentaje_pago'] ?? null;
+    $pct = is_numeric($p) && $p >= 0 && $p <= 100 ? (float)$p : 100.0;
+    if ($persona === null) return 100.0;
+    $titular = $el['persona_id'] ?? null;
+    if ($el['seccion'] !== 'contratos' || $titular === null || (int)$titular === $persona) return $pct;
+    return $pct < 100 ? 100 - $pct : 0.0;
+}
+
+/**
+ * Cada cuántos meses llegan las facturas (1, 2, 3, 6 o 12), por el hueco MÁS
+ * CORTO entre dos seguidas: una que falte por apuntar alarga los huecos, no
+ * los acorta. null con menos de dos fechas. (El agua: 3 recibos de unos 116 €
+ * cada 3 meses son 38,74 € al mes, no 116.)
+ */
+function intervalo_facturas(array $fechas): ?int {
+    sort($fechas);
+    $min = null;
+    for ($i = 1; $i < count($fechas); $i++) {
+        $d = dias_entre($fechas[$i - 1], $fechas[$i]);
+        if ($d > 0) $min = $min === null ? $d : min($min, $d);
+    }
+    if ($min === null) return null;
+    $meses = $min / 30.44;
+    $mejor = 1;
+    foreach ([1, 2, 3, 6, 12] as $m) if (abs(log($meses / $m)) < abs(log($meses / $mejor))) $mejor = $m;
+    return $mejor;
 }
 
 /**
@@ -85,11 +129,12 @@ function texto_comparable(string $s): string {
 
 /**
  * El análisis entero. $elementos = elementos_con_coste(); $historial =
- * historial_de_gastos(). Devuelve los totales, las partidas (en su orden
- * fijo), las cosas (de mayor a menor), el calendario de 12 meses desde el
- * actual, lo que falta por apuntar y la lista «Qué revisar».
+ * historial_de_gastos(); $persona = la de quien mira (null = la casa entera).
+ * Cada importe va dos veces: el de la casa ('mensual', 'total') y el de
+ * quien mira ('tuyo'). Las partidas, las cosas, el calendario y lo que hay
+ * que apartar van por lo tuyo; lo que pagan otros entero, aparte.
  */
-function analisis_gastos_fijos(array $elementos, array $historial, string $hoy): array {
+function analisis_gastos_fijos(array $elementos, array $historial, string $hoy, ?int $persona = null): array {
     $per = periodicidades();
     $inicio = substr($hoy, 0, 7) . '-01';
     $fin = sumar_dias(sumar_meses($inicio, 12), -1);
@@ -111,12 +156,14 @@ function analisis_gastos_fijos(array $elementos, array $historial, string $hoy):
             continue;
         }
         $h = $historial[$el['id']] ?? null;
+        $parte = parte_que_pagas($el, $persona);
         $it = [
             'id' => $el['id'], 'nombre' => $el['nombre'], 'seccion' => $el['seccion'], 'tipo' => $el['tipo'],
             'tipo_nombre' => tipo_def($el['seccion'], $el['tipo'])['nombre'] ?? $el['tipo'],
             'partida' => partida_de($el), 'coste' => $coste, 'periodicidad' => (string)$d['periodicidad'], 'meses' => $n,
-            'mensual' => $coste / $n, 'enlace_id' => $el['enlace_id'] ?? null, 'enlace_nombre' => $el['enlace_nombre'] ?? null,
-            'persona_nombre' => $el['persona_nombre'] ?? null, 'datos' => $d,
+            'mensual' => $coste / $n, 'parte' => $parte, 'tuyo' => $coste / $n * $parte / 100, 'coste_tuyo' => $coste * $parte / 100,
+            'enlace_id' => $el['enlace_id'] ?? null, 'enlace_nombre' => $el['enlace_nombre'] ?? null,
+            'persona_id' => $el['persona_id'] ?? null, 'persona_nombre' => $el['persona_nombre'] ?? null, 'datos' => $d,
             'proximo' => null, 'aprox' => false, 'real' => null,
         ];
 
@@ -125,61 +172,71 @@ function analisis_gastos_fijos(array $elementos, array $historial, string $hoy):
             $hasta = (string)($d['fecha_fin'] ?? '');
             foreach ($meses as $m => &$mm) {
                 if (fecha_valida($hasta) && $m . '-01' > $hasta) continue;
-                $mm['base'] += $coste;
+                $mm['base'] += $it['coste_tuyo'];
             }
             unset($mm);
         } else {
             $c = fechas_de_cargo($d, $n, $h['ultimo'] ?? null, $inicio, $fin);
             if ($c === null) {
                 $sin_fecha[] = $el['nombre'];
-                foreach ($meses as &$mm) $mm['extra'] += $it['mensual'];
+                foreach ($meses as &$mm) $mm['extra'] += $it['tuyo'];
                 unset($mm);
             } else {
                 foreach ($c['fechas'] as $f) {
                     $m = substr($f, 0, 7);
-                    $meses[$m]['extra'] += $coste;
-                    $meses[$m]['cargos'][] = ['fecha' => $f, 'id' => $el['id'], 'nombre' => $el['nombre'], 'importe' => $coste, 'aprox' => $c['aprox']];
+                    if ($it['coste_tuyo'] > 0) {
+                        $meses[$m]['extra'] += $it['coste_tuyo'];
+                        $meses[$m]['cargos'][] = ['fecha' => $f, 'id' => $el['id'], 'nombre' => $el['nombre'],
+                            'importe' => $it['coste_tuyo'], 'total' => $coste, 'aprox' => $c['aprox']];
+                    }
                     if ($it['proximo'] === null && $f >= $hoy) $it['proximo'] = $f;
                 }
                 $it['aprox'] = $c['aprox'];
             }
         }
-        // Con 3 facturas o más en 12 meses, lo que sale de verdad al mes.
+        // Con 3 facturas o más en 12 meses, lo que sale de verdad al mes, al
+        // ritmo al que llegan (que puede no ser el de la ficha).
         if ($el['tipo'] === 'suministro' && $h && $h['n'] >= 3) {
-            $it['real'] = ['mensual' => $h['total'] / ($h['n'] * $n), 'n' => $h['n'], 'max' => $h['max'], 'min' => $h['min']];
+            $cada = intervalo_facturas($h['fechas'] ?? []) ?? $n;
+            $it['real'] = ['mensual' => $h['total'] / ($h['n'] * $cada), 'n' => $h['n'], 'cada' => $cada,
+                           'media' => $h['total'] / $h['n'], 'max' => $h['max'], 'min' => $h['min']];
         }
         $items[] = $it;
     }
 
     $total = array_sum(array_column($items, 'mensual'));
-    $pct = static fn(float $x): float => $total > 0 ? $x / $total * 100 : 0.0;
+    $tuyo = array_sum(array_column($items, 'tuyo'));
+    $pct = static fn(float $x): float => $tuyo > 0 ? $x / $tuyo * 100 : 0.0;
+    $mios = array_values(array_filter($items, static fn($i) => $i['tuyo'] > 0));
 
     $partidas = [];
     foreach (partidas_gasto() as $k => $p) {
-        $suyos = array_values(array_filter($items, static fn($i) => $i['partida'] === $k));
+        $suyos = array_values(array_filter($mios, static fn($i) => $i['partida'] === $k));
         if (!$suyos) continue;
-        usort($suyos, static fn($a, $b) => $b['mensual'] <=> $a['mensual']);
-        $m = array_sum(array_column($suyos, 'mensual'));
-        $partidas[$k] = $p + ['mensual' => $m, 'pct' => $pct($m), 'items' => $suyos];
+        usort($suyos, static fn($a, $b) => $b['tuyo'] <=> $a['tuyo']);
+        $t = array_sum(array_column($suyos, 'tuyo'));
+        $partidas[$k] = $p + ['mensual' => array_sum(array_column($suyos, 'mensual')), 'tuyo' => $t, 'pct' => $pct($t), 'items' => $suyos];
     }
 
-    // Por cosa: la casa o el vehículo al que pertenece; si no pertenece a
-    // nada, la persona (la natación de Leo); si tampoco, «Sin casa ni vehículo».
+    // Por cosa: la casa o el vehículo al que pertenece; una actividad, por
+    // quien va (la natación de Leo); un contrato suelto (la plaza de garaje),
+    // él mismo.
     $cosas = [];
-    foreach ($items as $it) {
+    foreach ($mios as $it) {
         if ($it['enlace_id']) [$k, $nombre, $id] = ['e' . $it['enlace_id'], (string)$it['enlace_nombre'], (int)$it['enlace_id']];
-        elseif ($it['persona_nombre']) [$k, $nombre, $id] = ['p' . $it['persona_nombre'], (string)$it['persona_nombre'], null];
-        else [$k, $nombre, $id] = ['g', 'Sin casa ni vehículo', null];
+        elseif ($it['seccion'] !== 'contratos' && $it['persona_nombre']) [$k, $nombre, $id] = ['p' . $it['persona_nombre'], (string)$it['persona_nombre'], null];
+        else [$k, $nombre, $id] = ['e' . $it['id'], $it['nombre'], $it['id']];
         $c = &$cosas[$k];
-        $c ??= ['id' => $id, 'nombre' => $nombre, 'mensual' => 0.0, 'pct' => 0.0, 'items' => [],
+        $c ??= ['id' => $id, 'nombre' => $nombre, 'mensual' => 0.0, 'tuyo' => 0.0, 'pct' => 0.0, 'items' => [],
                 'otros_12m' => $id ? round((float)($historial[$id]['otros'] ?? 0), 2) : 0.0];
         $c['mensual'] += $it['mensual'];
+        $c['tuyo'] += $it['tuyo'];
         $c['items'][] = $it['nombre'];
         unset($c);
     }
-    foreach ($cosas as &$c) $c['pct'] = $pct($c['mensual']);
+    foreach ($cosas as &$c) $c['pct'] = $pct($c['tuyo']);
     unset($c);
-    uasort($cosas, static fn($a, $b) => $b['mensual'] <=> $a['mensual']);
+    uasort($cosas, static fn($a, $b) => $b['tuyo'] <=> $a['tuyo']);
 
     foreach ($meses as &$mm) {
         $mm['total'] = $mm['base'] + $mm['extra'];
@@ -191,11 +248,13 @@ function analisis_gastos_fijos(array $elementos, array $historial, string $hoy):
     $pico = null;
     foreach ($calendario as $i => $mm) if ($mm['extra'] > 0 && $mm['total'] === $max) { $pico = $i; break; }
 
-    $provision = array_sum(array_map(static fn($i) => $i['meses'] > 1 ? $i['mensual'] : 0.0, $items));
+    $provision = array_sum(array_map(static fn($i) => $i['meses'] > 1 ? $i['tuyo'] : 0.0, $items));
 
     $an = [
         'total' => round($total, 2), 'anual' => round($total * 12, 2),
+        'tuyo' => round($tuyo, 2), 'anual_tuyo' => round($tuyo * 12, 2), 'a_medias' => abs($total - $tuyo) >= 0.005,
         'items' => $items, 'partidas' => $partidas, 'cosas' => array_values($cosas),
+        'de_otros' => array_values(array_filter($items, static fn($i) => $i['tuyo'] <= 0)),
         'calendario' => $calendario, 'max_mes' => $max, 'pico' => $pico,
         'provision' => round($provision, 2), 'sin_importe' => $sin_importe, 'sin_fecha' => $sin_fecha,
     ];
@@ -210,13 +269,14 @@ function analisis_gastos_fijos(array $elementos, array $historial, string $hoy):
 function revisar_gastos_fijos(array $an, string $hoy): array {
     $out = [];
     $ficha = static fn(array $i): array => [$i['nombre'], 'elemento.php?id=' . $i['id']];
+    $nombre_periodo = [1 => 'Mensual', 2 => 'Bimestral', 3 => 'Trimestral', 6 => 'Semestral', 12 => 'Anual'];
 
     // Importes que faltan: el total se queda corto sin ellos.
     if ($an['sin_importe']) {
         $nombres = array_column($an['sin_importe'], 'nombre');
         $uno = count($nombres) === 1;
         $out[] = ['nivel' => 'aviso',
-            'titulo' => $uno ? 'Falta el importe de «' . $nombres[0] . '»' : 'Faltan los importes de ' . count($nombres) . ' contratos',
+            'titulo' => $uno ? 'Falta el importe de «' . $nombres[0] . '»' : 'Faltan los importes de ' . count($nombres) . ' gastos',
             'texto' => ($uno ? 'No tiene' : 'No tienen') . ' coste o periodicidad, así que no ' . ($uno ? 'cuenta' : 'cuentan')
                 . ' y el total se queda corto. Apúntalo en ' . ($uno ? 'su ficha' : 'cada ficha') . ' o pásale a Claude una factura.',
             'enlaces' => array_map($ficha, $an['sin_importe'])];
@@ -253,17 +313,30 @@ function revisar_gastos_fijos(array $an, string $hoy): array {
                     . 'compara tarifas o pide a la tuya que te iguale la oferta.',
                 'enlaces' => [$ficha($i)]];
         }
-        // La ficha no cuadra con lo que dicen las facturas.
-        if ($i['real'] && abs($i['real']['mensual'] - $i['mensual']) >= 3 && abs($i['real']['mensual'] - $i['mensual']) / $i['mensual'] >= 0.10) {
-            $out[] = ['nivel' => 'idea', 'titulo' => '«' . $i['nombre'] . '» no cuadra con sus facturas',
-                'texto' => 'La ficha cuenta ' . eur($i['mensual']) . ' al mes y las ' . $i['real']['n'] . ' facturas de los últimos 12 meses salen a '
-                    . eur($i['real']['mensual']) . '. Pon ese coste en la ficha para que el total sea real.',
-                'enlaces' => [$ficha($i)]];
+        if ($i['real']) {
+            $r = $i['real'];
+            if ($r['cada'] !== $i['meses']) {
+                // Las facturas llegan a otro ritmo que el de la ficha: el importe al mes puede
+                // estar bien, pero el calendario no pone cada cargo en su mes.
+                $out[] = ['nivel' => 'idea', 'titulo' => '«' . $i['nombre'] . '» se cobra ' . ($r['cada'] === 1 ? 'cada mes' : 'cada ' . $r['cada'] . ' meses'),
+                    'texto' => 'Sus facturas llegan ' . ($r['cada'] === 1 ? 'cada mes' : 'cada ' . $r['cada'] . ' meses') . ' (unos ' . eur($r['media'])
+                        . ' cada una) y la ficha dice «' . $i['periodicidad'] . '». Si pones ' . eur($r['media']) . ' y «' . ($nombre_periodo[$r['cada']] ?? '')
+                        . '», «Mes a mes» pondrá cada cargo en su mes.',
+                    'enlaces' => [$ficha($i)]];
+            }
+            // La ficha no cuadra con lo que dicen las facturas.
+            $dif = abs($r['mensual'] - $i['mensual']);
+            if ($dif >= 3 && $dif / $i['mensual'] >= 0.10) {
+                $out[] = ['nivel' => 'idea', 'titulo' => '«' . $i['nombre'] . '» no cuadra con sus facturas',
+                    'texto' => 'La ficha cuenta ' . eur($i['mensual']) . ' al mes y las ' . $r['n'] . ' facturas de los últimos 12 meses salen a '
+                        . eur($r['mensual']) . '. Pon ese coste en la ficha para que el total sea real.',
+                    'enlaces' => [$ficha($i)]];
+            }
         }
     }
 
     // Luz y gas cambian con la estación: con menos de un año de facturas, su media es orientativa.
-    $estacionales = array_values(array_filter($an['items'], static fn($i) => $i['real'] && $i['real']['n'] < 11
+    $estacionales = array_values(array_filter($an['items'], static fn($i) => $i['real'] && $i['real']['cada'] === 1 && $i['real']['n'] < 11
         && $i['real']['min'] > 0 && $i['real']['max'] / $i['real']['min'] >= 2));
     if ($estacionales) {
         $trozos = array_map(static fn($i) => '«' . $i['nombre'] . '», de ' . eur($i['real']['min']) . ' a ' . eur($i['real']['max']), $estacionales);
@@ -277,18 +350,17 @@ function revisar_gastos_fijos(array $an, string $hoy): array {
     foreach ($an['partidas']['hipoteca']['items'] ?? [] as $i) {
         $d = $i['datos'];
         $partes = [];
+        if ($i['parte'] < 100) {
+            $partes[] = 'Pagas el ' . numero_es($i['parte']) . ' %: ' . eur($i['tuyo']) . ' de los ' . eur($i['mensual']) . ' de la cuota.';
+        }
         $finh = (string)($d['fecha_fin'] ?? '');
         if (fecha_valida($finh) && $finh > $hoy) {
             $partes[] = 'Quedan ' . tiempo_hasta($hoy, $finh) . ' (la última cuota, en ' . MESES[(int)substr($finh, 5, 2) - 1] . ' de ' . substr($finh, 0, 4) . ').';
         }
-        $pago = $d['porcentaje_pago'] ?? null;
-        if (is_numeric($pago) && $pago > 0 && $pago < 100) {
-            $partes[] = 'Aquí cuenta la cuota entera; tu parte (' . numero_es($pago) . ' %) son ' . eur($i['mensual'] * $pago / 100) . ' al mes.';
-        }
         $rev = ['Mensual' => 'cada mes', 'Trimestral' => 'cada trimestre', 'Semestral' => 'cada seis meses', 'Anual' => 'cada año'][$d['revision_interes'] ?? ''] ?? null;
         if ($rev) $partes[] = 'El interés se revisa ' . $rev . ': cuando cambie la cuota, cámbiala en su ficha y todo se recalcula.';
         $partes[] = 'Si un día amortizas, reducir plazo ahorra más intereses que reducir cuota.';
-        $out[] = ['nivel' => 'dato', 'titulo' => 'La hipoteca es el ' . pct_es($i['mensual'] / max($an['total'], 0.01) * 100) . ' del gasto fijo',
+        $out[] = ['nivel' => 'dato', 'titulo' => 'La hipoteca es el ' . pct_es($i['tuyo'] / max($an['tuyo'], 0.01) * 100) . ' de tu gasto fijo',
             'texto' => implode(' ', $partes), 'enlaces' => [$ficha($i)]];
     }
 
@@ -310,10 +382,9 @@ function coste_y_periodo(float $coste, string $periodicidad): string {
 
 /**
  * Lo que dice finanzas (acción «resumen» de su API) puesto al lado de los
- * gastos fijos. OJO: finanzas lleva las cuentas de Gonzalo, no las de toda
- * la casa (allí la hipoteca sale por su 60 %), así que la hipoteca se compara
- * por la parte que paga él (porcentaje_pago) y no se calcula «gasto fijo de
- * la casa / sus ingresos», que mezclaría dos cosas distintas.
+ * gastos fijos. Finanzas lleva las cuentas de Gonzalo, no las de toda la casa
+ * (allí la hipoteca sale por su 60 %), así que todo se compara con SU parte
+ * (el análisis hecho con su persona): la cifra «tuyo», no el total de la casa.
  * Devuelve null si finanzas no tiene al menos 6 meses completos.
  */
 function salud_finanzas(array $resumen, array $an, string $hoy): ?array {
@@ -330,19 +401,16 @@ function salud_finanzas(array $resumen, array $an, string $hoy): ?array {
     $saldo = 0.0;
     foreach ($resumen['saldos'] ?? [] as $s) if (!empty($s['activa'])) $saldo += (float)$s['saldo'];
 
-    $hipoteca = 0.0;
-    $tuya = false;
-    foreach ($an['partidas']['hipoteca']['items'] ?? [] as $i) {
-        $p = $i['datos']['porcentaje_pago'] ?? null;
-        if (is_numeric($p) && $p > 0 && $p <= 100) { $hipoteca += $i['mensual'] * $p / 100; $tuya = true; }
-        else $hipoteca += $i['mensual'];
-    }
+    $hipotecas = $an['partidas']['hipoteca']['items'] ?? [];
+    $hipoteca = array_sum(array_column($hipotecas, 'tuyo'));
+    $tuya = (bool)array_filter($hipotecas, static fn($i) => $i['parte'] < 100);
 
     $ahorro = ($ingreso - $gasto) / $ingreso * 100;
     $colchon = $saldo / $gasto;
+    $fijos = $an['tuyo'] / $ingreso * 100;
     $r = [
         'meses' => $n, 'ingreso' => round($ingreso, 2), 'gasto' => round($gasto, 2), 'ahorro_pct' => $ahorro,
-        'saldo' => round($saldo, 2), 'colchon_meses' => $colchon,
+        'saldo' => round($saldo, 2), 'colchon_meses' => $colchon, 'fijos_pct' => $fijos,
         'hipoteca' => round($hipoteca, 2), 'hipoteca_tuya' => $tuya, 'hipoteca_pct' => $hipoteca > 0 ? $hipoteca / $ingreso * 100 : null,
         'repetidos' => gastos_repetidos_sin_recoger($resumen['gasto']['categorias'] ?? [], $an),
         'cifras' => [], 'revisar' => [],
@@ -355,6 +423,10 @@ function salud_finanzas(array $resumen, array $an, string $hoy): ?array {
     }
 
     // Las cifras, cada una con su referencia y su veredicto.
+    $r['cifras'][] = ['nivel' => $fijos <= 35 ? 'bien' : ($fijos <= 50 ? 'idea' : 'aviso'), 'valor' => pct_es($fijos),
+        'titulo' => 'de tus ingresos se va en gastos fijos',
+        'texto' => 'Tu parte son ' . eur($an['tuyo']) . ' al mes y entran ' . eur($ingreso) . '. La regla 50/30/20 deja el 50 % para lo necesario '
+            . '(esto, más la comida, el transporte…)' . ($fijos < 50 ? ': de ese 50 %, te quedan ' . eur($ingreso * 0.5 - $an['tuyo']) . ' para lo demás.' : ' y ya lo pasas solo con esto.')];
     $r['cifras'][] = $ahorro < 0
         ? ['nivel' => 'aviso', 'valor' => pct_es($ahorro), 'titulo' => 'de lo que ingresas, ahorras',
            'texto' => 'En los últimos ' . $n . ' meses salió más de lo que entró: ' . eur($gasto) . ' al mes frente a ' . eur($ingreso) . '.']
@@ -383,9 +455,10 @@ function salud_finanzas(array $resumen, array $an, string $hoy): ?array {
  * aquí que las recoja (la «Hipoteca» de finanzas ya está en la ficha).
  */
 function gastos_repetidos_sin_recoger(array $categorias, array $an): array {
-    $recoge = ['hipoteca' => ['hipoteca', 'prestamo'], 'suministro' => ['luz', 'gas', 'agua', 'internet', 'fibra', 'telef', 'movil', 'electric', 'suministro'],
+    $recoge = ['hipoteca' => ['hipoteca', 'prestamo'], 'alquiler' => ['alquiler', 'garaje', 'parking', 'aparcamiento', 'trastero'],
+               'suministro' => ['luz', 'gas', 'agua', 'internet', 'fibra', 'telef', 'movil', 'electric', 'suministro'],
                'seguro' => ['seguro'], 'comunidad' => ['comunidad'], 'suscripcion' => ['suscrip'], 'otros' => ['extraescolar', 'actividad']];
-    $fijos = ['garaje', 'parking', 'aparcamiento', 'alquiler', 'gimnas', 'colegio', 'guarder'];
+    $fijos = ['gimnas', 'colegio', 'guarder'];
     $out = [];
     foreach ($categorias as $c) {
         $nombre = (string)($c['categoria'] ?? '');

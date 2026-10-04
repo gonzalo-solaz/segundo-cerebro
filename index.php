@@ -8,7 +8,8 @@ $en_7 = count(array_filter($agenda, static fn($v) => $v['dias'] >= 0 && $v['dias
 $en_30 = count(array_filter($agenda, static fn($v) => $v['dias'] >= 0 && $v['dias'] <= 30));
 $cuantos = contar_elementos($pdo);
 $proximos = proximos_por_seccion($pdo);
-$gasto_fijo = coste_mensual_total($pdo);
+// Lo que paga quien mira (la hipoteca al 60 %, los suministros a medias…), con el total de la casa en pequeño.
+$gasto_fijo = analisis_gastos_fijos(elementos_con_coste($pdo), [], hoy(), (int)($usuario_actual['persona_id'] ?? 0) ?: null);
 $actividad = actividad_reciente($pdo, 8);
 $vigilancia = estado_vigilancia($pdo);
 $vacio = array_sum($cuantos) === 0 && !$agenda;
@@ -42,7 +43,8 @@ cabecera_pagina(saludo() . ', ' . nombre_corto($usuario_actual['nombre']), e(ucf
     <span class="kpi-num"><?= $en_30 ?></span><span class="kpi-txt">en 30 días</span>
   </div>
   <a class="kpi kpi-enlace" href="<?= e(url('gastos-fijos.php')) ?>">
-    <span class="kpi-num kpi-num-texto"><?= $gasto_fijo > 0 ? e(eur($gasto_fijo)) : '—' ?></span><span class="kpi-txt">gastos fijos al mes</span>
+    <span class="kpi-num kpi-num-texto"><?= $gasto_fijo['tuyo'] > 0 ? e(eur($gasto_fijo['tuyo'])) : '—' ?></span>
+    <span class="kpi-txt"><?= $gasto_fijo['a_medias'] ? 'tus gastos fijos al mes · de ' . e(eur($gasto_fijo['total'])) . ' de la casa' : 'gastos fijos al mes' ?></span>
     <span class="kpi-mas">A dónde va <?= icono('atras', 'ico ico-mini ico-girado') ?></span>
   </a>
 </section>

@@ -467,6 +467,22 @@ admin, acción `resumen`, copia de 1 h):** finanzas lleva las cuentas de Gonzalo
 sus ingresos: se compara la hipoteca por su parte (`porcentaje_pago`) con el límite bancario del
 30-35 %, el ahorro (12 meses completos, referencia 20 %) y el colchón (saldo de las cuentas activas
 / gasto medio, referencia 3-6 meses); y avisa de categorías del banco que parecen fijas y aquí no
-están. Visto en producción el 4/10/2026: Agua de casa sin importe, y en el banco «Garaje» (~112 €/mes)
-y «Suscripciones» (~41 €/mes) sin ficha aquí: preguntar a Gonzalo antes de darlas de alta (no hay
-tipo «Alquiler» para una plaza de garaje). API: acción `gastos` (`php remoto.php gastos`).
+están. API: acción `gastos` (`php remoto.php gastos persona=1` = lo de Gonzalo; sin persona, la casa).
+
+**Quién paga qué (4/10/2026, Gonzalo: «de la hipoteca pago el 60 %; de los suministros de casa,
+seguro de hogar y comunidad, el 50 %, y Pilar el otro 50 %; los seguros de los coches, yo. Pon mi
+gasto en la cifra y el total en pequeño»).** Campo `porcentaje_pago` («Parte que paga el titular»)
+en todos los tipos con coste (en actividades, «Parte que pagas tú»: allí la persona es quien va).
+`parte_que_pagas()` lo ve desde quien mira: titular = él → ese %; titular otro → el resto (o nada
+si lo paga entero); sin titular → ese %. El panel y `gastos-fijos.php` enseñan lo tuyo en grande y
+el total de la casa en pequeño; la API, sin `persona_id`, la casa. **`coste_mensual_total()` y las
+fichas siguen siendo de la casa** (el coste de un contrato es lo que cobra la compañía). Finanzas
+(cuentas de Gonzalo) se compara con lo suyo, y ahora también «gastos fijos / ingresos» (regla
+50/30/20). Trade Republic es su cuenta remunerada al 3 % y su fondo de emergencia: el colchón la
+cuenta bien. Tipo nuevo `contratos/alquiler` (partida «Alquileres», junto a la hipoteca): la plaza
+de garaje de Gonzalo, 113,63 €/mes por transferencia desde Mediolanum el día 1, sube cada abril
+(106,76 → 108,90 → 111,08 → 113,63 €). El agua tiene recibos trimestrales (~116 €) con la ficha en
+«Mensual» 38,74 €: el «real» de los suministros sale del ritmo de las facturas
+(`intervalo_facturas()`, el hueco más corto), no de la periodicidad de la ficha. Pendiente: importes
+de Tenis (id 29) y Voleibol (id 28) y quién los paga; «Suscripciones» (~41 €/mes en finanzas) sin
+ficha aquí.

@@ -23,7 +23,8 @@
 //                                          {"concepto":"Obra fuga","categoria":"Piscina","zona":"comun","total":2735.10,"extraordinaria":true}]}
 //            zona comun|escalera → la parte se calcula con los coeficientes de la ficha; o "parte" a mano
 //      php remoto.php comunidad <id>                Números del análisis (por año, categoría y recibo)
-//      php remoto.php gastos                       A dónde va el gasto fijo: partidas, cosas, mes a mes y qué revisar
+//      php remoto.php gastos [persona=<id>]        A dónde va el gasto fijo: partidas, cosas, mes a mes y qué revisar
+//            (con persona=1, por lo que paga Gonzalo: «tuyo»; sin ella, el total de la casa)
 //      php remoto.php peso <id>                     Control de peso: IMC, ritmo, objetivo, calorías y consejos
 //            Un pesaje: registro {"elemento_id":30,"fecha":"2026-10-03","tipo":"Peso","valor":82.4}  (Cintura en cm, Grasa corporal en %)
 //      php remoto.php documento <archivo.pdf> elemento=<id> [titulo="..."]
@@ -126,8 +127,9 @@ switch ($accion) {
         echo "Gasto fijo mensual: " . number_format((float)$r['gasto_fijo_mensual'], 2, ',', '.') . " €\n";
         echo "Vigilancia: {$r['vigilancia']}\n";
         exit(0);
-    case 'esquema':
     case 'gastos':
+        mostrar(llamar('gastos', ['persona_id' => (int)($kv['persona'] ?? 0)]));
+    case 'esquema':
     case 'personas':
     case 'actividad':
     case 'conexiones':

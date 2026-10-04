@@ -61,7 +61,7 @@
 
   /* Series de los gráficos (gastos-fijos.php), en este orden: dos vecinas se distinguen
      también con daltonismo (validado con la skill dataviz, 4/10/2026). La 0 es «otros». */
-  --serie-1: #2c6fae; --serie-2: #b0761a; --serie-3: #b8457c; --serie-4: #6c56b0; --serie-5: #00897a; --serie-0: #a4a9b8;
+  --serie-1: #2c6fae; --serie-2: #b0761a; --serie-3: #b8457c; --serie-4: #6c56b0; --serie-5: #00897a; --serie-6: #c4453c; --serie-0: #a4a9b8;
 
   --aclarar: 0%;              /* cuánto blanco se mezcla con el color de sección */
   --sombra-alta: 0 10px 32px rgba(0, 0, 0, .15), 0 40px 40px rgba(0, 0, 0, .04);
@@ -97,7 +97,7 @@
   --lateral-bg: #121735;
   --banda-bg: #182050;
   --aclarar: 42%;
-  --serie-1: #4a86c8; --serie-2: #c08530; --serie-3: #d0558f; --serie-4: #8a6fd8; --serie-5: #14a08e; --serie-0: #4f5670;
+  --serie-1: #4a86c8; --serie-2: #c08530; --serie-3: #d0558f; --serie-4: #8a6fd8; --serie-5: #14a08e; --serie-6: #e0685c; --serie-0: #4f5670;
   --sombra-alta: 0 10px 32px rgba(0, 0, 0, .5);
   color-scheme: dark;
 }
@@ -789,7 +789,7 @@ a.kpi-enlace:hover .kpi-mas { text-decoration: underline; text-underline-offset:
 .ico-girado { transform: rotate(180deg); }
 
 .serie-0 { --s: var(--serie-0); } .serie-1 { --s: var(--serie-1); } .serie-2 { --s: var(--serie-2); }
-.serie-3 { --s: var(--serie-3); } .serie-4 { --s: var(--serie-4); } .serie-5 { --s: var(--serie-5); }
+.serie-3 { --s: var(--serie-3); } .serie-4 { --s: var(--serie-4); } .serie-5 { --s: var(--serie-5); } .serie-6 { --s: var(--serie-6); }
 .punto { display: inline-block; width: 10px; height: 10px; border-radius: 50%; flex: none; background: var(--s, var(--borde-control)); }
 .leyenda { display: flex; flex-wrap: wrap; gap: .3rem 1rem; font-size: 13px; color: var(--tenue); }
 .leyenda > span { display: inline-flex; align-items: center; gap: 6px; }
@@ -799,11 +799,11 @@ a.kpi-enlace:hover .kpi-mas { text-decoration: underline; text-underline-offset:
 .reparto-tramo { flex: 1 1 0; min-width: 4px; background: var(--s); }
 .partida + .partida { margin-top: 18px; }
 .partida-cabecera { display: flex; align-items: center; gap: .55rem; }
-.partida-importe { margin-left: auto; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.partida-importe { margin-left: auto; font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
 .partida-items { list-style: none; margin: 6px 0 0; padding: 0 0 0 calc(10px + .55rem); }
 .partida-items li { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; padding: 8px 0; border-top: 1px solid var(--borde); font-size: 14px; }
 .partida-items li:first-child { border-top: 0; }
-.partida-items .num { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--texto); }
+.partida-items .num { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--texto); text-align: right; }
 .partida-meta { display: block; color: var(--tenue); font-size: 13px; }
 
 /* Qué revisar: cada consejo con su icono y su nivel (el color nunca va solo: icono + texto). */
@@ -821,7 +821,8 @@ a.kpi-enlace:hover .kpi-mas { text-decoration: underline; text-underline-offset:
 
 /* Frente a tus ingresos: tres cifras con su referencia. */
 .cifras { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
-@media (min-width: 760px) { .cifras { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (min-width: 640px) { .cifras { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 1200px) { .cifras { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
 .cifra { display: flex; flex-direction: column; background: var(--panel-2); border-radius: var(--radio-md); padding: 16px 18px; }
 .cifra-estado { display: inline-flex; align-items: center; gap: 5px; align-self: flex-start; padding: 3px 10px; border-radius: var(--pildora); background: var(--panel); color: var(--tenue); font-size: 12.5px; font-weight: 650; }
 .cifra-aviso .cifra-estado { color: var(--ambar); }
