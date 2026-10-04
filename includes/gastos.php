@@ -35,6 +35,7 @@ function partidas_gasto(): array {
         'seguro'      => ['nombre' => 'Seguros', 'serie' => 4],
         'comunidad'   => ['nombre' => 'Comunidad', 'serie' => 5],
         'suscripcion' => ['nombre' => 'Suscripciones', 'serie' => 6],
+        'impuesto'    => ['nombre' => 'Impuestos', 'serie' => 7],
         'otros'       => ['nombre' => 'Actividades y otros', 'serie' => 0],
     ];
 }
@@ -345,7 +346,7 @@ function falta_para_comparar(array $i): string {
         return $i['tipo'] === 'comunidad' ? 'los recibos de hace un año' : 'las facturas de hace un año';
     }
     return ['hipoteca' => 'la cuota de hace un año', 'seguro' => 'la prima de hace un año', 'alquiler' => 'la renta de hace un año',
-            'suscripcion' => 'lo que costaba hace un año'][$i['tipo']] ?? 'lo que costaba hace un año';
+            'impuesto' => 'el recibo de hace un año', 'suscripcion' => 'lo que costaba hace un año'][$i['tipo']] ?? 'lo que costaba hace un año';
 }
 
 // «+2,3 %», «−35,8 %».
@@ -588,7 +589,7 @@ function salud_finanzas(array $resumen, array $an, string $hoy, array $nominas =
 function gastos_repetidos_sin_recoger(array $categorias, array $an): array {
     $recoge = ['hipoteca' => ['hipoteca', 'prestamo'], 'alquiler' => ['alquiler', 'garaje', 'parking', 'aparcamiento', 'trastero'],
                'suministro' => ['luz', 'gas', 'agua', 'internet', 'fibra', 'telef', 'movil', 'electric', 'suministro'],
-               'seguro' => ['seguro'], 'comunidad' => ['comunidad'], 'suscripcion' => ['suscrip'], 'otros' => ['extraescolar', 'actividad']];
+               'seguro' => ['seguro'], 'comunidad' => ['comunidad'], 'suscripcion' => ['suscrip'], 'impuesto' => ['impuesto', 'ivtm', 'circulacion', 'basura'], 'otros' => ['extraescolar', 'actividad']];
     $fijos = ['gimnas', 'colegio', 'guarder'];
     $out = [];
     foreach ($categorias as $c) {

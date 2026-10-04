@@ -506,3 +506,18 @@ T4 (16), Hanway (14, solo desde el 18/10/2025). **Sin comparar por falta de dato
 internet (facturas de 2025), comunidad (recibos de 2025), hipoteca (la cuota de hace un año: lo de
 finanzas son transferencias redondas, 407 € hasta enero y 360 € desde febrero, no la cuota) y la
 prima anterior de la Hanway.
+
+**Impuestos: IBI e impuesto de circulación (4/10/2026, petición de Gonzalo: «en vehículos habrá que
+añadir los impuestos de circulación; también el IBI para la vivienda»).** Tipo `contratos/impuesto`
+(«Impuesto o tasa»), enlazable a una vivienda o a un vehículo, así que sale solo con su botón «Impuesto o
+tasa» en la tarjeta «Contratos y seguros» de cada ficha. Campos: qué impuesto (IBI, Impuesto de
+circulación, Tasa de basuras, Otro), ayuntamiento, referencia, importe, periodicidad, parte que paga el
+titular, domiciliado, bonificaciones y **«Próximo pago»** (clave `renovacion`, NO renombrarla: es la que usa
+el calendario del gasto fijo; aviso 15 días, se repite cada año al marcar «hecho»). Cada año se apunta el
+recibo en el historial como `Recibo` (así la comparativa frente a hace un año funciona sola). Entra en el
+gasto fijo como partida «Impuestos» (`serie-7`, azul claro `#2a9fd0` / `#2f9ad0` en oscuro, validado con la skill
+dataviz tras «Suscripciones»; si se reordenan las partidas, revalidar). Se quitaron las sugerencias de
+recordatorio «IBI» e «Impuesto de circulación» (la ficha crea su propio aviso). **Aún sin fichas
+en producción:** no se ha creado ninguno; Gonzalo los apuntará cuando lleguen los recibos. No inventar
+importes ni fechas de pago del ayuntamiento: preguntar o dejar vacío. Ojo: el T3 está de baja temporal y el Mini
+sin matricular, no llevan impuesto de circulación.

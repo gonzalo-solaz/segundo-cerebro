@@ -145,7 +145,7 @@ function secciones(): array {
                 'contacto' => tipo_contacto('Contacto de confianza', 'Fontanero de siempre', 'Oficio'),
             ],
             'sugerencias' => [
-                ['IBI', 12, 30], ['Seguro de hogar', 12, 45], ['Revisión de la caldera', 12, 30],
+                ['Seguro de hogar', 12, 45], ['Revisión de la caldera', 12, 30],
                 ['Limpieza de filtros del aire acondicionado', 12, 15], ['Inspección periódica del gas', 60, 30],
             ],
             'registros' => ['tipos' => ['Reparación', 'Mejora o reforma', 'Mantenimiento', 'Lectura de contador', 'Incidencia', 'Compra o venta'],
@@ -188,7 +188,7 @@ function secciones(): array {
                 'contacto' => tipo_contacto('Taller o contacto', 'Taller de confianza', 'Especialidad'),
             ],
             'sugerencias' => [
-                ['Impuesto de circulación', 12, 30], ['Seguro del vehículo', 12, 45],
+                ['Seguro del vehículo', 12, 45],
                 ['Cambio de aceite y filtros', 12, 21], ['Cambio de neumáticos', 0, 15],
             ],
             'registros' => ['tipos' => ['Mantenimiento', 'Reparación', 'Lectura de kilómetros', 'Repostaje', 'Multa', 'Otro'],
@@ -455,6 +455,31 @@ function secciones(): array {
                             'vence' => 'Revisión de la renta', 'aviso' => 30, 'repetir' => 12,
                             'ayuda' => 'Suele ser anual, con el IPC: comprueba que la subida es la que toca.'],
                         'telefono' => ['etiqueta' => 'Teléfono del arrendador', 'tipo' => 'tel'],
+                    ],
+                ],
+                // El impuesto de circulación (IVTM) de un vehículo y el IBI de una vivienda
+                // (4/10/2026, petición de Gonzalo). Cada año se apunta el recibo en el historial
+                // como «Recibo» y se pone la fecha del siguiente pago; «hecho» la salta un año.
+                // La clave `renovacion` es la que usa el calendario del gasto fijo para saber cuándo
+                // se cobra (includes/gastos.php): no renombrarla.
+                'impuesto' => [
+                    'nombre' => 'Impuesto o tasa', 'ejemplo' => 'IBI de la casa', 'persona' => 'opcional', 'persona_etiqueta' => 'Contribuyente',
+                    'enlace' => ['etiqueta' => 'Vivienda o vehículo', 'a' => [['vivienda', 'inmueble'], ['vehiculos', 'vehiculo']]],
+                    'campos' => [
+                        'impuesto' => ['etiqueta' => 'Qué impuesto es', 'tipo' => 'opcion', 'resumen' => true,
+                            'opciones' => ['IBI', 'Impuesto de circulación', 'Tasa de basuras', 'Otro']],
+                        'ayuntamiento' => ['etiqueta' => 'Ayuntamiento', 'tipo' => 'texto', 'resumen' => true],
+                        'referencia' => ['etiqueta' => 'Referencia catastral o matrícula', 'tipo' => 'texto'],
+                        'coste' => ['etiqueta' => 'Importe del recibo', 'tipo' => 'importe', 'resumen' => true],
+                        'periodicidad' => $periodicidad,
+                        'porcentaje_pago' => $parte,
+                        'domiciliado' => ['etiqueta' => 'Domiciliado', 'tipo' => 'opcion', 'opciones' => ['Sí', 'No'],
+                            'ayuda' => 'Con «Sí» se cobra solo en la cuenta; con «No» hay que pagarlo en el plazo voluntario.'],
+                        'renovacion' => ['etiqueta' => 'Próximo pago', 'tipo' => 'fecha', 'resumen' => true,
+                            'vence' => 'Pagar el impuesto', 'aviso' => 15, 'repetir' => 12,
+                            'ayuda' => 'El día del cargo en cuenta o el último del plazo voluntario, como diga el recibo o la carta del ayuntamiento. Si aún no ha llegado, déjalo vacío.'],
+                        'bonificaciones' => ['etiqueta' => 'Bonificaciones o exenciones', 'tipo' => 'texto',
+                            'ayuda' => 'Familia numerosa, vehículo histórico o eléctrico, baja temporal… lo que reduzca el recibo.'],
                     ],
                 ],
             ],

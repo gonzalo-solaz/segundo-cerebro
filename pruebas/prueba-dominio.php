@@ -320,7 +320,8 @@ comprueba('la casa lista sus contratos y su comunidad', $hijos === $esperados);
 comprueba('el contrato sabe a qué casa pertenece', elemento($pdo, $id['luz'])['enlace_nombre'] === 'Casa de prueba');
 $res = resumen_enlazados($pdo);
 comprueba('el resumen cuenta 3 y suma 80 €/mes (60 + 240/12; la comunidad de prueba no lleva coste)', $res[$id['casa']]['n'] === 3 && abs($res[$id['casa']]['mensual'] - 80.0) < 0.001, json_encode($res));
-comprueba('la vivienda ofrece añadir suministros, seguros, su hipoteca, su comunidad y alquileres', array_column(tipos_que_enlazan('vivienda', 'inmueble'), 1) === ['equipo', 'suministro', 'seguro', 'hipoteca', 'comunidad', 'alquiler']);
+comprueba('la vivienda ofrece añadir suministros, seguros, su hipoteca, su comunidad, alquileres e impuestos', array_column(tipos_que_enlazan('vivienda', 'inmueble'), 1) === ['equipo', 'suministro', 'seguro', 'hipoteca', 'comunidad', 'alquiler', 'impuesto']);
+comprueba('el vehículo ofrece su seguro y su impuesto', array_column(tipos_que_enlazan('vehiculos', 'vehiculo'), 1) === ['seguro', 'impuesto']);
 comprueba('un DNI no cuelga de nada', tipos_que_enlazan('documentos', 'dni') === []);
 $e = lanza(static fn() => guardar_elemento($pdo, 'contratos', 'suministro', $sum($id['furgo']), $id['luz'], $id['admin']));
 comprueba('un suministro no se puede enlazar a un vehículo', $e instanceof ErrorValidacion);
@@ -419,6 +420,28 @@ comprueba('ni con clave vacía', pase_leer('', $p, 'entrar') === null);
 comprueba('destino: solo páginas de la app', pase_destino_valido('nomina.php') === 'nomina.php'
     && pase_destino_valido('revisar.php?mes=2026-09') === 'revisar.php?mes=2026-09'
     && pase_destino_valido('https://malo.example/') === 'index.php' && pase_destino_valido('../config.php') === 'index.php');
+
+echo "\nImpuestos (IBI e impuesto de circulación)\n";
+$pi = bd_nueva();
+$ii = sembrar($pi);
+$ibi = guardar_elemento($pi, 'contratos', 'impuesto', ['nombre' => 'IBI de la casa', 'enlace_id' => $ii['casa'],
+    'datos' => ['impuesto' => 'IBI', 'coste' => '412,50', 'periodicidad' => 'Anual', 'renovacion' => '2026-11-20', 'domiciliado' => 'Sí']], null, $ii['admin']);
+$ivtm = guardar_elemento($pi, 'contratos', 'impuesto', ['nombre' => 'Impuesto de circulación de la furgo', 'enlace_id' => $ii['furgo'],
+    'datos' => ['impuesto' => 'Impuesto de circulación', 'coste' => '96,40', 'periodicidad' => 'Anual']], null, $ii['admin']);
+comprueba('el IBI cuelga de la casa y el impuesto de circulación, del vehículo', elemento($pi, (int)$ibi)['enlace_id'] === $ii['casa'] && elemento($pi, (int)$ivtm)['enlace_id'] === $ii['furgo']);
+$av = agenda($pi, 400, null, (int)$ibi);
+comprueba('el próximo pago crea su aviso, y sin fecha no hay aviso',
+    count($av) === 1 && $av[0]['titulo'] === 'Pagar el impuesto · IBI de la casa' && $av[0]['fecha'] === '2026-11-20' && agenda($pi, 4000, null, (int)$ivtm) === []);
+$e = lanza(static fn() => guardar_elemento($pi, 'contratos', 'impuesto', ['nombre' => 'IBI', 'enlace_id' => $ii['casa'], 'datos' => ['impuesto' => 'Plusvalía']], null, $ii['admin']));
+comprueba('solo vale un impuesto de la lista', $e instanceof ErrorValidacion);
+$gi = analisis_gastos_fijos(elementos_con_coste($pi), historial_de_gastos($pi, hoy()), hoy());
+$imp = $gi['partidas']['impuesto'] ?? null;
+comprueba('tiene su partida, con su color, tras las suscripciones y antes de «otros»',
+    $imp !== null && $imp['nombre'] === 'Impuestos' && $imp['serie'] === 7 && abs($imp['mensual'] - (412.50 + 96.40) / 12) < 0.001
+    && array_search('impuesto', array_keys(partidas_gasto())) === array_search('suscripcion', array_keys(partidas_gasto())) + 1);
+$cal = array_column($gi['calendario'], 'extra', 'mes');
+comprueba('el IBI se cobra en el mes de su próximo pago (con el seguro de prueba y el reparto del que no tiene fecha)', abs(($cal['2026-11'] ?? 0) - (240 + 412.50 + 96.40 / 12)) < 0.001, json_encode($cal));
+comprueba('el impuesto sin fecha se reparte por meses', in_array('Impuesto de circulación de la furgo', $gi['sin_fecha'], true));
 
 echo "\nPersonas y accesos\n";
 $e = lanza(static fn() => crear_usuario($pdo, ['nombre' => 'Otro', 'email' => 'ADMIN@ejemplo.test']));
