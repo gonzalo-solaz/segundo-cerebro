@@ -325,6 +325,13 @@ function secciones(): array {
                             'vence' => 'Renovar el carnet de conducir', 'aviso' => 90],
                     ],
                 ],
+                'tarjeta_sanitaria' => [
+                    'nombre' => 'Tarjeta sanitaria (SIP)', 'ejemplo' => 'Tarjeta sanitaria', 'persona' => 'obligatoria',
+                    'persona_etiqueta' => 'Titular', 'nombre_auto' => 'Tarjeta sanitaria de {persona}',
+                    'campos' => [
+                        'numero' => ['etiqueta' => 'Número SIP', 'tipo' => 'texto', 'resumen' => true],
+                    ],
+                ],
                 'otro' => [
                     'nombre' => 'Otro documento o tarjeta', 'ejemplo' => 'Tarjeta sanitaria europea', 'persona' => 'opcional',
                     'persona_etiqueta' => 'Titular',
