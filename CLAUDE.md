@@ -338,6 +338,14 @@ trae kilómetros en 2025-12 ni 2026-09, y `km` queda en 219.263 (mayo 2025). Es 
 
 **T3 de baja temporal y Opel Astra (3/10/2026, petición de Gonzalo):** el T3 Syncro (id 17) está de baja temporal: sin seguro ni ITV a propósito (queda dicho en sus notas; no esperar avisos). Opel Astra J 2647HJR traído de Notion y asignado a **Pilar** (persona 2): vehículos, id 19, con 23 apuntes de historial (2012-2026, último 232.829 km). No repetir. Sin rellenar: próxima ITV y seguro (Notion no los trae). Script en `private/importar-notion/astra-notion.py`. Quedan sin traer: Allroad C5 0913CMM, Mini Cooper S JCW, Polo y los 'coches de interés'.
 
+**ITV vencida a propósito (4/10/2026, Gonzalo pasó capturas de las alertas de la DGT):** la
+Hanway (id 13) tiene `proxima_itv` = 21/01/2025 y el T3 (id 17) = 22/12/2016, así que salen como
+**vencidas** en la agenda. Es deliberado: la «fecha de alerta» de la DGT es cuándo tocaba pasarla,
+y sirve para saber que está caducada. El apunte 53 de la Hanway (21/01/2023, 33,07 €) SÍ fue su
+ITV (la pasó ese día; la API no deja editar su tipo, queda como «Otro»). Cuando pase la ITV de
+verdad: apuntar el `registro` tipo ITV y poner la nueva `proxima_itv` (marcar «hecho» el aviso).
+El T3 sigue de baja temporal: el aviso vencido no significa que deba circular.
+
 **Mini Cooper S JCW (2005) traído de Notion (3/10/2026, petición de Gonzalo):** vehículos, id 24, a nombre de Gonzalo (persona 1), 23 apuntes de historial (compra 1.800 € el 29/12/2025, transporte 1.100 € y las compras de piezas hasta el 27/05/2026). **Importado de Alemania y SIN matricular en España**: la ficha no tiene matrícula ni fecha de matriculación a propósito (el campo `matricula` no es obligatorio); cuando se matricule, rellenarlos y añadir la ITV. Notion dice que todo funciona excepto el motor. No repetir. Script en `private/importar-notion/mini-notion.py`. Sin traer: Allroad C5 0913CMM, Polo y los 'coches de interés'.
 
 **Control de peso (3/10/2026, petición de Gonzalo: «peso con IMC, registro, evolución y pautas»):** tipo
@@ -506,6 +514,25 @@ T4 (16), Hanway (14, solo desde el 18/10/2025). **Sin comparar por falta de dato
 internet (facturas de 2025), comunidad (recibos de 2025), hipoteca (la cuota de hace un año: lo de
 finanzas son transferencias redondas, 407 € hasta enero y 360 € desde febrero, no la cuota) y la
 prima anterior de la Hanway.
+
+**Recibos de la comunidad de 2025 e historial de la hipoteca (4/10/2026, Gonzalo pasó capturas del banco):**
+comunidad = `Recibo` de la ficha 9 (registros 218-222), SIN desglose ni PDF (solo el total): 4T24 319,06 €, 1T25 319,06 €,
+2T25 291,27 €, 3T25 369,73 €, 4T25 318,49 €. Los cargos son del 3/1, 10/4, 7/7 y 6/10/2025 y el 7/1/2026; el trimestre se
+**dedujo** del patrón (1T26 se domicilió el 2/4/2026) y la fecha del apunte es el fin de trimestre, como en 2026, para que
+`interanual_item()` case mes a mes; el cargo real va en las notas. Comparativa de los 12 últimos meses frente a los
+anteriores: 1.299,12 € → 1.764,66 € (+35,8 %, casi todo las obras de la piscina del 2T26).
+**Corregido el mismo día (Gonzalo: «no es igualitario» y «explica el extra»):** la comparativa ya era de
+4 recibos contra 4 (12 meses móviles), pero la vista por años enfrentaba 2025 entero con 3 recibos de 2026 y
+las obras inflaban la subida. Ahora `interanual_item()` compara lo NORMAL con lo normal (las partidas
+`extraordinaria` salen de `historial_de_gastos()`, tercer valor de cada cargo) y enseña las obras aparte
+(`extra_ahora`); `gasto-comunidad.php` tiene la tarjeta «Frente a hace un año» (`comparar_recibos()`: últimos
+4 recibos contra los 4 anteriores) y avisa del año a medias. Normal: 1.299,12 € → 1.389,85 € (+7,0 %), más
+374,81 € de obras (tu parte). Límite: los recibos de 2025 no tienen desglose, se cuentan enteros como normales
+(2T25 fue el más barato, así que probablemente no llevaban obras). **Hipoteca (ficha 33):** cuotas
+de 2025 en `precios` (cuota entera, la del cuadro del banco: 605,71 € desde 7/1/2025, 597,78 desde 7/3, 579,98 desde 7/6,
+577,07 desde 7/9, 581,93 desde 7/12; el tipo, en la nota de cada precio), así que sale 577,07 → 611,65 € (+6,0 %).
+**Hueco:** no hay cuotas de enero a agosto de 2026 (la ficha dice 611,65 € «desde septiembre de 2026») ni de antes de
+2025. No repetir.
 
 **Suministros de 2025 para comparar con 2026 (4/10/2026, Gonzalo pasó el extracto del banco y las capturas de
 Pepeenergy, Aguas de Valencia y Naturgy).** Grabados en producción 37 apuntes `Factura` SIN PDF (registros 223-259):
