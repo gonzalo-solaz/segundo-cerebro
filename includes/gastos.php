@@ -313,7 +313,7 @@ function interanual_item(array $it, array $precios, ?array $h, string $hoy): ?ar
         $detalle = ($k === 1 ? 'la misma factura' : 'las facturas de los mismos ' . $k . ' meses') . ' de los dos años: ' . eur($a) . ' → ' . eur($b);
         if ($xa > 0.005 || $xb > 0.005) {
             $detalle = ($k === 1 ? 'la misma factura' : 'los mismos ' . $k . ' meses') . ' de los dos años, sin obras extraordinarias: ' . eur($na) . ' → ' . eur($nb)
-                . '; ahora se suman ' . eur($xb) . ' de obras' . ($xa > 0.005 ? ' (antes, ' . eur($xa) . ')' : ' (antes no constan)') . ', con ellas ' . eur($a) . ' → ' . eur($b);
+                . '; ahora se suman ' . eur($xb) . ' de obras' . ($xa > 0.005 ? ' (antes, ' . eur($xa) . ')' : ' (antes no constan)') . ', con ellas ' . eur($a) . ' → ' . eur($b) . ' (' . variacion_es(($b / $a - 1) * 100) . ')';
         }
         return ['como' => 'facturas', 'antes' => $mes($na), 'ahora' => $mes($nb), 'pct' => ($nb / $na - 1) * 100,
                 'extra_antes' => $mes($xa), 'extra_ahora' => $mes($xb), 'pct_con_extra' => ($b / $a - 1) * 100, 'detalle' => $detalle];
