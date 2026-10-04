@@ -175,5 +175,34 @@ function analisis_comunidad(PDO $pdo, int $elemento_id): array {
     arsort($total_cat);
     foreach ($recibos as &$rec) { $rec['ord'] = round($rec['ord'], 2); $rec['extra'] = round($rec['extra'], 2); }
     unset($rec);
-    return ['recibos' => $recibos, 'anios' => $anios, 'categorias' => array_keys($total_cat)];
+    return ['recibos' => $recibos, 'anios' => $anios, 'categorias' => array_keys($total_cat),
+            'comparativa' => comparar_recibos($recibos)];
+}
+
+/**
+ * Los últimos 4 recibos (un año de cobros) frente a los 4 anteriores, para no
+ * comparar un año entero con uno a medias. Lo extraordinario (obras) va aparte
+ * de lo normal. null si no hay 8 recibos. Los recibos sin desglose no dicen si
+ * llevaban obras: cuentan enteros como normales.
+ *   ['ahora'|'antes' => ['desde', 'hasta', 'pagado', 'extra', 'normal', 'sin_desglose'],
+ *    'pct_normal', 'pct_total', 'extras' => [título de cada recibo con obras]]
+ */
+function comparar_recibos(array $recibos, int $n = 4): ?array {
+    $lista = array_values($recibos);
+    if (count($lista) < 2 * $n) return null;
+    $tramo = static function (array $rs): array {
+        $pagado = round(array_sum(array_column($rs, 'coste')), 2);
+        $extra = round(array_sum(array_column($rs, 'extra')), 2);
+        return ['desde' => $rs[0]['etiqueta'], 'hasta' => end($rs)['etiqueta'], 'pagado' => $pagado, 'extra' => $extra,
+                'normal' => round($pagado - $extra, 2),
+                'sin_desglose' => count(array_filter($rs, static fn($r) => $r['n_partidas'] === 0))];
+    };
+    $ahora = $tramo(array_slice($lista, -$n));
+    $antes = $tramo(array_slice($lista, -2 * $n, $n));
+    if ($antes['normal'] <= 0 || $antes['pagado'] <= 0) return null;
+    return ['ahora' => $ahora, 'antes' => $antes,
+            'pct_normal' => ($ahora['normal'] / $antes['normal'] - 1) * 100,
+            'pct_total' => ($ahora['pagado'] / $antes['pagado'] - 1) * 100,
+            'extras' => array_values(array_map(static fn($r) => $r['titulo'] . ': ' . eur($r['extra']),
+                array_filter(array_slice($lista, -2 * $n), static fn($r) => $r['extra'] > 0.005)))];
 }

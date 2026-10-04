@@ -88,19 +88,25 @@ function borrar_registro(PDO $pdo, int $id, int $elemento_id, ?int $usuario_id =
  * 'n', 'total', 'max', 'min', 'fechas' => los cargos de los últimos 12 meses,
  * 'otros' => lo demás gastado en 12 meses (taller, ITV, reparaciones…; sin
  * «Compra o venta», que no es mantener), 'cargos' =>
- * [[fecha, coste], …] de los últimos 24 meses (para comparar con el año anterior)]].
+ * [[fecha, coste, parte extraordinaria], …] de los últimos 24 meses (para
+ * comparar con el año anterior; lo extraordinario son las obras de la comunidad)]].
  */
 function historial_de_gastos(PDO $pdo, string $hoy): array {
     $desde = sumar_meses($hoy, -12);
     $desde24 = substr(sumar_meses($hoy, -23), 0, 7) . '-01';   // 24 meses enteros, con el actual
     $out = [];
-    foreach ($pdo->query('SELECT elemento_id, fecha, tipo, coste FROM registros WHERE coste IS NOT NULL ORDER BY fecha, id') as $f) {
+    // Lo extraordinario de cada recibo (obras): se compara aparte de lo normal.
+    $extras = [];
+    foreach ($pdo->query('SELECT registro_id, SUM(parte) AS extra FROM partidas WHERE extraordinaria = 1 GROUP BY registro_id') as $x) {
+        $extras[(int)$x['registro_id']] = (float)$x['extra'];
+    }
+    foreach ($pdo->query('SELECT id, elemento_id, fecha, tipo, coste FROM registros WHERE coste IS NOT NULL ORDER BY fecha, id') as $f) {
         $o = &$out[(int)$f['elemento_id']];
         $o ??= ['ultimo' => null, 'n' => 0, 'total' => 0.0, 'max' => null, 'min' => null, 'fechas' => [], 'otros' => 0.0, 'cargos' => []];
         $c = (float)$f['coste'];
         $cargo = in_array($f['tipo'], ['Factura', 'Recibo'], true);
         if ($cargo) $o['ultimo'] = $f['fecha'];
-        if ($cargo && $f['fecha'] >= $desde24 && $f['fecha'] <= $hoy) $o['cargos'][] = [$f['fecha'], $c];
+        if ($cargo && $f['fecha'] >= $desde24 && $f['fecha'] <= $hoy) $o['cargos'][] = [$f['fecha'], $c, $extras[(int)$f['id']] ?? 0.0];
         if ($f['fecha'] > $desde && $f['fecha'] <= $hoy) {
             if ($cargo) {
                 $o['n']++;

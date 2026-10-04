@@ -82,6 +82,7 @@ cabecera_pagina('Gastos fijos', '<a href="' . e(url('index.php')) . '">Panel</a>
       <?php if ($an['interanual']): ?>
         Frente a hace un año <?= $chip($an['interanual']) ?>: lo que se puede comparar (<?= (int)$an['interanual']['n'] ?> de <?= (int)$an['interanual']['de'] ?> gastos)
         te cuesta <?= e(eur($an['interanual']['ahora'])) ?> al mes; hace un año, <?= e(eur($an['interanual']['antes'])) ?>.
+        <?php if ($an['interanual']['extra'] > 0.005): ?><span class="tenue">Sin contar obras extraordinarias (<?= e(eur($an['interanual']['extra'])) ?> al mes en el último año).</span><?php endif; ?>
       <?php else: ?>
         Aún no hay datos de hace un año para comparar.
       <?php endif; ?>

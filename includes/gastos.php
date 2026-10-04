@@ -287,22 +287,35 @@ function interanual_item(array $it, array $precios, ?array $h, string $hoy): ?ar
     $corte = substr(sumar_meses($hoy, -11), 0, 7);
     $ahora = [];
     $antes = [];
-    foreach ($h['cargos'] ?? [] as [$f, $c]) {
+    $ahora_x = [];
+    $antes_x = [];
+    foreach ($h['cargos'] ?? [] as $cargo) {
+        [$f, $c, $x] = $cargo + [2 => 0.0];
         $ym = substr($f, 0, 7);
-        if ($ym >= $corte) $ahora[$ym] = ($ahora[$ym] ?? 0) + $c;
-        else $antes[$ym] = ($antes[$ym] ?? 0) + $c;
+        if ($ym >= $corte) { $ahora[$ym] = ($ahora[$ym] ?? 0) + $c; $ahora_x[$ym] = ($ahora_x[$ym] ?? 0) + $x; }
+        else { $antes[$ym] = ($antes[$ym] ?? 0) + $c; $antes_x[$ym] = ($antes_x[$ym] ?? 0) + $x; }
     }
-    [$a, $b, $k] = [0.0, 0.0, 0];
+    // $a/$b = lo pagado en los meses comunes (antes/ahora); $xa/$xb = de ello, lo extraordinario (obras).
+    [$a, $b, $k, $xa, $xb] = [0.0, 0.0, 0, 0.0, 0.0];
     foreach ($ahora as $ym => $c) {
         $prev = ((int)substr($ym, 0, 4) - 1) . substr($ym, 4);
         if (!isset($antes[$prev])) continue;
         [$a, $b, $k] = [$a + $antes[$prev], $b + $c, $k + 1];
+        [$xa, $xb] = [$xa + $antes_x[$prev], $xb + $ahora_x[$ym]];
     }
     // El ritmo de cobro, el de las facturas del último año (dos sueltas, una por año, no son «anuales»).
     $cada = $it['real']['cada'] ?? $it['meses'];
-    if ($a > 0 && $k >= ($cada >= 3 ? 1 : 2)) {
-        return ['como' => 'facturas', 'antes' => $a / ($k * $cada) * $parte, 'ahora' => $b / ($k * $cada) * $parte, 'pct' => ($b / $a - 1) * 100,
-                'detalle' => ($k === 1 ? 'la misma factura' : 'las facturas de los mismos ' . $k . ' meses') . ' de los dos años: ' . eur($a) . ' → ' . eur($b)];
+    // Se compara lo normal con lo normal: las obras extraordinarias van aparte, no inflan la subida.
+    [$na, $nb] = [$a - $xa, $b - $xb];
+    if ($na > 0 && $k >= ($cada >= 3 ? 1 : 2)) {
+        $mes = static fn(float $x): float => $x / ($k * $cada) * $parte;
+        $detalle = ($k === 1 ? 'la misma factura' : 'las facturas de los mismos ' . $k . ' meses') . ' de los dos años: ' . eur($a) . ' → ' . eur($b);
+        if ($xa > 0.005 || $xb > 0.005) {
+            $detalle = ($k === 1 ? 'la misma factura' : 'los mismos ' . $k . ' meses') . ' de los dos años, sin obras extraordinarias: ' . eur($na) . ' → ' . eur($nb)
+                . '; ahora se suman ' . eur($xb) . ' de obras' . ($xa > 0.005 ? ' (antes, ' . eur($xa) . ')' : ' (antes no constan)') . ', con ellas ' . eur($a) . ' → ' . eur($b);
+        }
+        return ['como' => 'facturas', 'antes' => $mes($na), 'ahora' => $mes($nb), 'pct' => ($nb / $na - 1) * 100,
+                'extra_antes' => $mes($xa), 'extra_ahora' => $mes($xb), 'pct_con_extra' => ($b / $a - 1) * 100, 'detalle' => $detalle];
     }
     $p = precio_en($precios, sumar_meses($hoy, -12));
     $n = periodicidades()[$p['periodicidad'] ?? ''] ?? 0;
@@ -321,7 +334,9 @@ function sumar_interanual(array $items): ?array {
     if (!$con) return null;
     $a = array_sum(array_map(static fn($i) => $i['interanual']['antes'], $con));
     $b = array_sum(array_map(static fn($i) => $i['interanual']['ahora'], $con));
-    return $a > 0 ? ['antes' => $a, 'ahora' => $b, 'pct' => ($b / $a - 1) * 100, 'n' => count($con), 'de' => count($items)] : null;
+    // 'extra': obras extraordinarias de los últimos 12 meses (al mes), que no entran en antes/ahora.
+    $x = array_sum(array_map(static fn($i) => $i['interanual']['extra_ahora'] ?? 0.0, $con));
+    return $a > 0 ? ['antes' => $a, 'ahora' => $b, 'pct' => ($b / $a - 1) * 100, 'n' => count($con), 'de' => count($items), 'extra' => $x] : null;
 }
 
 // Lo que haría falta apuntar para poder comparar un gasto con hace un año.

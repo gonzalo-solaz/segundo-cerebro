@@ -70,6 +70,37 @@ cabecera_pagina('Gasto en comunidad',
     <div class="tarjeta vacio"><p>Aún no hay recibos. Apunta cada liquidación en el historial de la comunidad con el tipo «Recibo» y lo que te toca pagar.</p></div>
   <?php endif; ?>
 
+  <?php if ($cmp = $an['comparativa']): ?>
+    <?php [$ah, $an_] = [$cmp['ahora'], $cmp['antes']]; ?>
+    <section class="tarjeta" id="comparativa">
+      <div class="tarjeta-cabecera"><h2>Frente a hace un año</h2>
+        <span class="tenue">4 recibos contra 4</span></div>
+      <p class="tenue">Los últimos cuatro recibos (<?= e($ah['desde']) ?> a <?= e($ah['hasta']) ?>) contra los cuatro anteriores
+        (<?= e($an_['desde']) ?> a <?= e($an_['hasta']) ?>), para comparar un año completo con otro y no con uno a medias.</p>
+      <div class="tabla-scroll">
+        <table class="tabla">
+          <thead><tr><th></th><th <?= $num ?>><?= e($an_['desde']) ?> – <?= e($an_['hasta']) ?></th><th <?= $num ?>><?= e($ah['desde']) ?> – <?= e($ah['hasta']) ?></th><th <?= $num ?>>Cambio</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Normal</strong> (sin obras)</td>
+              <td <?= $num ?>><?= e(eur($an_['normal'])) ?></td><td <?= $num ?>><strong><?= e(eur($ah['normal'])) ?></strong></td>
+              <td <?= $num ?>><strong><?= e(variacion_es($cmp['pct_normal'])) ?></strong></td></tr>
+            <tr><td>Obras extraordinarias</td>
+              <td <?= $num ?>><?= $an_['extra'] > 0.005 ? e(eur($an_['extra'])) : '—' ?></td><td <?= $num ?>><?= $ah['extra'] > 0.005 ? e(eur($ah['extra'])) : '—' ?></td><td></td></tr>
+            <tr class="apagado"><td>Total pagado</td>
+              <td <?= $num ?>><?= e(eur($an_['pagado'])) ?></td><td <?= $num ?>><?= e(eur($ah['pagado'])) ?></td>
+              <td <?= $num ?>><?= e(variacion_es($cmp['pct_total'])) ?></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <?php if ($cmp['extras']): ?>
+        <p class="tenue">Obras extraordinarias en estos recibos: <?= e(implode('; ', $cmp['extras'])) ?>. Son un gasto puntual: no se comparan con lo normal.</p>
+      <?php endif; ?>
+      <?php if ($an_['sin_desglose']): ?>
+        <p class="tenue nota-pequena">De los 4 recibos anteriores, <?= (int)$an_['sin_desglose'] ?> no tienen desglose por partidas: si llevaban alguna obra, está dentro de «Normal».</p>
+      <?php endif; ?>
+    </section>
+  <?php endif; ?>
+
   <?php foreach ($an['anios'] as $anio => $a): ?>
     <?php
       $suma = $a['ord'] + $a['extra'];
@@ -80,6 +111,9 @@ cabecera_pagina('Gasto en comunidad',
         <h2><?= (int)$anio ?></h2>
         <span class="tenue"><strong><?= e(eur($a['pagado'])) ?></strong> · <?= (int)$a['n'] ?> <?= $a['n'] === 1 ? 'recibo' : 'recibos' ?></span>
       </div>
+      <?php if ($a['n'] < 4 && $anio === array_key_first($an['anios'])): ?>
+        <p class="tenue"><strong>Año a medias:</strong> solo <?= (int)$a['n'] ?> de 4 recibos. No lo compares con un año entero; mira «Frente a hace un año».</p>
+      <?php endif; ?>
       <?php if ($a['desglosados']): ?>
         <p class="tenue">Sin obras ni extras, un recibo medio sale por <strong><?= e(eur($a['media_ordinaria'])) ?></strong>.
           <?php if ($a['extra'] > 0): ?>Las obras y gastos extraordinarios suman <strong><?= e(eur($a['extra'])) ?></strong>.<?php endif; ?></p>

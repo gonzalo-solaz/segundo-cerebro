@@ -244,6 +244,23 @@ comprueba('por facturas: diciembre, agosto y septiembre de los dos años, 200 �
     && abs($v['antes'] - 200 / 3 * 0.5) < 0.001, json_encode($v));
 comprueba('un mes suelto no basta para lo mensual', interanual_item($itl, [], ['cargos' => [['2025-09-10', 80], ['2026-09-09', 100]]], '2026-10-03') === null);
 comprueba('las facturas mandan sobre el precio', interanual_item($itl, [['desde' => '2020-01-01', 'coste' => 1, 'periodicidad' => 'Mensual', 'nota' => '']], $hl, '2026-10-03')['como'] === 'facturas');
+// Con obras extraordinarias: se compara lo normal con lo normal y las obras van aparte.
+$itc = ['tipo' => 'comunidad', 'meses' => 3, 'parte' => 50, 'tuyo' => 150, 'mensual' => 100, 'coste' => 300, 'periodicidad' => 'Trimestral', 'real' => null];
+$hc = ['cargos' => [['2025-03-31', 300], ['2025-06-30', 300], ['2026-03-31', 330], ['2026-06-30', 900, 540]]];
+$v = interanual_item($itc, [], $hc, '2026-10-03');
+comprueba('con obras: normal 600 € → 690 € (+15 %), no 600 → 1.230 €', $v['como'] === 'facturas' && abs($v['pct'] - 15) < 0.001
+    && abs($v['pct_con_extra'] - 105) < 0.001 && abs($v['extra_ahora'] - 540 / 6 * 0.5) < 0.001 && $v['extra_antes'] == 0, json_encode($v));
+comprueba('lo extraordinario no se mezcla con lo normal en la partida', sumar_interanual([['interanual' => $v]])['extra'] > 0);
+// Un año a medias no se compara con uno entero: 4 recibos contra 4.
+$rc = [];
+foreach ([300, 300, 300, 300, 310, 900, 320, 330] as $i => $coste) {
+    $rc[$i + 1] = ['coste' => (float)$coste, 'extra' => $coste === 900 ? 560.0 : 0.0, 'n_partidas' => $i > 3 ? 5 : 0,
+                   'etiqueta' => 'r' . $i, 'titulo' => 'Recibo ' . $i];
+}
+$cr = comparar_recibos($rc);
+comprueba('comparar recibos: 4 contra 4, normal 1.200 € → 1.300 € (+8,3 %), con obras +55 %', $cr && $cr['antes']['normal'] === 1200.0 && $cr['ahora']['normal'] === 1300.0
+    && abs($cr['pct_normal'] - 8.333) < 0.01 && abs($cr['pct_total'] - 55) < 0.01 && count($cr['extras']) === 1 && $cr['antes']['sin_desglose'] === 4, json_encode($cr));
+comprueba('con menos de 8 recibos no se compara', comparar_recibos(array_slice($rc, 0, 7, true)) === null);
 // El sueldo base frente al IPC del mes anterior a la subida.
 $anios = [['anio' => 2025, 'meses' => [['mes' => '2025-11', 'tipo' => 'mensual', 'campos' => ['salario_base' => 1903.38]],
                                         ['mes' => '2025-12', 'tipo' => 'mensual', 'campos' => ['salario_base' => 1903.38]],
