@@ -205,6 +205,15 @@ pinta_bien('si finanzas no contesta, lo dice y enseña la última copia', $r, 'E
 putenv('SC_CACHE');
 putenv('SC_FINANZAS_CLAVE');
 pinta_bien('sin clave de finanzas, la página lo explica', pedir('finanzas.php'), 'Falta la clave de finanzas');
+// Las pantallas de acción de finanzas, dentro del menú lateral (iframe por el pase).
+$r = pedir('finanzas-pantalla.php', ['p' => 'revisar', 'q' => 'vista=sueltos']);
+pinta_bien('Finanzas: una pantalla de acción lleva el menú lateral y su marco', $r, 'class="fin-marco"');
+pinta_bien('el marco entra por el pase y reenvía su query', $r, 'finanzas-entrar.php?a=revisar.php%3Fvista%3Dsueltos%26embed%3D1');
+pinta_bien('«Finanzas» sigue marcada en el menú lateral', $r, 'class="activo"');
+pinta_bien('y hay una pestaña por cada pantalla', $r, 'finanzas-pantalla.php?p=salud');
+pinta_bien('sin query, el marco pide solo embed=1', pedir('finanzas-pantalla.php', ['p' => 'nomina']), 'finanzas-entrar.php?a=nomina.php%3Fembed%3D1');
+comprueba('una pantalla que no existe vuelve al panel de finanzas', ($r2 = pedir('finanzas-pantalla.php', ['p' => 'inventada']))['redireccion'] !== null && str_contains((string)$r2['redireccion'], 'finanzas.php'), (string)$r2['redireccion']);
+pinta_bien('un miembro no ve las pantallas de finanzas', pedir('finanzas-pantalla.php', ['p' => 'revisar'], null, $id['miembro']), 'Solo administradores');
 pinta_bien('un miembro no ve Finanzas', pedir('finanzas.php', [], null, $id['miembro']), 'Solo administradores');
 @unlink($cache . '/finanzas-nomina_estado.json');
 @rmdir($cache);

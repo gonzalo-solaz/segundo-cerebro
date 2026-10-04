@@ -425,3 +425,26 @@ un solo código del panel (no fusionar repos: las funciones chocan); las pantall
 acción (importar, revisar, movimiento, nómina…) siguen en finanzas, abiertas por el pase,
 y se irán pasando aquí una a una sobre su API; la dirección vieja de finanzas redirige
 aquí (su login `?local=1` es el plan B). La página resumen anterior se ha retirado.
+
+**Las pantallas de acción de finanzas, dentro del menú lateral (4/10/2026, queja de
+Gonzalo: «las subsecciones de finanzas no están adaptadas, son diferentes y pierdo el menú
+lateral; quiero que toda la app respire el mismo estilo»).** Importar, revisar, movimiento,
+nómina, cotizaciones y salud ya no se abren sueltas en finanzas con su maqueta oscura:
+`finanzas-pantalla.php?p=<pantalla>` (solo admin) pinta el menú lateral, la cabecera y una
+fila de pestañas, y monta la pantalla en un **iframe** que entra por el pase
+(`finanzas-entrar.php?a=revisar.php?…&embed=1`: siempre pase nuevo, así no hay sesión de
+finanzas caducada a medias). **Por qué iframe y no pasarlas ya a la API:** cada una tiene
+formularios, subida de extractos y lógica propia; pasarlas es el plan largo, esto da la
+navegación y el estilo ya. Dentro, finanzas detecta que está embebida (`embebido()` en su
+`includes/cerebro.php`: cabecera `Sec-Fetch-Dest: iframe` o `?embed=1`) y pinta SOLO el
+contenido, cargando de aquí `app.css` + **`assets/finanzas-pantallas.css`** (viste su marcado:
+`.caja`, tablas, `.num`, `.etiqueta`, botones, `.pildora`) y **`finanzas-pantallas.js`** (ajusta
+la altura del iframe, sigue el tema claro/oscuro de fuera y sube arriba tras cada envío). El
+diseño sigue siendo de aquí: si finanzas renombra clases de esas pantallas, revisar ese CSS.
+Una visita directa (no en iframe) a una pantalla de finanzas rebota sola a este marco si se
+entró por el pase. Los botones del panel y «Abrir en finanzas» de la ficha del empleo apuntan
+al marco. Finanzas pasó `X-Frame-Options` de DENY a SAMEORIGIN (solo ellas, mismo dominio).
+Al pasar una pantalla a esta app sobre la API, se borra de la lista `$pantallas` y se le hace
+página propia; el resto no cambia. Límite conocido: si caduca la sesión de ESTA app (2 días)
+con el marco abierto, el login no se puede mostrar dentro del iframe (CSP `frame-ancestors`)
+y sale en blanco: basta recargar la página entera.

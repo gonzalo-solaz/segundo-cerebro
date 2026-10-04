@@ -1,0 +1,104 @@
+/* =====================================================================
+   Pantallas de acción de finanzas (importar, revisar, movimiento, nómina,
+   cotizaciones, salud) dentro del segundo cerebro (finanzas-pantalla.php).
+   Finanzas las pinta SOLO con su contenido, en un iframe, y carga app.css
+   (los mismos tokens, letra y controles que el resto de la app) y este
+   archivo, que viste lo que tiene su propio marcado: .caja, tablas, .num,
+   .etiqueta, botones, píldoras. Gonzalo, 4/10/2026: «las subsecciones de
+   finanzas no están adaptadas y son diferentes en cuanto a estilos».
+   Solo toca lo que cuelga de body.fin-pantalla. Si finanzas renombra clases
+   (includes/layout.php y sus páginas), revisar aquí.
+   ===================================================================== */
+
+body.fin-pantalla { background: var(--bg-app); min-height: 0; }
+.fin-contenido { padding: 2px 2px 24px; max-width: 1120px; }
+
+/* El título y el antetítulo los pone el marco (finanzas-pantalla.php). */
+.fin-contenido > h1 { display: none; }
+.fin-contenido > p.sub { color: var(--tenue); font-size: 15px; margin: 0 0 20px; max-width: 70ch; }
+.fin-contenido h2 { margin: 28px 0 12px; }
+.fin-contenido h3 { margin: 18px 0 8px; }
+.fin-contenido a { color: var(--acento); }
+
+/* ---------- Tarjetas ---------- */
+.fin-contenido .caja {
+  background: var(--panel); border: 1px solid var(--borde); border-radius: 20px; padding: 18px 20px; margin: 0 0 14px;
+  color: var(--texto-2); font-size: 14.5px;
+}
+@media (min-width: 640px) { .fin-contenido .caja { border-radius: var(--radio); padding: 22px 26px; } }
+/* Estado: el mismo tinte que los avisos de la app. */
+.fin-contenido .caja.ok    { background: color-mix(in srgb, var(--verde) 11%, var(--panel)); border-color: transparent; color: var(--texto); }
+.fin-contenido .caja.mal   { background: color-mix(in srgb, var(--rojo) 11%, var(--panel));  border-color: transparent; color: var(--texto); }
+.fin-contenido .caja.aviso { background: color-mix(in srgb, var(--ambar) 13%, var(--panel)); border-color: transparent; color: var(--texto); }
+.fin-contenido .caja.ok strong   { color: var(--verde); }
+.fin-contenido .caja.mal strong  { color: var(--rojo); }
+.fin-contenido .caja.aviso strong { color: var(--ambar); }
+.fin-contenido .caja > :last-child { margin-bottom: 0; }
+
+/* ---------- Tablas ---------- */
+.fin-contenido .tabla-scroll { overflow-x: auto; margin: 0 0 14px; padding: 10px 20px !important; }
+@media (min-width: 640px) { .fin-contenido .tabla-scroll { padding: 14px 26px !important; } }
+.fin-contenido table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.fin-contenido th, .fin-contenido td { text-align: left; padding: 11px 10px; border-bottom: 1px solid var(--borde); vertical-align: middle; color: var(--texto); }
+.fin-contenido th:first-child, .fin-contenido td:first-child { padding-left: 0; }
+.fin-contenido th:last-child, .fin-contenido td:last-child { padding-right: 0; }
+.fin-contenido th { color: var(--tenue); font-size: 13px; font-weight: 600; text-transform: none; letter-spacing: 0; padding-top: 4px; }
+.fin-contenido tr:last-child td { border-bottom: 0; }
+.fin-contenido td.num, .fin-contenido th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+@media (hover: hover) and (pointer: fine) { .fin-contenido tbody tr:hover td { background: var(--hover); } }
+.fin-contenido .neg { color: var(--rojo); }
+.fin-contenido .pos { color: var(--verde); }
+
+/* ---------- Etiquetas ---------- */
+.fin-contenido .etiqueta {
+  display: inline-block; padding: 3px 10px; border-radius: var(--pildora); background: var(--neutro); color: var(--texto-2);
+  font-size: 12.5px; font-weight: 550; letter-spacing: -.005em; line-height: 1.45;
+}
+.fin-contenido .etiqueta.pendiente { background: color-mix(in srgb, var(--ambar) 16%, var(--panel)); color: var(--ambar); }
+
+/* ---------- Píldoras (vistas de Revisar, años de Nómina) ---------- */
+.fin-contenido .pildoras { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 18px; }
+.fin-contenido a.pildora {
+  display: inline-flex; padding: 7px 16px; border: 1px solid var(--borde-control); border-radius: var(--pildora);
+  background: transparent; color: var(--texto); font-size: 14px; font-weight: 550; text-decoration: none;
+  transition: background .15s var(--ease), color .15s var(--ease), border-color .15s var(--ease);
+}
+@media (hover: hover) and (pointer: fine) { .fin-contenido a.pildora:hover { border-color: var(--texto); background: var(--hover); } }
+.fin-contenido a.pildora.activa, .fin-contenido a.pildora.activa:hover { background: var(--marino); border-color: var(--marino); color: #fff; font-weight: 600; }
+:root[data-theme="dark"] .fin-contenido a.pildora.activa { background: var(--celeste); border-color: var(--celeste); color: var(--marino); }
+
+/* ---------- Botones: píldora celeste, y «gris» = secundario ---------- */
+.fin-contenido button {
+  display: inline-flex; align-items: center; justify-content: center; gap: .5rem; padding: 10px 20px; border: 1px solid transparent;
+  border-radius: var(--pildora); background: var(--celeste); color: var(--marino); font: inherit; font-weight: 600; font-size: 14px;
+  letter-spacing: -.01em; cursor: pointer; line-height: 1.2;
+  transition: background .15s var(--ease), transform .12s var(--ease);
+}
+@media (hover: hover) and (pointer: fine) { .fin-contenido button:hover { background: var(--celeste-hover); } }
+.fin-contenido button:active { transform: scale(.97); }
+.fin-contenido button.gris { background: var(--neutro); color: var(--texto); }
+@media (hover: hover) and (pointer: fine) { .fin-contenido button.gris:hover { background: var(--neutro-hover); } }
+.fin-contenido button:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; }
+.fin-contenido td button, .fin-contenido td button.gris { padding: 5px 12px !important; font-size: 13px !important; }
+
+/* ---------- Formularios ---------- */
+.fin-contenido label { color: var(--texto); font-size: 14px; font-weight: 600; letter-spacing: -.008em; }
+.fin-contenido label span, .fin-contenido label[style*="--tenue"] { font-weight: 400; }
+.fin-contenido input[type=text], .fin-contenido input[type=date], .fin-contenido input[type=number], .fin-contenido select { margin-top: 6px; }
+.fin-contenido td input[type=text], .fin-contenido td input[type=number], .fin-contenido td select, .fin-contenido td input[type=date] { margin-top: 0; padding: 7px 10px; }
+/* Mes y hora: el mismo campo que los demás (app.css solo conoce text, date, number…). */
+.fin-contenido input[type=month], .fin-contenido input[type=time], .fin-contenido input[type=search] {
+  width: 100%; padding: 11px 14px; border: 1px solid var(--borde-control); border-radius: var(--radio-sm);
+  background: var(--panel); color: var(--texto); font: inherit; font-size: 15px;
+}
+.fin-contenido input[type=month]:focus { outline: none; border-color: var(--acento); box-shadow: inset 0 0 0 1px var(--acento); }
+.fin-contenido td select { min-width: 13rem; }
+.fin-contenido input[type=checkbox] { width: 17px; height: 17px; margin: 0 6px 0 0; accent-color: var(--marino); }
+:root[data-theme="dark"] .fin-contenido input[type=checkbox] { accent-color: var(--celeste); }
+.fin-contenido details > summary { cursor: pointer; }
+.fin-contenido p { margin: 0 0 .8rem; }
+.fin-contenido pre { background: var(--panel-2); border: 1px solid var(--borde); border-radius: var(--radio-sm); padding: 12px 14px; color: var(--texto-2); overflow-x: auto; }
+.fin-contenido ul { margin: .4rem 0 .8rem; padding-left: 1.2rem; }
+
+/* ---------- El marco, visto desde el segundo cerebro ---------- */
+.fin-marco { display: block; width: 100%; height: 640px; border: 0; background: transparent; color-scheme: normal; }

@@ -190,7 +190,7 @@ cabecera_pagina($el['nombre'],
           <p class="vacio-mini">Finanzas aún no tiene ninguna nómina grabada.</p>
         <?php endif; ?>
         <?php if (es_admin() && FINANZAS_URL !== ''): ?>
-          <a class="btn btn-sutil" href="<?= e(PASE_CLAVE !== '' ? url_finanzas('nomina.php') : rtrim(FINANZAS_URL, '/') . '/nomina.php') ?>"><?= icono('externo') ?>Abrir en finanzas</a>
+          <a class="btn btn-sutil" href="<?= e(PASE_CLAVE !== '' ? url('finanzas-pantalla.php?p=nomina') : rtrim(FINANZAS_URL, '/') . '/nomina.php') ?>"><?= icono('externo') ?>Abrir en finanzas</a>
         <?php endif; ?>
       </section>
     <?php endif; ?>
