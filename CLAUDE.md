@@ -515,11 +515,17 @@ y la primera factura de Pepeenergy de diciembre, 108,91 €). No repetir. **Fech
 si no (luz de abril a diciembre, gas de Pepeenergy, Pepephone de diciembre) es aproximada y la nota lo dice, siempre en el
 MES de emisión (el de la factura, no el del consumo) para que `interanual_item()` empareje con 2026. Lo que dicen: luz
 ene-ago +11,5 % (julio y agosto, +88 €: aire acondicionado), agua +2,6 %, Pepephone +2,7 % (el descuento de 3 € del gas
-tapa la subida de tarifa a 52,90 €). El gas de invierno es más caro por los radiadores de gas (Gonzalo). **Gas: no se
-compara por facturas** (Naturgy factura cada 2 meses; Pepeenergy, cada mes): `interanual_item()` ahora lo salta cuando el
-ritmo de los dos años no coincide (salía −24 % falso). Para comparar de verdad hacen falta los PDF de Naturgy (periodo y
-kWh), y los de luz de 2025 para separar precio de consumo. **Por revisar:** los 108,91 € de Pepeenergy y los
-86,50 € + 9,93 € de Naturgy caen en las mismas semanas de diciembre (¿solapados?). Ojo con el balance por años: la
+tapa la subida de tarifa a 52,90 €). Gonzalo tiene radiadores de gas (invierno) y aire acondicionado (verano: la luz).
+**Gas: no se compara por facturas** (Naturgy factura cada 2 meses; Pepeenergy, cada mes): `interanual_item()` lo salta
+cuando el ritmo de los dos años no coincide (salía −24 % falso). Con los PDF de Naturgy (adjuntos a la ficha 4,
+documentos 46-52; la captura de Pepeenergy de diciembre, el 53) se ve que **el gas sube por consumo, no por precio**:
+11/12-31/03 son 3.975 kWh y 439 € (sin la inspección) frente a ≈2.326 kWh y ≈258 € del mismo tramo de 2024/25 (Naturgy
+prorrateado por días): +71 % de kWh y +70 % de euros, con el mismo coste por kWh (≈0,110 €, fijo incluido; Pepeenergy
+cobra 0,088 €/kWh variable frente a 0,0808 de Naturgy, pero su término fijo es más bajo y lleva el descuento de
+Pepephone). Abril-julio: 639 kWh y 91,54 € frente a 353 kWh y 61,34 € (4/4-6/8/2025). De enero a julio de 2026 lleva
+3.650 kWh, el 96 % de los 3.782 de todo 2025 (lecturas reales: 5.376 m³ el 29/11/2024, 5.706 el 6/12/2025). No hay
+solapamiento en diciembre: Naturgy llegó hasta el 10/12 y Pepeenergy empieza el 11/12; su factura de diciembre se emitió
+el 11/02/2026, así que el apunte (fechado 31/12/2025) tiene la fecha aproximada. Ojo con el balance por años: la
 fecha es la de emisión, no la del consumo.
 
 **Impuestos: IBI e impuesto de circulación (4/10/2026, petición de Gonzalo: «en vehículos habrá que
