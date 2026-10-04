@@ -486,3 +486,23 @@ de garaje de Gonzalo, 113,63 €/mes por transferencia desde Mediolanum el día 
 (`intervalo_facturas()`, el hueco más corto), no de la periodicidad de la ficha. Pendiente: importes
 de Tenis (id 29) y Voleibol (id 28) y quién los paga; «Suscripciones» (~41 €/mes en finanzas) sin
 ficha aquí.
+
+**Frente a hace un año y el IPC (4/10/2026, Gonzalo: «saber si cada partida sale más cara o más
+barata que el año anterior, y el IPC; el garaje y la nómina suben con él»).** En «A dónde va», cada
+gasto y partida lleva ▲/▼ con su % frente a hace un año (ámbar si sube más que el IPC, verde si
+baja), y debajo, qué falta para comparar el resto. `interanual_item()`: con facturas/recibos de los
+mismos meses en los dos años (los 12 hasta el actual frente a los 12 anteriores), lo pagado; si no,
+el precio que regía hace un año. **Historial de precios:** tabla `precios` (migración 006,
+`includes/precios.php`): se apunta sola al cambiar el coste de la ficha (y, si no había historial,
+el anterior desde la creación de la ficha) y hacia atrás con la acción `precio` de la API
+(`php remoto.php precio '{"elemento_id":38,"desde":"2025-04-01","coste":111.08}'`). **IPC:** INE,
+serie IPC251856 (variación anual, nacional), API pública sin clave, `includes/ipc.php`, copia de un
+día en `private/cache/ipc.json` (con `IPC_URL` vacía, las pruebas, no sale a la red). El INE va con
+retraso: se dice siempre de qué mes es. **Sueldo:** en «Frente a tus ingresos», la última subida del
+salario base (nomina_estado de finanzas) frente al IPC del mes anterior a la subida: enero de 2026,
+1.903,38 → 1.941,45 € (+2,0 %) frente al 2,9 % de diciembre de 2025. Precios cargados en producción
+el 4/10/2026 (de las notas de las fichas y de finanzas): garaje (38), Tuio/Liberty (7), Audi (12),
+T4 (16), Hanway (14, solo desde el 18/10/2025). **Sin comparar por falta de datos:** luz, gas, agua e
+internet (facturas de 2025), comunidad (recibos de 2025), hipoteca (la cuota de hace un año: lo de
+finanzas son transferencias redondas, 407 € hasta enero y 360 € desde febrero, no la cuota) y la
+prima anterior de la Hanway.

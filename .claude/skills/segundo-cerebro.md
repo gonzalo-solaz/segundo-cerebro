@@ -115,7 +115,7 @@ Sobre el contexto de la casa:
    - **Próximas semanas**.
 3. Para cada cosa, di qué hay que hacer en concreto si es obvio (pedir cita ITV, comparar el seguro antes de que renueve).
 4. **No marques nada como hecho sin que el usuario lo confirme.**
-5. Si pregunta **a dónde va el dinero o por los gastos fijos**: `php remoto.php gastos persona=1` (lo que paga Gonzalo, «tuyo», y el total de la casa; partidas, cosas, mes a mes y «revisar», lo mismo que `gastos-fijos.php`). Al grabar un contrato que se paga a medias, pon `porcentaje_pago` (la parte del titular). Cuenta el total, las 2-3 partidas que más pesan, el mes más caro y lo que hay que apartar al mes; luego lo de «revisar». No recalcules a ojo.
+5. Si pregunta **a dónde va el dinero o por los gastos fijos**: `php remoto.php gastos persona=1` (lo que paga Gonzalo, «tuyo», y el total de la casa; partidas, cosas, mes a mes y «revisar», lo mismo que `gastos-fijos.php`). Al grabar un contrato que se paga a medias, pon `porcentaje_pago` (la parte del titular). Si el papel trae lo que costaba antes (la prima del año pasado, la renta anterior), apúntalo con `php remoto.php precio` (`desde` = la fecha desde la que regía): de ahí sale la comparación con hace un año. Y las facturas antiguas de un suministro, como `registro` tipo `Factura` con su fecha real. Cuenta el total, las 2-3 partidas que más pesan, el mes más caro y lo que hay que apartar al mes; luego lo de «revisar». No recalcules a ojo.
 6. Si `vigilancia` dice que el cron no corre, avísalo al final con el paso 6 de `INSTRUCCIONES.md`.
 
 ---

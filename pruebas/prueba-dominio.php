@@ -209,6 +209,54 @@ comprueba('un contrato suelto es su propia cosa: la plaza de garaje', in_array('
 comprueba('y con él, el garaje del banco ya está recogido', array_column(salud_finanzas($res, $ag, '2026-10-04')['repetidos'], 'categoria') === ['Suscripciones']);
 comprueba('con menos de 6 meses de finanzas no se opina', salud_finanzas(['gasto' => ['meses' => [['mes' => '2026-09', 'gasto' => 1, 'ingreso' => 1]]]], $an, '2026-10-04') === null);
 
+echo "\nFrente a hace un año (precios, facturas e IPC)\n";
+$ine = '{"COD":"IPC251856","Data":[{"Anyo":2025,"FK_Periodo":11,"Valor":3.0},{"Anyo":2025,"FK_Periodo":12,"Valor":2.9},{"Anyo":2025,"FK_Periodo":10,"Valor":3.1}]}';
+$serie = ipc_leer_ine($ine);
+comprueba('el IPC del INE, por meses y en orden', $serie === ['2025-10' => 3.1, '2025-11' => 3.0, '2025-12' => 2.9]);
+comprueba('el IPC de un mes que aún no ha salido es el último publicado', ipc_hasta($serie, '2026-03') === ['mes' => '2025-12', 'valor' => 2.9] && ipc_hasta($serie, '2025-09') === null);
+// Un cambio de coste en la ficha deja su precio; y hacia atrás, guardar_precio.
+guardar_elemento($pg, 'contratos', 'seguro', ['nombre' => 'Seguro de hogar', 'datos' => ['ramo' => 'Hogar', 'coste' => '250', 'periodicidad' => 'Anual', 'renovacion' => '2026-11-01']], $ig['seguro'], null);
+$pr = precios_por_elemento($pg)[$ig['seguro']] ?? [];
+comprueba('cambiar el coste en la ficha apunta el precio nuevo desde hoy', count($pr) >= 1 && end($pr)['desde'] === hoy() && end($pr)['coste'] === 250.0);
+guardar_precio($pg, $ig['seguro'], '2025-11-01', 200, null, 'Liberty');
+guardar_precio($pg, $ig['seguro'], '2025-11-01', 210, null, 'Liberty');
+$pr = precios_por_elemento($pg)[$ig['seguro']];
+comprueba('el mismo día se sustituye, no se duplica', count(array_filter($pr, static fn($p) => $p['desde'] === '2025-11-01')) === 1);
+comprueba('el precio que regía en una fecha', precio_en($pr, '2026-01-01')['coste'] === 210.0 && precio_en($pr, '2025-10-01') === null);
+$e = lanza(static fn() => guardar_precio($pg, $ig['dni'], '2025-01-01', 10));
+comprueba('un DNI no tiene precio', $e instanceof ErrorValidacion);
+$e = lanza(static fn() => guardar_precio($pg, $ig['seguro'], 'ayer', 10));
+comprueba('ni un precio sin fecha', $e instanceof ErrorValidacion);
+// Por precio: el seguro, 200 € hace un año (desde el 1/3/2025) y 250 € hoy: +25 %.
+guardar_precio($pg, $ig['seguro'], '2025-03-01', 200);
+$gp = analisis_gastos_fijos(elementos_con_coste($pg), historial_de_gastos($pg, hoy()), hoy(), $ig['yo'], precios_por_elemento($pg));
+$seg = array_values(array_filter($gp['items'], static fn($i) => $i['id'] === $ig['seguro']))[0];
+comprueba('por precio: 200 € hace un año, 250 € hoy = +25 %', $seg['interanual']['como'] === 'precio' && abs($seg['interanual']['pct'] - 25) < 0.001
+    && abs($seg['interanual']['antes'] - 200 / 12) < 0.001, json_encode($seg['interanual']));
+comprueba('la partida junta lo comparable y dice cuántos', $gp['partidas']['seguro']['interanual']['n'] === 1 && $gp['partidas']['seguro']['interanual']['de'] === 1);
+comprueba('y lo que no se puede comparar dice qué falta', in_array('Netflix', array_column($gp['sin_comparar'], 'nombre'), true)
+    && array_column($gp['sin_comparar'], 'falta', 'nombre')['Luz'] === 'las facturas de hace un año');
+// Por facturas: los mismos meses de los dos años (agosto y septiembre).
+$itl = ['tipo' => 'suministro', 'meses' => 1, 'parte' => 50, 'tuyo' => 30, 'mensual' => 60, 'coste' => 60, 'periodicidad' => 'Mensual', 'real' => null];
+$hl = ['cargos' => [['2024-12-01', 50], ['2025-08-10', 70], ['2025-09-10', 80], ['2025-12-09', 70.10], ['2026-08-09', 80.50], ['2026-09-09', 100.52]]];
+$v = interanual_item($itl, [], $hl, '2026-10-03');
+comprueba('por facturas: diciembre, agosto y septiembre de los dos años, 200 € → 251,12 €', $v['como'] === 'facturas' && abs($v['pct'] - (251.12 / 200 - 1) * 100) < 0.001
+    && abs($v['antes'] - 200 / 3 * 0.5) < 0.001, json_encode($v));
+comprueba('un mes suelto no basta para lo mensual', interanual_item($itl, [], ['cargos' => [['2025-09-10', 80], ['2026-09-09', 100]]], '2026-10-03') === null);
+comprueba('las facturas mandan sobre el precio', interanual_item($itl, [['desde' => '2020-01-01', 'coste' => 1, 'periodicidad' => 'Mensual', 'nota' => '']], $hl, '2026-10-03')['como'] === 'facturas');
+// El sueldo base frente al IPC del mes anterior a la subida.
+$anios = [['anio' => 2025, 'meses' => [['mes' => '2025-11', 'tipo' => 'mensual', 'campos' => ['salario_base' => 1903.38]],
+                                        ['mes' => '2025-12', 'tipo' => 'mensual', 'campos' => ['salario_base' => 1903.38]],
+                                        ['mes' => '2025-12', 'tipo' => 'extra', 'campos' => ['salario_base' => 5000]]]],
+          ['anio' => 2026, 'meses' => [['mes' => '2026-01', 'tipo' => 'mensual', 'campos' => ['salario_base' => 1941.45]],
+                                        ['mes' => '2026-02', 'tipo' => 'mensual', 'campos' => ['salario_base' => 1941.45]]]]];
+$sub = subida_salarial($anios, $serie);
+comprueba('el sueldo base subió un 2,0 % en enero (la paga extra no cuenta)', $sub['mes'] === '2026-01' && abs($sub['pct'] - 2.0001) < 0.01 && $sub['ipc']['mes'] === '2025-12');
+$sf2 = salud_finanzas($res, $an, '2026-10-04', $anios, $serie);
+comprueba('y frente al IPC del 2,9 %, pierde 0,9 puntos', str_contains(end($sf2['cifras'])['texto'], 'pierdes 0,9 puntos') && end($sf2['cifras'])['nivel'] === 'idea');
+comprueba('sin cambios de sueldo en los datos, no se dice nada', subida_salarial([$anios[1]], $serie) === null || subida_salarial([['meses' => [$anios[1]['meses'][0]]]], $serie) === null);
+comprueba('variación con signo', variacion_es(2.04) === '+2,0 %' && variacion_es(-35.83) === '−35,8 %');
+
 echo "\nControl de peso\n";
 comprueba('IMC de 85,5 kg y 180 cm = 26,4 (sobrepeso)', imc(85.5, 180) === 26.4 && categoria_imc(26.4)[0] === 'Sobrepeso');
 comprueba('los cortes del IMC son los de la OMS', categoria_imc(18.4)[0] === 'Bajo peso' && categoria_imc(24.9)[0] === 'Peso normal'

@@ -231,6 +231,14 @@ pinta_bien('gastos fijos: con finanzas, frente a los ingresos', $r, 'Frente a tu
 pinta_bien('…con el ahorro de los 12 meses completos', $r, '<span class="cifra-valor">17 %</span>');
 pinta_bien('…y lo que se repite en el banco y aquí no está', $r, e('«Garaje» (112,24 € al mes de media)'));
 comprueba('…pero un miembro no ve nada de finanzas', !str_contains(pedir('gastos-fijos.php', [], null, $id['miembro'])['html'], 'Frente a tus ingresos'));
+// Frente a hace un año: el seguro costaba 200 € (precio desde el 1/3/2025) y hoy 240 €; el IPC, de la copia.
+file_put_contents($cache . '/ipc.json', json_encode(['t' => time(), 'serie' => ['2025-11' => 3.0, '2025-12' => 2.9]]));
+guardar_precio($pdo, $id['seguro'], '2025-03-01', 200);
+$r = pedir('gastos-fijos.php');
+pinta_bien('frente a hace un año: el seguro sube un 20 %, más que el IPC', $r, 'var-sube" title="Frente a hace un año: sube más que el IPC">▲ 20,0 %');
+pinta_bien('…con el IPC del INE y su mes', $r, 'IPC: +2,9 % (diciembre de 2025, INE)');
+pinta_bien('…y lo que falta para comparar el resto', $r, 'Para compararlo con hace un año falta');
+@unlink($cache . '/ipc.json');
 @unlink($cache . '/finanzas-resumen.json');
 @unlink($cache . '/finanzas-panel.json');
 putenv('SC_CACHE');

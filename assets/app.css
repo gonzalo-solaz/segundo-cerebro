@@ -821,8 +821,7 @@ a.kpi-enlace:hover .kpi-mas { text-decoration: underline; text-underline-offset:
 
 /* Frente a tus ingresos: tres cifras con su referencia. */
 .cifras { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
-@media (min-width: 640px) { .cifras { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (min-width: 1200px) { .cifras { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (min-width: 640px) { .cifras { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); } }
 .cifra { display: flex; flex-direction: column; background: var(--panel-2); border-radius: var(--radio-md); padding: 16px 18px; }
 .cifra-estado { display: inline-flex; align-items: center; gap: 5px; align-self: flex-start; padding: 3px 10px; border-radius: var(--pildora); background: var(--panel); color: var(--tenue); font-size: 12.5px; font-weight: 650; }
 .cifra-aviso .cifra-estado { color: var(--ambar); }
@@ -846,3 +845,11 @@ a.kpi-enlace:hover .kpi-mas { text-decoration: underline; text-underline-offset:
 .cal-cargos { grid-column: 2 / -1; font-size: 13px; color: var(--tenue); }
 .partida-items.cosas { padding-left: 0; margin-top: 0; }
 .partida-items .num .partida-meta { text-align: right; }
+
+/* Frente a hace un año: ▲ ▼ con el %; ámbar si sube más que el IPC, verde si baja (flecha y texto, nunca solo color). */
+.var { display: inline-flex; align-items: center; gap: 3px; padding: 1px 8px; border-radius: var(--pildora); background: var(--panel-2);
+  color: var(--tenue); font-size: 12px; font-weight: 650; white-space: nowrap; font-variant-numeric: tabular-nums; vertical-align: 1px; }
+.var-baja { color: var(--verde); background: color-mix(in srgb, var(--verde) 11%, var(--panel)); }
+.var-sube { color: var(--ambar); background: color-mix(in srgb, var(--ambar) 11%, var(--panel)); }
+.comparativa { font-size: 14px; margin: -8px 0 20px; }
+.partida-cabecera .nota-pequena { white-space: nowrap; }

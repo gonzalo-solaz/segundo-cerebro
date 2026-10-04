@@ -7,7 +7,10 @@ require_once __DIR__ . '/includes/auth.php';
 
 $hoy = hoy();
 $persona = (int)($usuario_actual['persona_id'] ?? 0) ?: null;
-$an = analisis_gastos_fijos(elementos_con_coste($pdo), historial_de_gastos($pdo, $hoy), $hoy, $persona);
+$an = analisis_gastos_fijos(elementos_con_coste($pdo), historial_de_gastos($pdo, $hoy), $hoy, $persona, precios_por_elemento($pdo));
+// El IPC del INE (copia de un día): la vara con la que se mide lo que sube cada cosa.
+$ipc = ipc_serie();
+$ipc_ref = $ipc['ultimo'] ? ['mes' => $ipc['ultimo'], 'valor' => $ipc['serie'][$ipc['ultimo']]] : null;
 
 // Finanzas: solo admin (como su sección), con la copia de una hora de finanzas_leer().
 $fin = null;
@@ -15,7 +18,7 @@ $fin_leido = null;
 $fin_error = null;
 if (es_admin() && finanzas_configurada() && $an['tuyo'] > 0) {
     $r = finanzas_leer('resumen');
-    $fin = $r['datos'] ? salud_finanzas($r['datos'], $an, $hoy) : null;
+    $fin = $r['datos'] ? salud_finanzas($r['datos'], $an, $hoy, finanzas_nominas()['anios'], $ipc['serie']) : null;
     [$fin_leido, $fin_error] = [$r['leido_en'], $r['error']];
     if ($fin) $an['revisar'] = ordenar_revisar(array_merge($an['revisar'], $fin['revisar']));
 }
@@ -29,6 +32,15 @@ $mes_nombre = static function (string $mes, int $i): string {
 // «de 75,69 €»: el total, en pequeño, cuando lo tuyo es solo una parte.
 $de_total = static fn(float $tuyo, float $total): string => abs($total - $tuyo) >= 0.005 ? 'de ' . eur($total) : '';
 $pico = $an['pico'] !== null ? $an['calendario'][$an['pico']] : null;
+// ▲ ▼ frente a hace un año: en ámbar lo que sube más que el IPC; en verde lo que baja.
+$chip = static function (?array $v) use ($ipc_ref): string {
+    if (!$v) return '';
+    $p = round($v['pct'], 1);
+    [$clase, $flecha, $que] = $p < 0 ? ['var-baja', '▼', 'baja'] : ($p == 0.0 ? ['var-igual', '=', 'igual']
+        : ($ipc_ref && $p > $ipc_ref['valor'] ? ['var-sube', '▲', 'sube más que el IPC'] : ['var-ipc', '▲', 'sube, no más que el IPC']));
+    return '<span class="var ' . $clase . '" title="' . e('Frente a hace un año: ' . $que) . '">' . $flecha . ' '
+         . e(number_format(abs($p), 1, ',', '.')) . ' %</span>';
+};
 $medias = $an['a_medias'];
 
 cabecera('Gastos fijos', 'index');
@@ -66,12 +78,22 @@ cabecera_pagina('Gastos fijos', '<a href="' . e(url('index.php')) . '">Panel</a>
               title="<?= e($p['nombre'] . ' · ' . eur($p['tuyo']) . ' al mes · ' . pct_es($p['pct'])) ?>"></span>
       <?php endforeach; ?>
     </div>
+    <p class="comparativa">
+      <?php if ($an['interanual']): ?>
+        Frente a hace un año <?= $chip($an['interanual']) ?>: lo que se puede comparar (<?= (int)$an['interanual']['n'] ?> de <?= (int)$an['interanual']['de'] ?> gastos)
+        te cuesta <?= e(eur($an['interanual']['ahora'])) ?> al mes; hace un año, <?= e(eur($an['interanual']['antes'])) ?>.
+      <?php else: ?>
+        Aún no hay datos de hace un año para comparar.
+      <?php endif; ?>
+      <?php if ($ipc_ref): ?><span class="tenue">IPC: <?= e(variacion_es($ipc_ref['valor'])) ?> (<?= e(mes_largo($ipc_ref['mes'])) ?>, INE).</span><?php endif; ?>
+    </p>
     <?php foreach ($an['partidas'] as $p): ?>
       <div class="partida">
         <div class="partida-cabecera">
           <span class="punto serie-<?= (int)$p['serie'] ?>"></span>
           <h3><?= e($p['nombre']) ?></h3>
           <span class="tenue"><?= e(pct_es($p['pct'])) ?></span>
+          <?php if ($p['interanual']): ?><?= $chip($p['interanual']) ?><?php if ($p['interanual']['n'] < $p['interanual']['de']): ?><span class="tenue nota-pequena"><?= (int)$p['interanual']['n'] ?> de <?= (int)$p['interanual']['de'] ?></span><?php endif; ?><?php endif; ?>
           <span class="partida-importe"><strong><?= e(eur($p['tuyo'])) ?></strong>
             <?php if ($t = $de_total($p['tuyo'], $p['mensual'])): ?><span class="partida-meta"><?= e($t) ?></span><?php endif; ?></span>
         </div>
@@ -79,7 +101,7 @@ cabecera_pagina('Gastos fijos', '<a href="' . e(url('index.php')) . '">Panel</a>
           <?php foreach ($p['items'] as $i): ?>
             <li>
               <div>
-                <a href="<?= e(url('elemento.php?id=' . $i['id'])) ?>"><?= e($i['nombre']) ?></a>
+                <a href="<?= e(url('elemento.php?id=' . $i['id'])) ?>"><?= e($i['nombre']) ?></a> <?= $chip($i['interanual']) ?>
                 <span class="partida-meta">
                   <?php if ($i['parte'] < 100): ?>pagas el <?= e(numero_es($i['parte'])) ?> % · <?php endif; ?>
                   <?php if ($i['meses'] > 1): ?>
@@ -90,6 +112,7 @@ cabecera_pagina('Gastos fijos', '<a href="' . e(url('index.php')) . '">Panel</a>
                     <?= e($i['tipo_nombre']) ?>, cada mes
                   <?php endif; ?>
                 </span>
+                <?php if ($i['interanual']): ?><span class="partida-meta"><?= e(ucfirst($i['interanual']['detalle'])) ?></span><?php endif; ?>
               </div>
               <span class="num"><?= e(eur($i['tuyo'])) ?>
                 <?php if ($t = $de_total($i['tuyo'], $i['mensual'])): ?><span class="partida-meta"><?= e($t) ?></span><?php endif; ?></span>
@@ -98,6 +121,10 @@ cabecera_pagina('Gastos fijos', '<a href="' . e(url('index.php')) . '">Panel</a>
         </ul>
       </div>
     <?php endforeach; ?>
+    <?php if ($an['sin_comparar']): ?>
+      <p class="tenue nota-pequena">Para compararlo con hace un año falta:
+        <?php foreach ($an['sin_comparar'] as $n => $s): ?><?= $n ? '; ' : '' ?><a href="<?= e(url('elemento.php?id=' . $s['id'])) ?>"><?= e($s['nombre']) ?></a>, <?= e($s['falta']) ?><?php endforeach; ?>.</p>
+    <?php endif; ?>
     <?php if ($an['de_otros']): ?>
       <p class="tenue nota-pequena">Lo pagan otros, no cuenta en lo tuyo:
         <?php foreach ($an['de_otros'] as $n => $o): ?><?= $n ? ', ' : '' ?><a href="<?= e(url('elemento.php?id=' . $o['id'])) ?>"><?= e($o['nombre']) ?></a><?= $o['persona_nombre'] ? ' (' . e(nombre_corto($o['persona_nombre'])) . ')' : '' ?><?php endforeach; ?>.</p>

@@ -12,6 +12,11 @@ $api = static fn(string $accion, array $datos = [], ?array $archivo = null) =>
 
 $r = $api('estado');
 comprueba('estado: hoy, avisos y gasto fijo', $r['hoy'] === '2026-10-03' && count($r['avisos']) > 0 && abs($r['gasto_fijo_mensual'] - 127.99) < 0.001);
+$r = $api('precio', ['elemento_id' => $id['seguro'], 'desde' => '2025-03-01', 'coste' => 200, 'nota' => 'la prima de 2025']);
+comprueba('precio: apunta lo que costaba y devuelve el historial', $r['precios'][0]['coste'] === 200.0 && $r['precios'][0]['nota'] === 'la prima de 2025');
+$r = $api('gastos', ['persona_id' => $id['yo']]);
+$seg = array_values(array_filter($r['items'], static fn($i) => $i['id'] === $id['seguro']))[0];
+comprueba('gastos: con el precio de hace un año, la comparación (+20 %)', abs($seg['interanual']['pct'] - 20) < 0.001);
 $r = $api('gastos');
 comprueba('gastos: el total del panel, por partidas, mes a mes y qué revisar (sin los datos en bruto)', abs($r['total'] - 127.99) < 0.001
     && isset($r['partidas']['seguro']) && count($r['calendario']) === 12 && $r['revisar'] && !isset($r['items'][0]['datos']) && !isset($r['partidas']['seguro']['items'][0]['datos']));

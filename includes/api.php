@@ -80,12 +80,19 @@ function api_ejecutar(PDO $pdo, array $p, ?array $archivo = null): array {
             // A dónde va el gasto fijo (lo de gastos-fijos.php, sin finanzas):
             // partidas, cosas, calendario de 12 meses y «Qué revisar». Con
             // persona_id, por lo que paga esa persona («tuyo»); sin él, la casa.
-            $an = analisis_gastos_fijos(elementos_con_coste($pdo), historial_de_gastos($pdo, hoy()), hoy(), (int)($datos['persona_id'] ?? 0) ?: null);
+            $an = analisis_gastos_fijos(elementos_con_coste($pdo), historial_de_gastos($pdo, hoy()), hoy(), (int)($datos['persona_id'] ?? 0) ?: null, precios_por_elemento($pdo));
             $quitar = static fn(array $i): array => array_diff_key($i, ['datos' => 0]);
             $an['items'] = array_map($quitar, $an['items']);
             foreach ($an['partidas'] as &$p) $p['items'] = array_map($quitar, $p['items']);
             unset($p);
             return $an;
+
+        case 'precio':
+            // Lo que costaba un contrato desde una fecha (para comparar con hace un año):
+            // las primas de años anteriores, la renta del garaje que sale en finanzas…
+            $id = guardar_precio($pdo, (int)($datos['elemento_id'] ?? 0), (string)($datos['desde'] ?? ''), $datos['coste'] ?? null,
+                isset($datos['periodicidad']) ? (string)$datos['periodicidad'] : null, (string)($datos['nota'] ?? ''), null);
+            return ['precio_id' => $id, 'precios' => precios_por_elemento($pdo)[(int)($datos['elemento_id'] ?? 0)] ?? []];
 
         case 'peso':
             // Números del control de peso (para poner al día el plan). Los

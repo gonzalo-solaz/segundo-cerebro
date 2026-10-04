@@ -39,6 +39,8 @@ if (!defined('SC_CONFIG_CARGADA')) {
         'FINANZAS_URL'       => '',
         'FINANZAS_API_CLAVE' => '',
         'PASE_CLAVE'         => '',
+        // La variación anual del IPC (INE, serie IPC251856, últimos 36 meses). Vacía = sin red (pruebas).
+        'IPC_URL'            => 'https://servicios.ine.es/wstempus/js/ES/DATOS_SERIE/IPC251856?nult=36',
         'DIR_ARCHIVOS'       => dirname(__DIR__) . '/private/archivos',
         'DIR_CACHE'          => dirname(__DIR__) . '/private/cache',
     ];

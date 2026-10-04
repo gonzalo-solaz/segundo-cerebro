@@ -244,6 +244,7 @@ function guardar_elemento(PDO $pdo, string $seccion, string $tipo, array $entrad
             $verbo = 'añadió';
         }
         sincronizar_vencimientos_campos($pdo, $id, $seccion, $tipo, $f['nombre'], $f['datos']);
+        registrar_cambio_precio($pdo, $id, $actual ?? null, $f['datos']);
         anotar($pdo, $usuario_id, "{$verbo} «{$f['nombre']}» en " . seccion($seccion)['nombre']);
         $pdo->commit();
     } catch (Throwable $e) {
@@ -326,7 +327,7 @@ function borrar_elemento(PDO $pdo, int $id, ?int $usuario_id = null): ?string {
     // Se borran los hijos a mano además del ON DELETE CASCADE: si un día las
     // claves foráneas no están activas, no quedan huérfanos.
     $pdo->prepare('DELETE FROM partidas WHERE registro_id IN (SELECT id FROM registros WHERE elemento_id = ?)')->execute([$id]);
-    foreach (['vencimientos', 'registros', 'documentos'] as $tabla) {
+    foreach (['vencimientos', 'registros', 'documentos', 'precios'] as $tabla) {
         $pdo->prepare("DELETE FROM {$tabla} WHERE elemento_id = ?")->execute([$id]);
     }
     $pdo->prepare('UPDATE elementos SET enlace_id = NULL WHERE enlace_id = ?')->execute([$id]);

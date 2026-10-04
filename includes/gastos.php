@@ -14,6 +14,10 @@
 //  se ve por la parte de quien mira (parte_que_pagas): la cifra grande es
 //  lo suyo y el total de la casa va en pequeño (Gonzalo, 4/10/2026).
 //
+//  Frente a hace un año (interanual_item): con facturas o recibos de los
+//  mismos meses en los dos años, lo pagado; si no, el precio que regía hace
+//  un año (tabla precios) contra el de hoy. El IPC (ipc.php) es la vara.
+//
 //  Funciones puras (los datos entran, el análisis sale) para probarlas sin
 //  base de datos. Las lecturas son elementos_con_coste() (elementos.php) e
 //  historial_de_gastos() (registros.php).
@@ -129,12 +133,13 @@ function texto_comparable(string $s): string {
 
 /**
  * El análisis entero. $elementos = elementos_con_coste(); $historial =
- * historial_de_gastos(); $persona = la de quien mira (null = la casa entera).
+ * historial_de_gastos(); $persona = la de quien mira (null = la casa entera);
+ * $precios = precios_por_elemento() (para comparar con hace un año).
  * Cada importe va dos veces: el de la casa ('mensual', 'total') y el de
  * quien mira ('tuyo'). Las partidas, las cosas, el calendario y lo que hay
  * que apartar van por lo tuyo; lo que pagan otros entero, aparte.
  */
-function analisis_gastos_fijos(array $elementos, array $historial, string $hoy, ?int $persona = null): array {
+function analisis_gastos_fijos(array $elementos, array $historial, string $hoy, ?int $persona = null, array $precios = []): array {
     $per = periodicidades();
     $inicio = substr($hoy, 0, 7) . '-01';
     $fin = sumar_dias(sumar_meses($inicio, 12), -1);
@@ -201,6 +206,7 @@ function analisis_gastos_fijos(array $elementos, array $historial, string $hoy, 
             $it['real'] = ['mensual' => $h['total'] / ($h['n'] * $cada), 'n' => $h['n'], 'cada' => $cada,
                            'media' => $h['total'] / $h['n'], 'max' => $h['max'], 'min' => $h['min']];
         }
+        $it['interanual'] = interanual_item($it, $precios[$el['id']] ?? [], $h, $hoy);
         $items[] = $it;
     }
 
@@ -215,7 +221,8 @@ function analisis_gastos_fijos(array $elementos, array $historial, string $hoy, 
         if (!$suyos) continue;
         usort($suyos, static fn($a, $b) => $b['tuyo'] <=> $a['tuyo']);
         $t = array_sum(array_column($suyos, 'tuyo'));
-        $partidas[$k] = $p + ['mensual' => array_sum(array_column($suyos, 'mensual')), 'tuyo' => $t, 'pct' => $pct($t), 'items' => $suyos];
+        $partidas[$k] = $p + ['mensual' => array_sum(array_column($suyos, 'mensual')), 'tuyo' => $t, 'pct' => $pct($t), 'items' => $suyos,
+                             'interanual' => sumar_interanual($suyos)];
     }
 
     // Por cosa: la casa o el vehículo al que pertenece; una actividad, por
@@ -257,9 +264,104 @@ function analisis_gastos_fijos(array $elementos, array $historial, string $hoy, 
         'de_otros' => array_values(array_filter($items, static fn($i) => $i['tuyo'] <= 0)),
         'calendario' => $calendario, 'max_mes' => $max, 'pico' => $pico,
         'provision' => round($provision, 2), 'sin_importe' => $sin_importe, 'sin_fecha' => $sin_fecha,
+        'interanual' => sumar_interanual($mios),
+        'sin_comparar' => array_map(static fn($i) => ['id' => $i['id'], 'nombre' => $i['nombre'], 'falta' => falta_para_comparar($i)],
+            array_values(array_filter($mios, static fn($i) => $i['interanual'] === null))),
     ];
     $an['revisar'] = revisar_gastos_fijos($an, $hoy);
     return $an;
+}
+
+/**
+ * Un gasto frente a hace un año, en lo que paga quien mira (al mes), o null
+ * si no hay con qué comparar:
+ *  1. Facturas o recibos de los mismos meses en los dos años (los 12 meses
+ *     hasta el actual frente a los 12 anteriores): lo pagado de verdad, con
+ *     el consumo dentro. Hacen falta dos meses en común (uno si se cobra cada
+ *     3 meses o más).
+ *  2. Si no, el precio que regía hace un año (tabla precios) frente al de hoy.
+ * ['como' => facturas|precio, 'antes', 'ahora', 'pct', 'detalle'].
+ */
+function interanual_item(array $it, array $precios, ?array $h, string $hoy): ?array {
+    $parte = $it['parte'] / 100;
+    $corte = substr(sumar_meses($hoy, -11), 0, 7);
+    $ahora = [];
+    $antes = [];
+    foreach ($h['cargos'] ?? [] as [$f, $c]) {
+        $ym = substr($f, 0, 7);
+        if ($ym >= $corte) $ahora[$ym] = ($ahora[$ym] ?? 0) + $c;
+        else $antes[$ym] = ($antes[$ym] ?? 0) + $c;
+    }
+    [$a, $b, $k] = [0.0, 0.0, 0];
+    foreach ($ahora as $ym => $c) {
+        $prev = ((int)substr($ym, 0, 4) - 1) . substr($ym, 4);
+        if (!isset($antes[$prev])) continue;
+        [$a, $b, $k] = [$a + $antes[$prev], $b + $c, $k + 1];
+    }
+    // El ritmo de cobro, el de las facturas del último año (dos sueltas, una por año, no son «anuales»).
+    $cada = $it['real']['cada'] ?? $it['meses'];
+    if ($a > 0 && $k >= ($cada >= 3 ? 1 : 2)) {
+        return ['como' => 'facturas', 'antes' => $a / ($k * $cada) * $parte, 'ahora' => $b / ($k * $cada) * $parte, 'pct' => ($b / $a - 1) * 100,
+                'detalle' => ($k === 1 ? 'la misma factura' : 'las facturas de los mismos ' . $k . ' meses') . ' de los dos años: ' . eur($a) . ' → ' . eur($b)];
+    }
+    $p = precio_en($precios, sumar_meses($hoy, -12));
+    $n = periodicidades()[$p['periodicidad'] ?? ''] ?? 0;
+    if ($p && $n > 0 && $p['coste'] > 0) {
+        $mes = $p['coste'] / $n;
+        return ['como' => 'precio', 'antes' => $mes * $parte, 'ahora' => $it['tuyo'], 'pct' => ($it['mensual'] / $mes - 1) * 100,
+                'detalle' => 'hace un año, ' . coste_y_periodo($p['coste'], $p['periodicidad']) . '; hoy, ' . coste_y_periodo($it['coste'], $it['periodicidad'])
+                    . ($p['nota'] !== '' ? ' (' . $p['nota'] . ')' : '')];
+    }
+    return null;
+}
+
+// Junta lo comparable de varios gastos: ['antes', 'ahora', 'pct', 'n' (comparables), 'de' (todos)] o null.
+function sumar_interanual(array $items): ?array {
+    $con = array_values(array_filter($items, static fn($i) => $i['interanual'] !== null));
+    if (!$con) return null;
+    $a = array_sum(array_map(static fn($i) => $i['interanual']['antes'], $con));
+    $b = array_sum(array_map(static fn($i) => $i['interanual']['ahora'], $con));
+    return $a > 0 ? ['antes' => $a, 'ahora' => $b, 'pct' => ($b / $a - 1) * 100, 'n' => count($con), 'de' => count($items)] : null;
+}
+
+// Lo que haría falta apuntar para poder comparar un gasto con hace un año.
+function falta_para_comparar(array $i): string {
+    if (in_array($i['tipo'], ['suministro', 'comunidad'], true) || $i['real']) {
+        return $i['tipo'] === 'comunidad' ? 'los recibos de hace un año' : 'las facturas de hace un año';
+    }
+    return ['hipoteca' => 'la cuota de hace un año', 'seguro' => 'la prima de hace un año', 'alquiler' => 'la renta de hace un año',
+            'suscripcion' => 'lo que costaba hace un año'][$i['tipo']] ?? 'lo que costaba hace un año';
+}
+
+// «+2,3 %», «−35,8 %».
+function variacion_es(float $p): string {
+    $r = round($p, 1);
+    return ($r > 0 ? '+' : ($r < 0 ? '−' : '')) . number_format(abs($r), 1, ',', '.') . ' %';
+}
+
+/**
+ * La última subida del sueldo base (nomina_estado de finanzas) frente al IPC
+ * del mes anterior a la subida: ['mes', 'antes', 'ahora', 'pct', 'ipc' =>
+ * ['mes', 'valor'] | null], o null si en los datos no ha cambiado nunca.
+ */
+function subida_salarial(array $anios, array $ipc_serie): ?array {
+    $meses = [];
+    foreach ($anios as $a) foreach ($a['meses'] ?? [] as $m) {
+        $b = $m['campos']['salario_base'] ?? null;
+        if (($m['tipo'] ?? 'mensual') !== 'mensual' || !is_numeric($b) || $b <= 0) continue;
+        $meses[(string)$m['mes']] = (float)$b;
+    }
+    ksort($meses);
+    if (count($meses) < 2) return null;
+    $ultimo = end($meses);
+    [$desde, $antes] = [null, null];
+    foreach (array_reverse($meses, true) as $mes => $b) {
+        if (abs($b - $ultimo) > 0.005) { $antes = $b; break; }
+        $desde = $mes;
+    }
+    if ($antes === null) return null;
+    return ['mes' => $desde, 'antes' => $antes, 'ahora' => $ultimo, 'pct' => ($ultimo / $antes - 1) * 100,
+            'ipc' => ipc_hasta($ipc_serie, substr(sumar_meses($desde . '-01', -1), 0, 7))];
 }
 
 /**
@@ -387,7 +489,7 @@ function coste_y_periodo(float $coste, string $periodicidad): string {
  * (el análisis hecho con su persona): la cifra «tuyo», no el total de la casa.
  * Devuelve null si finanzas no tiene al menos 6 meses completos.
  */
-function salud_finanzas(array $resumen, array $an, string $hoy): ?array {
+function salud_finanzas(array $resumen, array $an, string $hoy, array $nominas = [], array $ipc_serie = []): ?array {
     $actual = substr($hoy, 0, 7);
     $meses = array_values(array_filter($resumen['gasto']['meses'] ?? [], static fn($m) => (string)($m['mes'] ?? '') < $actual
         && ((float)($m['gasto'] ?? 0) > 0 || (float)($m['ingreso'] ?? 0) > 0)));
@@ -444,6 +546,20 @@ function salud_finanzas(array $resumen, array $an, string $hoy): ?array {
             'titulo' => $tuya ? 'de tus ingresos va a tu parte de la hipoteca' : 'de tus ingresos va a la hipoteca',
             'texto' => ($tuya ? 'Tu parte' : 'La cuota') . ' son ' . eur($hipoteca) . ' al mes. Los bancos ponen el límite en el 30-35 % de los ingresos netos'
                 . ($hp <= 30 ? ': vas holgado.' : ($hp <= 35 ? ': estás en el límite.' : ': lo pasas.'))];
+    }
+    // El sueldo frente al IPC: si sube menos, se pierde poder adquisitivo.
+    $s = subida_salarial($nominas, $ipc_serie);
+    $r['sueldo'] = $s;
+    if ($s) {
+        $txt = 'Tu sueldo base pasó de ' . eur($s['antes']) . ' a ' . eur($s['ahora']) . ' al mes en ' . mes_largo($s['mes']) . '.';
+        $nivel = 'dato';
+        if ($s['ipc']) {
+            $dif = round($s['pct'] - $s['ipc']['valor'], 1);
+            $txt .= ' El IPC de ' . mes_largo($s['ipc']['mes']) . ' estaba en el ' . numero_es($s['ipc']['valor']) . ' %: '
+                . ($dif >= 0 ? 'ganas ' . numero_es($dif) . ' puntos de poder adquisitivo.' : 'pierdes ' . numero_es(-$dif) . ' puntos de poder adquisitivo.');
+            $nivel = $dif >= 0 ? 'bien' : ($dif >= -1 ? 'idea' : 'aviso');
+        }
+        $r['cifras'][] = ['nivel' => $nivel, 'valor' => variacion_es($s['pct']), 'titulo' => 'subió tu sueldo base (' . mes_largo($s['mes']) . ')', 'texto' => $txt];
     }
     return $r;
 }

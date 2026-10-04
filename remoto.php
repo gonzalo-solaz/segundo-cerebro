@@ -25,6 +25,8 @@
 //      php remoto.php comunidad <id>                Números del análisis (por año, categoría y recibo)
 //      php remoto.php gastos [persona=<id>]        A dónde va el gasto fijo: partidas, cosas, mes a mes y qué revisar
 //            (con persona=1, por lo que paga Gonzalo: «tuyo»; sin ella, el total de la casa)
+//      php remoto.php precio <archivo.json | JSON>  Lo que costaba un contrato desde una fecha (historial de precios)
+//            {"elemento_id":38,"desde":"2025-04-01","coste":111.08,"nota":"subida con el IPC"}   (periodicidad: la de la ficha si no se dice)
 //      php remoto.php peso <id>                     Control de peso: IMC, ritmo, objetivo, calorías y consejos
 //            Un pesaje: registro {"elemento_id":30,"fecha":"2026-10-03","tipo":"Peso","valor":82.4}  (Cintura en cm, Grasa corporal en %)
 //      php remoto.php documento <archivo.pdf> elemento=<id> [titulo="..."]
@@ -147,6 +149,7 @@ switch ($accion) {
     case 'vencimiento':
     case 'registro':
     case 'partidas':
+    case 'precio':
         mostrar(llamar($accion, leer_json_arg($pos[0] ?? null)));
     case 'documento':
         if (empty($pos[0]) || empty($kv['elemento'])) { fwrite(STDERR, "Uso: php remoto.php documento <archivo> elemento=<id> [titulo=\"...\"]\n"); exit(1); }
