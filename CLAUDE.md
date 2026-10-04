@@ -552,7 +552,9 @@ cobra 0,088 €/kWh variable frente a 0,0808 de Naturgy, pero su término fijo e
 Pepephone). Abril-julio: 639 kWh y 91,54 € frente a 353 kWh y 61,34 € (4/4-6/8/2025). De enero a julio de 2026 lleva
 3.650 kWh, el 96 % de los 3.782 de todo 2025 (lecturas reales: 5.376 m³ el 29/11/2024, 5.706 el 6/12/2025). No hay
 solapamiento en diciembre: Naturgy llegó hasta el 10/12 y Pepeenergy empieza el 11/12; su factura de diciembre se emitió
-el 11/02/2026, así que el apunte (fechado 31/12/2025) tiene la fecha aproximada. Ojo con el balance por años: la
+el 11/02/2026, así que el apunte (fechado 31/12/2025) tiene la fecha aproximada. **Para que el gas muestre variación** (sin comparar por facturas) se apuntó en `precios` (id 18, ficha 4) la media
+mensual de ene-jul 2025, 40,56 € (Naturgy repartido por días; ficha de hoy: 66,58 €, ene-jul 2026): +64 %. No repetir; cuando
+haya un año entero de Pepeenergy, la media de la ficha y esta se pueden rehacer con el año completo. Ojo con el balance por años: la
 fecha es la de emisión, no la del consumo.
 
 **Impuestos: IBI e impuesto de circulación (4/10/2026, petición de Gonzalo: «en vehículos habrá que
