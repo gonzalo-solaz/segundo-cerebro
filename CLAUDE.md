@@ -571,3 +571,5 @@ recordatorio «IBI» e «Impuesto de circulación» (la ficha crea su propio avi
 en producción:** no se ha creado ninguno; Gonzalo los apuntará cuando lleguen los recibos. No inventar
 importes ni fechas de pago del ayuntamiento: preguntar o dejar vacío. Ojo: el T3 está de baja temporal y el Mini
 sin matricular, no llevan impuesto de circulación.
+
+**Tarjeta sanitaria (SIP) también en Documentos (4/10/2026, Gonzalo: «¿no debería salir también en documentos?»).** Tipo `documentos/tarjeta_sanitaria` (solo el número SIP; no caduca, así que sin aviso). Grabada la de Gonzalo: id 40, 7304580087 (con el «73» delante, confirmado por él). El mismo número sigue en el campo `tarjeta_sanitaria` de su ficha médica (id 20): está en dos sitios a propósito (cartera y ficha de urgencias); si cambia, tocar los dos. Pilar y los niños, sin grabar. No repetir.
