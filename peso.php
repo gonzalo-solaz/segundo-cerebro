@@ -289,7 +289,7 @@ cabecera_pagina($el ? $el['nombre'] : 'Control de peso',
     <?php endif; ?>
 
     <section class="tarjeta" id="registro">
-      <div class="tarjeta-cabecera"><h2><?= icono('agenda') ?>Registro</h2><span class="tenue"><?= count($a['mediciones']) ?> días</span></div>
+      <div class="tarjeta-cabecera"><h2><?= icono('agenda') ?>Registro</h2><span class="tenue"><?= count($a['mediciones']) ?> <?= count($a['mediciones']) === 1 ? 'día' : 'días' ?></span></div>
       <?php if (!$a['mediciones']): ?><p class="vacio-mini">Sin pesajes todavía.</p><?php else: ?>
         <?php
           $filas = array_reverse($a['mediciones'], true);

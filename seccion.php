@@ -48,13 +48,13 @@ foreach ($sec['tipos'] as $t => $def) {
 }
 
 if ($clave === 'salud' && elementos_peso($pdo)) {
-    $botones .= '<a class="btn btn-sutil" href="' . e(url('peso.php')) . '">' . icono('bascula') . 'Peso y pautas</a>';
+    $botones .= '<a class="btn btn-sutil btn-ir" href="' . e(url('peso.php')) . '">' . icono('bascula') . 'Peso y pautas</a>';
 }
 if ($clave === 'contratos') {
-    $botones .= '<a class="btn btn-sutil" href="' . e(url('gastos-fijos.php')) . '">' . icono('cartera') . 'Gastos fijos</a>';
-    $botones .= '<a class="btn btn-sutil" href="' . e(url('gasto-suministros.php')) . '">' . icono('historial') . 'Gasto en suministros</a>';
+    $botones .= '<a class="btn btn-sutil btn-ir" href="' . e(url('gastos-fijos.php')) . '">' . icono('cartera') . 'Gastos fijos</a>';
+    $botones .= '<a class="btn btn-sutil btn-ir" href="' . e(url('gasto-suministros.php')) . '">' . icono('historial') . 'Gasto en suministros</a>';
     if (elementos_comunidad($pdo)) {
-        $botones .= '<a class="btn btn-sutil" href="' . e(url('gasto-comunidad.php')) . '">' . icono('historial') . 'Gasto en comunidad</a>';
+        $botones .= '<a class="btn btn-sutil btn-ir" href="' . e(url('gasto-comunidad.php')) . '">' . icono('historial') . 'Gasto en comunidad</a>';
     }
 }
 
@@ -97,7 +97,7 @@ cabecera_pagina($sec['nombre'], e($sec['descripcion']), $botones, $sec['icono'],
               <?php endforeach; ?>
             </dl>
             <?php if ($prox): ?>
-              <span class="ts-proximo venc-<?= e($prox['situacion']) ?>"><?= icono('reloj', 'ico ico-mini') ?><?= e(fecha_corta($prox['fecha'])) ?> · <?= e(relativo($prox['dias'])) ?></span>
+              <span class="ts-proximo venc-<?= e($prox['situacion']) ?>"><?= icono('reloj', 'ico ico-mini') ?><span><?= e(titulo_sin_elemento($prox['titulo'], $el['nombre'])) ?> · <?= e(fecha_corta($prox['fecha'])) ?> · <?= e(relativo($prox['dias'])) ?></span></span>
             <?php endif; ?>
           </a>
         <?php endforeach; ?>
@@ -175,7 +175,7 @@ cabecera_pagina($sec['nombre'], e($sec['descripcion']), $botones, $sec['icono'],
               <?php endif; ?>
             </dl>
             <?php if ($prox): ?>
-              <p class="ts-proximo venc-<?= e($prox['situacion']) ?>"><?= icono('reloj', 'ico ico-mini') ?><?= e(fecha_corta($prox['fecha'])) ?> · <?= e(relativo($prox['dias'])) ?></p>
+              <p class="ts-proximo venc-<?= e($prox['situacion']) ?>"><?= icono('reloj', 'ico ico-mini') ?><span><?= e(titulo_sin_elemento($prox['titulo'], $el['nombre'])) ?> · <?= e(fecha_corta($prox['fecha'])) ?> · <?= e(relativo($prox['dias'])) ?></span></p>
             <?php endif; ?>
           </a>
         <?php endforeach; ?>

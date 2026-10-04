@@ -116,7 +116,7 @@ cabecera_pagina('Ajustes', 'Accesos de la familia y estado del sistema.', '', 'a
             <td class="acciones-fila">
               <form method="post" class="en-linea" data-confirmar="¿Generar una contraseña temporal nueva para <?= e($u['nombre']) ?>? La actual dejará de valer.">
                 <?= csrf_input() ?><input type="hidden" name="accion" value="temporal"><input type="hidden" name="usuario_id" value="<?= (int)$u['id'] ?>">
-                <button class="btn-icono" title="Nueva contraseña temporal"><?= icono('llave') ?></button></form>
+                <button class="btn btn-sutil" title="Nueva contraseña temporal"><?= icono('llave') ?>Contraseña temporal</button></form>
               <?php if (!$yo && dos_pasos_activa($u)): ?>
                 <form method="post" class="en-linea" data-confirmar="¿Quitar la verificación en dos pasos de <?= e($u['nombre']) ?>? Úsalo si ha perdido el móvil.">
                   <?= csrf_input() ?><input type="hidden" name="accion" value="quitar-2p"><input type="hidden" name="usuario_id" value="<?= (int)$u['id'] ?>">

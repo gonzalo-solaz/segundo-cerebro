@@ -344,7 +344,10 @@ function valor_campo(array $campo, $valor): string {
     switch ($campo['tipo']) {
         case 'fecha':   return fecha_es((string)$valor);
         case 'importe': return eur($valor);
-        case 'numero':  return numero_es($valor) . (!empty($campo['unidad']) ? ' ' . $campo['unidad'] : '');
+        // Un año no lleva punto de miles («2.015» salía en la ficha del Audi, 4/10/2026),
+        // y lo escrito a mano se enseña con sus decimales (la cuota 8,355 % salía 8,36 %).
+        case 'numero':  return (!empty($campo['anio']) ? (string)(int)$valor : numero_es($valor, 4))
+                             . (!empty($campo['unidad']) ? NBSP . $campo['unidad'] : '');
         default:        return (string)$valor;
     }
 }

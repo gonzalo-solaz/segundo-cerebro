@@ -19,6 +19,7 @@
 //    tipo       texto | area | numero | importe | fecha | opcion | tel | email
 //    opciones   (tipo opcion) Lista cerrada de valores.
 //    unidad     Se pinta detrás del valor («km», «m²»).
+//    anio       (tipo numero) Es un año: sin punto de miles («2015», no «2.015»).
 //    resumen    true = sale en la tarjeta del listado.
 //    ayuda      Texto pequeño bajo el campo.
 //    aparte     (tipo area) Va en su propia tarjeta plegada, fuera de «Datos».
@@ -119,7 +120,7 @@ function secciones(): array {
                             'opciones' => ['Propiedad', 'Propiedad con hipoteca', 'Alquiler', 'Otro']],
                         'referencia_catastral' => ['etiqueta' => 'Referencia catastral', 'tipo' => 'texto'],
                         'superficie' => ['etiqueta' => 'Superficie construida', 'tipo' => 'numero', 'unidad' => 'm²'],
-                        'anio_construccion' => ['etiqueta' => 'Año de construcción', 'tipo' => 'numero'],
+                        'anio_construccion' => ['etiqueta' => 'Año de construcción', 'tipo' => 'numero', 'anio' => true],
                         'fecha_compra' => ['etiqueta' => 'Fecha de compra o de entrada', 'tipo' => 'fecha'],
                         'porcentaje_propiedad' => ['etiqueta' => 'Parte del titular', 'tipo' => 'numero', 'unidad' => '%',
                             'ayuda' => 'La parte de la propiedad del titular de arriba. Finanzas la usa para el patrimonio.'],
@@ -166,7 +167,7 @@ function secciones(): array {
                         'marca' => ['etiqueta' => 'Marca', 'tipo' => 'texto'],
                         'modelo' => ['etiqueta' => 'Modelo', 'tipo' => 'texto', 'resumen' => true],
                         'matricula' => ['etiqueta' => 'Matrícula', 'tipo' => 'texto', 'resumen' => true],
-                        'anio' => ['etiqueta' => 'Año', 'tipo' => 'numero'],
+                        'anio' => ['etiqueta' => 'Año', 'tipo' => 'numero', 'anio' => true],
                         'combustible' => ['etiqueta' => 'Combustible', 'tipo' => 'opcion',
                             'opciones' => ['Gasolina', 'Diésel', 'Híbrido', 'Híbrido enchufable', 'Eléctrico', 'GLP', 'Otro']],
                         'bastidor' => ['etiqueta' => 'Número de bastidor', 'tipo' => 'texto'],

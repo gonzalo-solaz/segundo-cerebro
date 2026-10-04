@@ -186,15 +186,21 @@ function saludo(): string {
 // ---------------------------------------------------------------------
 //  Números
 // ---------------------------------------------------------------------
+// Espacio duro entre la cifra y su «€» o «%»: en el móvil, «543,02 / €»
+// partido en dos líneas se leía mal (revisión del móvil, 4/10/2026).
+const NBSP = "\u{00A0}";
+
 function eur($n): string {
-    return number_format((float)$n, 2, ',', '.') . ' €';
+    return number_format((float)$n, 2, ',', '.') . NBSP . '€';
 }
 
 // 154300 → «154.300»; 85.5 → «85,5». Sin decimales inútiles.
-function numero_es($n): string {
+// $decimales: los de un dato escrito a mano (una cuota de 8,355 %) no se redondean.
+function numero_es($n, int $decimales = 2): string {
     $n = (float)$n;
-    if (abs($n - round($n)) < 0.005) return number_format($n, 0, ',', '.');
-    return rtrim(rtrim(number_format($n, 2, ',', '.'), '0'), ',');
+    $tolerancia = 0.5 / (10 ** $decimales);
+    if (abs($n - round($n)) < $tolerancia) return number_format($n, 0, ',', '.');
+    return rtrim(rtrim(number_format($n, $decimales, ',', '.'), '0'), ',');
 }
 
 // Lee números escritos «a la española»: '1.234,56', '154.300' (miles),
@@ -212,15 +218,18 @@ function leer_numero($v): ?float {
     return is_numeric($v) ? (float)$v : null;
 }
 
-// Para rellenar un input: 154300 → «154300»; 12.5 → «12,50».
+// Para rellenar un input: 154300 → «154300»; 8.355 → «8,355»; un importe de 12.5 → «12,50».
 function numero_input($n, bool $importe = false): string {
     if ($n === null || $n === '') return '';
     // Lo que ya es texto (lo que el usuario escribió, al repintar un
     // formulario con errores) se devuelve tal cual.
     if (!is_int($n) && !is_float($n)) return (string)$n;
     $n = (float)$n;
-    if (!$importe && abs($n - round($n)) < 0.005) return (string)(int)round($n);
-    return number_format($n, 2, ',', '');
+    if ($importe) return number_format($n, 2, ',', '');
+    // Sin redondear a 2 decimales: al guardar la ficha sin tocar nada, la cuota de
+    // 8,355 % se quedaba en 8,36 % (4/10/2026).
+    if (abs($n - round($n)) < 0.00005) return (string)(int)round($n);
+    return rtrim(rtrim(number_format($n, 4, ',', ''), '0'), ',');
 }
 
 // ---------------------------------------------------------------------

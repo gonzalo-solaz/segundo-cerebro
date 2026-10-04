@@ -140,7 +140,12 @@ avisa por correo.
   sesión en el navegador de Claude: capturas con Edge headless
   (`msedge --headless=new --screenshot`) de HTML bajado con curl; para el móvil,
   dentro de un `<iframe width=390>` (la ventana headless no baja de ~500 px y
-  parece que desborda cuando no lo hace).
+  parece que desborda cuando no lo hace). Mejor, para revisar el móvil: **Playwright
+  (Python) está instalado** y lanza el Edge del equipo (`channel='msedge'`) emulando un
+  móvil de verdad (`viewport` 360/390, `is_mobile`, `has_touch`), y con los **datos reales**:
+  se clonan de producción por la API (solo lectura: `personas`, `buscar`, `ficha <id>`) a un
+  SQLite del scratchpad y se sirven con otro `config` vía `SC_CONFIG` (ver «Revisión del móvil»).
+  Con datos de juguete no salen los fallos (notas largas, números de factura, dos teléfonos).
 - **Desplegar — lo haces tú, por GitHub (corrección de Gonzalo, 3/10/2026).** No se
   sube nada con FileZilla: tras editar y pasar las pruebas (5/5), haces commit y
   `git push` a `main`; GitHub Actions pasa las pruebas y sube por FTP a Hostinger
@@ -577,3 +582,30 @@ sin matricular, no llevan impuesto de circulación.
 **Certificado de vacunación COVID de Gonzalo (4/10/2026, petición suya; PDF en `Dropbox\personal\documentos`).** Grabado en producción en los dos sitios, con el PDF adjunto en ambos: Documentos = tipo `otro` «Certificado COVID digital de la UE (vacunación)», id 41, número = el identificador del certificado, sin caducidad (el papel no la da); Salud = apunte `Vacuna` en su ficha médica (id 20), 15/02/2022, Spikevax (Moderna) dosis 3/3 (documentos 56 y 57). Las dosis 1 y 2 no constan en el certificado: no inventarlas. No repetir. En la misma carpeta están los de Pilar y Candela, sin grabar.
 
 **Escritura de la casa (4/10/2026, Gonzalo pasó las escrituras de `Dropbox\personal\vivienda\Doctor-Jose-Vilella\compra`).** Campo plegado `escritura` («Escritura y registro», formato lista) en el tipo `vivienda/inmueble`: notaría y protocolos (1055 compraventa, 1056 préstamo), vendedor, registro (finca 4.944, Moncada 1), descripción, superficies, cuotas, servidumbres. **Superficie: manda la escritura** (155,95 m² construidos, 101,54 útiles), no el catastro (123 m² = 78 + 37 + 8 de comunes); Gonzalo: «es lo que manda de todas formas». La ficha 2 la tiene ya con `superficie` 155,95 y las notas corregidas (antes decían «78 + 37» y «parcela de 501 m²»: lo segundo era del edificio entero, 495,88 m²). La ficha 33 (hipoteca) lleva en `notas` las condiciones de la escritura (tipo, margen y penalizaciones, desistimiento 0,25 % hoy, tasación 183.654,06 €, responsabilidad 161.200 €). Adjuntos: compraventa y escaneo a la ficha 2 (documentos 58 y 60), préstamo a la 33 (59). La escritura dice 21,229 % de cuota de escalera y la comunidad usa 21,230 %: no afecta. **Duda abierta:** `fecha_inicio` de la hipoteca es 6/11/2017 y la escritura es del 7/11/2017 (puede ser la fecha valor del banco); no se tocó. El escaneo `escritura.pdf` (9 MB) no se pudo leer (sin texto ni pdftoppm): se tituló «escaneo, noviembre de 2017» sin verificar qué contiene. No repetir.
+
+**Revisión del móvil (4/10/2026, Gonzalo: «revisa bien que en móvil se visualice todo de forma
+correcta; que no haya errores ni datos poco claros, amontonados o que desborden»).** Hecha con los
+datos reales clonados de producción y un recorrido automático de las 289 páginas a 320, 360 y 390 px
+que mide qué se sale de la pantalla, más capturas. Lo que se corrigió y por qué, para no deshacerlo:
+- **Fallos de datos:** el año salía «2.015» (clave `anio` en el campo de `secciones.php`: sin punto de
+  miles); la cuota 8,355 % salía 8,36 % y, peor, **el formulario la guardaba redondeada** al editar
+  cualquier otra cosa de la ficha (`numero_input()` y `valor_campo()` conservan hasta 4 decimales en
+  los campos `numero`; los importes siguen a 2); el teléfono «962 683 350 / 656 967 618 (móvil)» era UN
+  enlace `tel:` con 18 dígitos (`enlaces_tel()` en `layout.php`: un enlace por número); «1 días» en Peso.
+- **Espacio duro (`NBSP`, en `funciones.php`) entre la cifra y su «€» o «%»** en `eur()`, `pct_es()`,
+  `variacion_es()` y los «pagas el X %»: en el móvil se partía «543,02 / €». `leer_numero()` ya lo
+  ignora. Las pruebas de páginas comparan sin él (`pinta_bien()` lo cambia por un espacio).
+- **Avisos sin el nombre repetido:** los automáticos se titulan «Pasar la ITV · Hanway Scrambler 125» y
+  debajo salía otra vez el nombre; `titulo_sin_elemento()` lo quita del título donde la cosa ya se ve
+  (enlazada debajo o en su propia ficha). La tarjeta de cada cosa en su sección enseña ahora QUÉ vence
+  («Pasar la ITV · 11 jun 2027 · en 8 meses»), no solo la fecha.
+- **CSS (bloque «Móvil: revisión del 4/10/2026» de `app.css`):** historial con la fecha encima (al lado
+  dejaba 134 px al texto); archivos y cosas enlazadas con el nombre en su línea y los detalles debajo;
+  cabeceras con 4+ botones (Contratos tiene 9, Salud 6) en una fila que se desliza de lado, con los
+  enlaces a análisis (`btn-ir`: Gastos fijos, Peso y pautas…) delante; botones de añadir de la ficha en
+  `.botones-tarjeta` (antes pegados sin separación); el nombre de una tarjeta ya no se aplasta contra la
+  persona (la persona baja); a 360 px o menos, `.tabla-scroll` usa el relleno de 16 px de la tarjeta (se
+  salía 4 px); menú lateral compacto en pantallas bajas (en un iPhone SE no se veía «Ajustes»).
+- **Sin arreglar a propósito:** la página Finanzas y sus pantallas no se pudieron revisar en local (el
+  panel lo da la API de finanzas, que necesita `FINANZAS_API_CLAVE`). Las tablas anchas que quedan
+  («Recibo a recibo» de la comunidad, que crece una columna por trimestre) se deslizan dentro de su tarjeta.

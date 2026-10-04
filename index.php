@@ -95,7 +95,7 @@ cabecera_pagina(saludo() . ', ' . nombre_corto($usuario_actual['nombre']), e(ucf
       </div>
       <?php if ($kpi): ?><p class="ts-kpi"><?= e($kpi) ?></p><?php endif; ?>
       <?php if ($prox): ?>
-        <p class="ts-proximo venc-<?= e($prox['situacion']) ?>"><?= icono('reloj', 'ico ico-mini') ?><?= e($prox['titulo']) ?> · <?= e(relativo($prox['dias'])) ?></p>
+        <p class="ts-proximo venc-<?= e($prox['situacion']) ?>"><?= icono('reloj', 'ico ico-mini') ?><span><?= e($prox['titulo']) ?> · <?= e(relativo($prox['dias'])) ?></span></p>
       <?php else: ?>
         <p class="ts-proximo tenue">Sin avisos pendientes</p>
       <?php endif; ?>

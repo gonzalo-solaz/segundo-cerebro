@@ -117,7 +117,7 @@ function tiempo_hasta(string $desde, string $hasta): string {
 }
 
 function pct_es(float $p): string {
-    return ($p > 0 && $p < 1 ? '<1' : numero_es(round($p, $p < 10 ? 1 : 0))) . ' %';
+    return ($p > 0 && $p < 1 ? '<1' : numero_es(round($p, $p < 10 ? 1 : 0))) . NBSP . '%';
 }
 
 // «a, b y c».
@@ -360,7 +360,7 @@ function falta_para_comparar(array $i): string {
 // «+2,3 %», «−35,8 %».
 function variacion_es(float $p): string {
     $r = round($p, 1);
-    return ($r > 0 ? '+' : ($r < 0 ? '−' : '')) . number_format(abs($r), 1, ',', '.') . ' %';
+    return ($r > 0 ? '+' : ($r < 0 ? '−' : '')) . number_format(abs($r), 1, ',', '.') . NBSP . '%';
 }
 
 /**
@@ -477,7 +477,7 @@ function revisar_gastos_fijos(array $an, string $hoy): array {
         $d = $i['datos'];
         $partes = [];
         if ($i['parte'] < 100) {
-            $partes[] = 'Pagas el ' . numero_es($i['parte']) . ' %: ' . eur($i['tuyo']) . ' de los ' . eur($i['mensual']) . ' de la cuota.';
+            $partes[] = 'Pagas el ' . numero_es($i['parte']) . NBSP . '%: ' . eur($i['tuyo']) . ' de los ' . eur($i['mensual']) . ' de la cuota.';
         }
         $finh = (string)($d['fecha_fin'] ?? '');
         if (fecha_valida($finh) && $finh > $hoy) {
@@ -579,7 +579,7 @@ function salud_finanzas(array $resumen, array $an, string $hoy, array $nominas =
         $nivel = 'dato';
         if ($s['ipc']) {
             $dif = round($s['pct'] - $s['ipc']['valor'], 1);
-            $txt .= ' El IPC de ' . mes_largo($s['ipc']['mes']) . ' estaba en el ' . numero_es($s['ipc']['valor']) . ' %: '
+            $txt .= ' El IPC de ' . mes_largo($s['ipc']['mes']) . ' estaba en el ' . numero_es($s['ipc']['valor']) . NBSP . '%: '
                 . ($dif >= 0 ? 'ganas ' . numero_es($dif) . ' puntos de poder adquisitivo.' : 'pierdes ' . numero_es(-$dif) . ' puntos de poder adquisitivo.');
             $nivel = $dif >= 0 ? 'bien' : ($dif >= -1 ? 'idea' : 'aviso');
         }

@@ -166,6 +166,18 @@ function chip_seccion(string $clave): string {
          . icono($s['icono'], 'ico ico-mini') . e($s['nombre']) . '</a>';
 }
 
+// «962 683 350 / 656 967 618 (móvil)» → un enlace tel: por número. Con uno solo para
+// todo, el móvil marcaba los 18 dígitos seguidos (revisión del móvil, 4/10/2026).
+function enlaces_tel(string $valor): string {
+    $trozos = preg_split('/\s*(?:\/|,|;|\s+y\s+|\s+o\s+)\s*/u', trim($valor)) ?: [$valor];
+    $html = [];
+    foreach ($trozos as $t) {
+        $numero = preg_replace('/[^0-9+]/', '', preg_replace('/\(.*?\)/u', '', $t));
+        $html[] = strlen($numero) >= 6 ? '<a href="tel:' . e($numero) . '">' . e($t) . '</a>' : e($t);
+    }
+    return implode(' · ', $html);
+}
+
 function chip_persona(?string $nombre, ?string $color): string {
     if (!$nombre) return '';
     return '<span class="chip chip-persona" style="--c:' . e($color ?: '#405189') . '">' . e($nombre) . '</span>';
@@ -190,13 +202,23 @@ function cabecera_pagina(string $titulo, string $antetitulo = '', string $accion
  * Una fila de la agenda: fecha grande, qué es, cuándo, y el botón «Hecho».
  * $volver = la página a la que regresar después de marcarlo.
  */
+// Los avisos automáticos se titulan «Pasar la ITV · Hanway Scrambler 125». Donde el
+// nombre de la cosa ya se ve (debajo, enlazado, o porque es su ficha), se quita del
+// título: en el móvil, cada aviso repetía el nombre dos veces (4/10/2026).
+function titulo_sin_elemento(string $titulo, ?string $nombre): string {
+    $cola = ' · ' . (string)$nombre;
+    if ($nombre === null || $nombre === '' || !str_ends_with($titulo, $cola) || $titulo === $cola) return $titulo;
+    return substr($titulo, 0, -strlen($cola));
+}
+
 function fila_vencimiento(array $v, string $volver, bool $con_seccion = true, bool $con_elemento = true): void {
     [, $m, $d] = array_map('intval', explode('-', $v['fecha']));
+    $titulo = $v['elemento_id'] ? titulo_sin_elemento($v['titulo'], $v['elemento_nombre'] ?? null) : $v['titulo'];
     ?>
     <div class="venc venc-<?= e($v['situacion']) ?>">
       <div class="venc-fecha"><strong><?= $d ?></strong><span><?= e(MESES_CORTOS[$m - 1]) ?></span></div>
       <div class="venc-cuerpo">
-        <div class="venc-titulo"><?= e($v['titulo']) ?></div>
+        <div class="venc-titulo"><?= e($titulo) ?></div>
         <div class="venc-meta">
           <span class="venc-cuando"><?= e(relativo($v['dias'])) ?><?= substr($v['fecha'], 0, 4) !== substr(hoy(), 0, 4) ? ' · ' . e(substr($v['fecha'], 0, 4)) : '' ?></span>
           <?php if ($con_seccion): ?><?= chip_seccion($v['seccion']) ?><?php endif; ?>

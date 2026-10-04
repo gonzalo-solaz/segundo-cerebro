@@ -118,7 +118,7 @@ cabecera_pagina($el['nombre'],
             <dt><?= e($c['etiqueta']) ?></dt>
             <dd><?php
               $val = valor_campo($c, $el['datos'][$clave]);
-              if ($c['tipo'] === 'tel') echo '<a href="tel:' . e(preg_replace('/[^0-9+]/', '', $val)) . '">' . e($val) . '</a>';
+              if ($c['tipo'] === 'tel') echo enlaces_tel($val);
               elseif ($c['tipo'] === 'email') echo '<a href="mailto:' . e($val) . '">' . e($val) . '</a>';
               else echo nl2br(e($val));
             ?></dd>
@@ -220,9 +220,11 @@ cabecera_pagina($el['nombre'],
             </li>
           <?php endforeach; ?>
         </ul>
-        <?php foreach ($g['tipos'] as [$ts, $tt, $tn]): ?>
-          <a class="btn btn-sutil" href="<?= e(url('elemento-editar.php?s=' . $ts . '&t=' . $tt . '&enlace=' . $id)) ?>"><?= icono('mas') ?><?= e($tn) ?></a>
-        <?php endforeach; ?>
+        <div class="botones-tarjeta">
+          <?php foreach ($g['tipos'] as [$ts, $tt, $tn]): ?>
+            <a class="btn btn-sutil" href="<?= e(url('elemento-editar.php?s=' . $ts . '&t=' . $tt . '&enlace=' . $id)) ?>"><?= icono('mas') ?><?= e($tn) ?></a>
+          <?php endforeach; ?>
+        </div>
       </section>
     <?php endforeach; ?>
 
@@ -238,8 +240,10 @@ cabecera_pagina($el['nombre'],
             </li>
           <?php endforeach; ?>
         </ul>
-        <a class="btn btn-sutil" href="<?= e(url('elemento-editar.php?s=vivienda&t=contacto')) ?>"><?= icono('mas') ?>Contacto de confianza</a>
-        <a class="btn btn-sutil" href="<?= e(url('elemento-editar.php?s=vivienda&t=inmueble')) ?>"><?= icono('mas') ?>Otra vivienda</a>
+        <div class="botones-tarjeta">
+          <a class="btn btn-sutil" href="<?= e(url('elemento-editar.php?s=vivienda&t=contacto')) ?>"><?= icono('mas') ?>Contacto de confianza</a>
+          <a class="btn btn-sutil" href="<?= e(url('elemento-editar.php?s=vivienda&t=inmueble')) ?>"><?= icono('mas') ?>Otra vivienda</a>
+        </div>
       </section>
     <?php endif; ?>
 

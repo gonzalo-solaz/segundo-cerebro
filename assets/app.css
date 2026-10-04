@@ -354,7 +354,8 @@ a.tarjeta:hover { text-decoration: none; }
 .venc-pronto .venc-cuando { color: var(--ambar); font-weight: 650; }
 .venc-acciones { display: flex; align-items: center; gap: .35rem; flex: none; }
 .venc-acciones form { margin: 0; }
-.ts-proximo { font-size: 13.5px; margin: .9rem 0 0; display: flex; gap: .4rem; align-items: center; color: var(--texto-2); }
+.ts-proximo { font-size: 13.5px; margin: .9rem 0 0; display: flex; gap: .4rem; align-items: flex-start; color: var(--texto-2); }
+.ts-proximo > .ico { margin-top: .2em; }
 .ts-proximo.venc-vencido { color: var(--rojo); font-weight: 550; }
 .ts-proximo.venc-pronto { color: var(--ambar); font-weight: 550; }
 
@@ -388,11 +389,13 @@ a.chip:hover { text-decoration: none; background: color-mix(in srgb, var(--c) 20
 }
 :root[data-theme="dark"] .chip-activo .ico { color: var(--marino); }
 .filtros { display: flex; gap: 8px; overflow-x: auto; padding-bottom: .4rem; margin-bottom: 1.2rem; scrollbar-width: none; }
+.filtros .chip { flex: none; }
 .sugerencias { display: flex; flex-wrap: wrap; gap: 8px; }
 
 /* ---------------- Tarjetas de sección / elemento / persona ---------------- */
 .ts-cabecera, .te-cabecera { display: flex; align-items: center; gap: .9rem; }
-.te-cabecera { justify-content: space-between; align-items: flex-start; }
+.te-cabecera { justify-content: space-between; align-items: flex-start; flex-wrap: wrap; row-gap: .5rem; }
+.te-cabecera h3 { flex: 1 1 11rem; min-width: 0; }
 .ts-cabecera h3 { display: flex; align-items: center; gap: .35rem; font-size: 17px; font-weight: 700; letter-spacing: -.02em; }
 .ts-cabecera .tenue { font-size: 13.5px; }
 .ts-kpi { margin: 1rem 0 0; font-weight: 550; font-size: 14px; color: var(--texto); letter-spacing: -.01em; }
@@ -403,7 +406,7 @@ a.chip:hover { text-decoration: none; background: color-mix(in srgb, var(--c) 20
 .resumen { margin: .9rem 0 0; display: grid; gap: .35rem; }
 .resumen div { display: flex; justify-content: space-between; gap: .75rem; font-size: 13.5px; }
 .resumen dt { color: var(--tenue); }
-.resumen dd { margin: 0; text-align: right; overflow-wrap: anywhere; color: var(--texto); font-weight: 550; }
+.resumen dd { margin: 0; text-align: right; overflow-wrap: anywhere; color: var(--texto); font-weight: 550; text-wrap: balance; }
 .tarjeta-persona.archivada { opacity: .55; }
 .tarjeta-persona p { margin: .8rem 0 .5rem; font-size: 14px; }
 .enlaces-persona { display: flex; flex-wrap: wrap; gap: .3rem 1rem; font-size: 14px; }
@@ -444,10 +447,10 @@ a.chip:hover { text-decoration: none; background: color-mix(in srgb, var(--c) 20
 .datos dd { margin: .15rem 0 0; font-weight: 600; color: var(--texto); overflow-wrap: anywhere; letter-spacing: -.01em; }
 .dato-ancho { grid-column: 1 / -1; }
 .subtitulo { margin: 1.6rem 0 .6rem; font-size: 14px; font-weight: 700; color: var(--texto); letter-spacing: -.01em; }
-.notas { white-space: normal; color: var(--texto-2); margin: .3rem 0 0; }
+.notas { white-space: normal; color: var(--texto-2); margin: .3rem 0 0; overflow-wrap: break-word; }
 /* Campos de texto en lista (equipamiento, recambios, origen de un vehículo) */
 .lista-campo { margin: 0 0 .5rem; padding-left: 1.15rem; color: var(--texto-2); }
-.lista-campo li { margin: .3rem 0; padding-left: .15rem; }
+.lista-campo li { margin: .3rem 0; padding-left: .15rem; overflow-wrap: anywhere; }
 .lista-campo li::marker { color: var(--borde-control); }
 .lista-campo strong { color: var(--texto); font-weight: 650; }
 details.tarjeta-plegable > .subtitulo:first-of-type { margin-top: 0; }
@@ -508,7 +511,7 @@ textarea { resize: vertical; }
 .ayuda { font-size: 13px; color: var(--tenue); display: flex; gap: .35rem; align-items: center; }
 .ayuda-aviso { color: var(--acento); font-weight: 500; }
 .con-sufijo { display: flex; align-items: center; gap: .5rem; }
-.con-sufijo span { color: var(--tenue); font-size: 14px; }
+.con-sufijo span { color: var(--tenue); font-size: 14px; min-width: 1.6rem; }
 .input-unidad { max-width: 7.5rem; }
 .acciones-form { display: flex; gap: .5rem; flex-wrap: wrap; }
 .form-elemento { padding: 22px; }
@@ -626,8 +629,9 @@ details.tarjeta-plegable[open] > summary { margin-bottom: 16px; }
 .texto-alto { color: var(--rojo); }
 .tabla .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .tabla td.fecha-celda { white-space: nowrap; }
+.tabla td.fecha-celda .nota-pequena { white-space: normal; }
 .nota-pequena { font-size: 13px; }
-.filtros-mini { margin: 0; padding: 0; }
+.filtros-mini { margin: 0; padding: 0; flex-wrap: wrap; overflow: visible; }
 .filtros-mini .chip { padding: 5px 12px; font-size: 13px; }
 .datos-compactos { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: .7rem 1rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--borde); }
 
@@ -778,7 +782,63 @@ details.desplegable + details.desplegable { margin-top: .6rem; }
   .venc-cuerpo { flex-basis: calc(100% - 52px - .9rem); }
   .venc-acciones { width: 100%; padding-left: calc(52px + .9rem); }
 }
-@media (max-width: 360px) { .tarjeta { padding: 16px; } }
+@media (max-width: 360px) {
+  .tarjeta { padding: 16px; }
+  /* La tabla llega al borde de la tarjeta, no 4 px más allá (con 16 px de relleno, no 20). */
+  .tabla-scroll { margin: 0 -16px; padding: 0 16px; }
+}
+
+/* Menú del móvil en pantallas bajas (iPhone SE, 667 px): sin esto, «Ajustes» quedaba
+   cortado bajo el pie del menú. */
+@media (max-width: 959px) and (max-height: 820px) {
+  .menu { margin-top: 14px; }
+  .menu a, .menu-abierto .menu a { padding-top: 8px; padding-bottom: 8px; }
+  .menu-separador { margin: 8px 10px; }
+}
+
+/* Botones de añadir al pie de una tarjeta de la ficha (+ Suministro, + Seguro…): con aire entre filas. */
+.botones-tarjeta { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
+
+/* ---------------- Móvil: revisión del 4/10/2026 con los datos reales ---------------- */
+@media (max-width: 640px) {
+  /* Historial: la fecha encima y el texto a todo el ancho (con la fecha al lado
+     quedaban 134 px para el texto y cada apunte ocupaba media pantalla). */
+  .historial li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .2rem .75rem; }
+  .historial .h-fecha { width: auto; grid-column: 1; grid-row: 1; padding-top: 0; }
+  .historial .h-cuerpo { grid-column: 1; grid-row: 2; }
+  .historial li > form { grid-column: 2; grid-row: 1 / span 2; align-self: start; }
+  .h-cuerpo .chip { margin-left: .15rem; }
+
+  /* Archivos y cosas enlazadas: el nombre en su línea; debajo, los detalles y los botones
+     (antes los detalles se partían en una columna estrecha a la derecha). */
+  .lista-docs li > a:first-child { flex: 1 1 100%; }
+  .lista-docs li > span { flex: 1 1 0; min-width: 0; }
+
+  /* Mes a mes: lo que se cobra ese mes, a todo el ancho bajo la barra. */
+  .calendario .cal-cargos { grid-column: 1 / -1; }
+}
+
+@media (max-width: 480px) {
+  /* Cabecera con muchos botones (Contratos tiene 9): una fila que se desliza de lado,
+     como los filtros de la agenda, en vez de una columna que ocupaba la pantalla entera.
+     Llega hasta el borde para que se vea que sigue. */
+  .cabecera-pagina .acciones:has(> .btn:nth-child(4)) {
+    flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; width: auto;
+    margin: 0 -16px; padding: 2px 16px 6px; flex-basis: calc(100% + 32px);
+  }
+  .cabecera-pagina .acciones:has(> .btn:nth-child(4))::-webkit-scrollbar { display: none; }
+  .cabecera-pagina .acciones:has(> .btn:nth-child(4)) > .btn { flex: none; white-space: nowrap; padding: 8px 14px; font-size: 13.5px; min-height: 38px; }
+  /* Los enlaces a los análisis (Gastos fijos, Peso y pautas…) delante de los «+ Añadir», que no se escondan al final. */
+  .cabecera-pagina .acciones > .btn-ir { order: -1; }
+  /* Botones de añadir al pie de las tarjetas de la ficha: más pequeños. */
+  .botones-tarjeta .btn { padding: 8px 14px; font-size: 13.5px; min-height: 38px; }
+  /* Rótulos de filtro («3 meses», «1 año»): en una línea. */
+  .filtros .chip, .filtros-mini .chip { white-space: nowrap; }
+  /* En la tabla del gasto en suministros, la categoría repite el nombre («Luz de casa · Luz»). */
+  .tabla .chip-categoria { display: none; }
+  /* Primera columna de las tablas de cifras: «extraordinarias» se parte con guion antes que sacar la tabla de la tarjeta. */
+  .tabla td:first-child { hyphens: auto; -webkit-hyphens: auto; }
+}
 
 /* ---------------- Gastos fijos (gastos-fijos.php) ---------------- */
 /* La cifra del panel lleva a su desglose. */
@@ -798,7 +858,8 @@ a.kpi-enlace:hover .kpi-mas { text-decoration: underline; text-underline-offset:
 .reparto { display: flex; gap: 2px; height: 14px; border-radius: var(--pildora); overflow: hidden; margin: 0 0 22px; }
 .reparto-tramo { flex: 1 1 0; min-width: 4px; background: var(--s); }
 .partida + .partida { margin-top: 18px; }
-.partida-cabecera { display: flex; align-items: center; gap: .55rem; }
+.partida-cabecera { display: flex; align-items: center; flex-wrap: wrap; gap: .2rem .55rem; }
+.partida-cabecera > .tenue { white-space: nowrap; }
 .partida-importe { margin-left: auto; font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
 .partida-items { list-style: none; margin: 6px 0 0; padding: 0 0 0 calc(10px + .55rem); }
 .partida-items li { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; padding: 8px 0; border-top: 1px solid var(--borde); font-size: 14px; }

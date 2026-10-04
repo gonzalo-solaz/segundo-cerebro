@@ -28,7 +28,7 @@ function barra_partida(float $ord, float $extra, float $max, string $color): str
 
 function porcentaje_partida(float $parte, float $total): string {
     $p = $parte / $total * 100;
-    return ($p > 0 && $p < 1 ? '<1' : numero_es(round($p))) . ' %';
+    return ($p > 0 && $p < 1 ? '<1' : numero_es(round($p))) . NBSP . '%';
 }
 
 $num = 'class="num" style="text-align:right;white-space:nowrap"';
@@ -79,12 +79,13 @@ cabecera_pagina('Gasto en comunidad',
         (<?= e($an_['desde']) ?> a <?= e($an_['hasta']) ?>), para comparar un año completo con otro y no con uno a medias.</p>
       <div class="tabla-scroll">
         <table class="tabla">
-          <thead><tr><th></th><th <?= $num ?>><?= e($an_['desde']) ?> – <?= e($an_['hasta']) ?></th><th <?= $num ?>><?= e($ah['desde']) ?> – <?= e($ah['hasta']) ?></th><th <?= $num ?>>Cambio</th></tr></thead>
+          <?php // Cabeceras que se parten («dic 24 –» / «sep 25»): en una línea, la tabla no cabía en el móvil. ?>
+          <thead><tr><th></th><th style="text-align:right"><span style="white-space:nowrap"><?= e($an_['desde']) ?> –</span> <span style="white-space:nowrap"><?= e($an_['hasta']) ?></span></th><th style="text-align:right"><span style="white-space:nowrap"><?= e($ah['desde']) ?> –</span> <span style="white-space:nowrap"><?= e($ah['hasta']) ?></span></th><th <?= $num ?>>Cambio</th></tr></thead>
           <tbody>
             <tr><td><strong>Normal</strong> (sin obras)</td>
               <td <?= $num ?>><?= e(eur($an_['normal'])) ?></td><td <?= $num ?>><strong><?= e(eur($ah['normal'])) ?></strong></td>
               <td <?= $num ?>><strong><?= e(variacion_es($cmp['pct_normal'])) ?></strong></td></tr>
-            <tr><td>Obras extraordinarias</td>
+            <tr><td>Obras y extras</td>
               <td <?= $num ?>><?= $an_['extra'] > 0.005 ? e(eur($an_['extra'])) : '—' ?></td><td <?= $num ?>><?= $ah['extra'] > 0.005 ? e(eur($ah['extra'])) : '—' ?></td><td></td></tr>
             <tr class="apagado"><td>Total pagado</td>
               <td <?= $num ?>><?= e(eur($an_['pagado'])) ?></td><td <?= $num ?>><?= e(eur($ah['pagado'])) ?></td>

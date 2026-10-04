@@ -29,15 +29,15 @@ cabecera_pagina('Gasto en suministros',
       </div>
       <div class="tabla-scroll">
         <table class="tabla">
-          <thead><tr><th>Suministro</th><th>Facturas</th><th>Media</th><th>Total</th></tr></thead>
+          <thead><tr><th>Suministro</th><th class="num">Facturas</th><th class="num">Media</th><th class="num">Total</th></tr></thead>
           <tbody>
             <?php foreach ($a['suministros'] as $id => $s): ?>
               <tr>
                 <td><a href="<?= e(url('elemento.php?id=' . $id . '#historial')) ?>"><?= e($s['nombre']) ?></a>
-                  <?php if ($s['categoria'] !== ''): ?><span class="chip"><?= e($s['categoria']) ?></span><?php endif; ?></td>
-                <td><?= (int)$s['n'] ?></td>
-                <td><?= e(eur($s['total'] / $s['n'])) ?></td>
-                <td><strong><?= e(eur($s['total'])) ?></strong></td>
+                  <?php if ($s['categoria'] !== ''): ?><span class="chip chip-categoria"><?= e($s['categoria']) ?></span><?php endif; ?></td>
+                <td class="num"><?= (int)$s['n'] ?></td>
+                <td class="num"><?= e(eur($s['total'] / $s['n'])) ?></td>
+                <td class="num"><strong><?= e(eur($s['total'])) ?></strong></td>
               </tr>
             <?php endforeach; ?>
           </tbody>
@@ -46,10 +46,10 @@ cabecera_pagina('Gasto en suministros',
       <h3 class="subtitulo">Por meses</h3>
       <div class="tabla-scroll">
         <table class="tabla">
-          <thead><tr><th>Mes</th><th>Total</th></tr></thead>
+          <thead><tr><th>Mes</th><th class="num">Total</th></tr></thead>
           <tbody>
             <?php foreach ($a['meses'] as $m => $importe): ?>
-              <tr><td><?= e(ucfirst(MESES[$m - 1])) ?></td><td><?= e(eur($importe)) ?></td></tr>
+              <tr><td><?= e(ucfirst(MESES[$m - 1])) ?></td><td class="num"><?= e(eur($importe)) ?></td></tr>
             <?php endforeach; ?>
           </tbody>
         </table>

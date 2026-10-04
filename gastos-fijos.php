@@ -39,7 +39,7 @@ $chip = static function (?array $v) use ($ipc_ref): string {
     [$clase, $flecha, $que] = $p < 0 ? ['var-baja', '▼', 'baja'] : ($p == 0.0 ? ['var-igual', '=', 'igual']
         : ($ipc_ref && $p > $ipc_ref['valor'] ? ['var-sube', '▲', 'sube más que el IPC'] : ['var-ipc', '▲', 'sube, no más que el IPC']));
     return '<span class="var ' . $clase . '" title="' . e('Frente a hace un año: ' . $que) . '">' . $flecha . ' '
-         . e(number_format(abs($p), 1, ',', '.')) . ' %</span>';
+         . e(number_format(abs($p), 1, ',', '.')) . NBSP . '%</span>';
 };
 $medias = $an['a_medias'];
 
@@ -104,7 +104,7 @@ cabecera_pagina('Gastos fijos', '<a href="' . e(url('index.php')) . '">Panel</a>
               <div>
                 <a href="<?= e(url('elemento.php?id=' . $i['id'])) ?>"><?= e($i['nombre']) ?></a> <?= $chip($i['interanual']) ?>
                 <span class="partida-meta">
-                  <?php if ($i['parte'] < 100): ?>pagas el <?= e(numero_es($i['parte'])) ?> % · <?php endif; ?>
+                  <?php if ($i['parte'] < 100): ?>pagas el <?= e(numero_es($i['parte']) . NBSP . '%') ?> · <?php endif; ?>
                   <?php if ($i['meses'] > 1): ?>
                     <?= e(coste_y_periodo($i['coste'], $i['periodicidad'])) ?><?php if ($i['proximo']): ?> · próximo cargo <?= $i['aprox'] ? '≈ ' : '' ?><?= e(fecha_corta($i['proximo'])) ?><?php endif; ?>
                   <?php elseif ($i['real']): ?>

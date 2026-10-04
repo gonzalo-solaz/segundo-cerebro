@@ -106,7 +106,7 @@ $e = lanza(static fn() => crear_registro($pdo, ['elemento_id' => $id['furgo'], '
 comprueba('un tipo de apunte que no está en la lista se rechaza', $e instanceof ErrorValidacion);
 // Luz 60/mes + seguro 240/año (20) + Netflix 12,99 + natación 35 = 127,99
 comprueba('gasto fijo mensual = 127,99 €', abs(coste_mensual_total($pdo) - 127.99) < 0.001, (string)coste_mensual_total($pdo));
-comprueba('kpi de contratos', kpi_seccion($pdo, 'contratos') === '92,99 € al mes', (string)kpi_seccion($pdo, 'contratos'));
+comprueba('kpi de contratos', kpi_seccion($pdo, 'contratos') === '92,99' . NBSP . '€ al mes', (string)kpi_seccion($pdo, 'contratos'));
 
 $e = lanza(static fn() => guardar_documento_bytes($pdo, $id['casa'], 'Falso', 'virus.pdf', "MZ\x90\x00 ejecutable", null));
 comprueba('un «.pdf» que no es PDF no entra', $e instanceof ErrorValidacion);
@@ -158,8 +158,8 @@ $hip = ['id' => 90, 'seccion' => 'contratos', 'tipo' => 'hipoteca', 'nombre' => 
         'datos' => ['coste' => 600, 'periodicidad' => 'Mensual', 'porcentaje_pago' => 60, 'fecha_fin' => '2042-11-07', 'revision_interes' => 'Trimestral']];
 $an = analisis_gastos_fijos([$hip], [], '2026-10-04', 1);
 $r = $an['revisar'][0];
-comprueba('la hipoteca: su peso, lo que queda y tu parte', $r['titulo'] === 'La hipoteca es el 100 % de tu gasto fijo'
-    && str_contains($r['texto'], 'Quedan 16 años y 1 mes') && str_contains($r['texto'], 'Pagas el 60 %: 360,00 € de los 600,00 €'), $r['titulo'] . ' / ' . $r['texto']);
+comprueba('la hipoteca: su peso, lo que queda y tu parte', $r['titulo'] === 'La hipoteca es el 100' . NBSP . '% de tu gasto fijo'
+    && str_contains($r['texto'], 'Quedan 16 años y 1 mes') && str_contains($r['texto'], 'Pagas el 60' . NBSP . '%: 360,00' . NBSP . '€ de los 600,00' . NBSP . '€'), $r['titulo'] . ' / ' . $r['texto']);
 comprueba('lo tuyo y lo de la casa', abs($an['tuyo'] - 360) < 0.001 && abs($an['total'] - 600) < 0.001 && $an['a_medias']);
 $casa = analisis_gastos_fijos([$hip], [], '2026-10-04');
 comprueba('sin decir quién mira, la casa entera (como la API y los usuarios sin persona)', abs($casa['tuyo'] - 600) < 0.001 && !$casa['a_medias']);
@@ -178,7 +178,7 @@ comprueba('finanzas: la media de los 12 meses completos, sin el actual', $sf['me
 comprueba('ahorro del 16,7 % y colchón de 2 meses (solo las cuentas activas)', abs($sf['ahorro_pct'] - 50 / 3) < 0.001 && abs($sf['colchon_meses'] - 2) < 0.001);
 comprueba('la hipoteca, por tu parte: 360 de 3.000 = 12 %, holgado', $sf['hipoteca_tuya'] && abs($sf['hipoteca_pct'] - 12) < 0.001 && $sf['cifras'][3]['nivel'] === 'bien');
 comprueba('tus gastos fijos frente a tus ingresos: 360 de 3.000 = 12 %, y lo que queda del 50 %', abs($sf['fijos_pct'] - 12) < 0.001
-    && $sf['cifras'][0]['nivel'] === 'bien' && str_contains($sf['cifras'][0]['texto'], '1.140,00 €'));
+    && $sf['cifras'][0]['nivel'] === 'bien' && str_contains($sf['cifras'][0]['texto'], '1.140,00' . NBSP . '€'));
 comprueba('lo que se repite en el banco y aquí no está: garaje y suscripciones, no la hipoteca',
     array_column($sf['repetidos'], 'categoria') === ['Garaje', 'Suscripciones'], implode(',', array_column($sf['repetidos'], 'categoria')));
 // Quién paga qué (Gonzalo = 1, Pilar = 2): la parte del titular, el resto si el titular es el otro.
@@ -276,7 +276,7 @@ comprueba('el sueldo base subió un 2,0 % en enero (la paga extra no cuenta)', $
 $sf2 = salud_finanzas($res, $an, '2026-10-04', $anios, $serie);
 comprueba('y frente al IPC del 2,9 %, pierde 0,9 puntos', str_contains(end($sf2['cifras'])['texto'], 'pierdes 0,9 puntos') && end($sf2['cifras'])['nivel'] === 'idea');
 comprueba('sin cambios de sueldo en los datos, no se dice nada', subida_salarial([$anios[1]], $serie) === null || subida_salarial([['meses' => [$anios[1]['meses'][0]]]], $serie) === null);
-comprueba('variación con signo', variacion_es(2.04) === '+2,0 %' && variacion_es(-35.83) === '−35,8 %');
+comprueba('variación con signo', variacion_es(2.04) === '+2,0' . NBSP . '%' && variacion_es(-35.83) === '−35,8' . NBSP . '%');
 
 echo "\nControl de peso\n";
 comprueba('IMC de 85,5 kg y 180 cm = 26,4 (sobrepeso)', imc(85.5, 180) === 26.4 && categoria_imc(26.4)[0] === 'Sobrepeso');

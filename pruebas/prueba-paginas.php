@@ -50,6 +50,8 @@ function pedir_con_sesion(string $pagina, array $get, ?array $post, array $sesio
 }
 
 function pinta_bien(string $que, array $r, string $debe_contener = ''): void {
+    // «127,99 €» con espacio duro (NBSP) cuenta como «127,99 €»: aquí importa el contenido.
+    $r['html'] = str_replace(NBSP, ' ', $r['html']);
     $limpio = $r['codigo'] === 0
         && str_contains($r['html'], '</html>')
         && !preg_match('/(Warning|Notice|Deprecated|Fatal error|Uncaught|ErrorException)/', $r['html']);
@@ -59,7 +61,9 @@ function pinta_bien(string $que, array $r, string $debe_contener = ''): void {
 
 echo "Páginas (GET)\n";
 pinta_bien('panel', pedir('index.php'), 'Lo que viene');
-pinta_bien('el panel enseña el aviso vencido de la ITV', pedir('index.php'), 'Pasar la ITV · Furgo');
+$r = pedir('index.php');
+pinta_bien('el panel enseña el aviso vencido de la ITV', $r, '<div class="venc-titulo">Pasar la ITV</div>');
+pinta_bien('…con la cosa enlazada debajo, sin repetirla en el título', $r, '>Furgo</a>');
 pinta_bien('el panel enseña el gasto fijo', pedir('index.php'), '127,99');
 foreach (array_keys(secciones()) as $s) {
     pinta_bien("sección {$s}", pedir('seccion.php', ['s' => $s, 'lista' => '1']), e(seccion($s)['nombre']));
