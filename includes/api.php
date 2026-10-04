@@ -76,6 +76,16 @@ function api_ejecutar(PDO $pdo, array $p, ?array $archivo = null): array {
             if (!$el || $el['seccion'] !== 'contratos' || $el['tipo'] !== 'comunidad') throw new RuntimeException('Ese elemento no es una comunidad de propietarios.');
             return ['elemento' => api_elemento_resumen($el), 'analisis' => analisis_comunidad($pdo, $el['id'])];
 
+        case 'gastos':
+            // A dónde va el gasto fijo (lo de gastos-fijos.php, sin finanzas):
+            // partidas, cosas, calendario de 12 meses y «Qué revisar».
+            $an = analisis_gastos_fijos(elementos_con_coste($pdo), historial_de_gastos($pdo, hoy()), hoy());
+            $quitar = static fn(array $i): array => array_diff_key($i, ['datos' => 0]);
+            $an['items'] = array_map($quitar, $an['items']);
+            foreach ($an['partidas'] as &$p) $p['items'] = array_map($quitar, $p['items']);
+            unset($p);
+            return $an;
+
         case 'peso':
             // Números del control de peso (para poner al día el plan). Los
             // pesajes se graban con «registro» (tipo Peso, Cintura o Grasa corporal).

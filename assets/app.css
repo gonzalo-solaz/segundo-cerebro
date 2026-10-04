@@ -59,6 +59,10 @@
   --banda-borde: rgba(255, 255, 255, .14);
   --banda-verde: #7fe0b6;
 
+  /* Series de los gráficos (gastos-fijos.php), en este orden: dos vecinas se distinguen
+     también con daltonismo (validado con la skill dataviz, 4/10/2026). La 0 es «otros». */
+  --serie-1: #2c6fae; --serie-2: #b0761a; --serie-3: #b8457c; --serie-4: #6c56b0; --serie-5: #00897a; --serie-0: #a4a9b8;
+
   --aclarar: 0%;              /* cuánto blanco se mezcla con el color de sección */
   --sombra-alta: 0 10px 32px rgba(0, 0, 0, .15), 0 40px 40px rgba(0, 0, 0, .04);
   --lateral: 264px;
@@ -93,6 +97,7 @@
   --lateral-bg: #121735;
   --banda-bg: #182050;
   --aclarar: 42%;
+  --serie-1: #4a86c8; --serie-2: #c08530; --serie-3: #d0558f; --serie-4: #8a6fd8; --serie-5: #14a08e; --serie-0: #4f5670;
   --sombra-alta: 0 10px 32px rgba(0, 0, 0, .5);
   color-scheme: dark;
 }
@@ -774,3 +779,69 @@ details.desplegable + details.desplegable { margin-top: .6rem; }
   .venc-acciones { width: 100%; padding-left: calc(52px + .9rem); }
 }
 @media (max-width: 360px) { .tarjeta { padding: 16px; } }
+
+/* ---------------- Gastos fijos (gastos-fijos.php) ---------------- */
+/* La cifra del panel lleva a su desglose. */
+a.kpi-enlace { color: inherit; font-weight: inherit; text-decoration: none; transition: background .2s var(--ease); }
+a.kpi-enlace:hover { text-decoration: none; background: rgba(255, 255, 255, .05); }
+.kpi-mas { display: inline-flex; align-items: center; gap: 4px; margin-top: 8px; color: var(--celeste); font-size: 13px; font-weight: 600; }
+a.kpi-enlace:hover .kpi-mas { text-decoration: underline; text-underline-offset: 3px; }
+.ico-girado { transform: rotate(180deg); }
+
+.serie-0 { --s: var(--serie-0); } .serie-1 { --s: var(--serie-1); } .serie-2 { --s: var(--serie-2); }
+.serie-3 { --s: var(--serie-3); } .serie-4 { --s: var(--serie-4); } .serie-5 { --s: var(--serie-5); }
+.punto { display: inline-block; width: 10px; height: 10px; border-radius: 50%; flex: none; background: var(--s, var(--borde-control)); }
+.leyenda { display: flex; flex-wrap: wrap; gap: .3rem 1rem; font-size: 13px; color: var(--tenue); }
+.leyenda > span { display: inline-flex; align-items: center; gap: 6px; }
+
+/* A dónde va: una barra apilada (el ancho, en flex-grow desde el HTML) y su leyenda con el detalle. */
+.reparto { display: flex; gap: 2px; height: 14px; border-radius: var(--pildora); overflow: hidden; margin: 0 0 22px; }
+.reparto-tramo { flex: 1 1 0; min-width: 4px; background: var(--s); }
+.partida + .partida { margin-top: 18px; }
+.partida-cabecera { display: flex; align-items: center; gap: .55rem; }
+.partida-importe { margin-left: auto; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.partida-items { list-style: none; margin: 6px 0 0; padding: 0 0 0 calc(10px + .55rem); }
+.partida-items li { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; padding: 8px 0; border-top: 1px solid var(--borde); font-size: 14px; }
+.partida-items li:first-child { border-top: 0; }
+.partida-items .num { font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--texto); }
+.partida-meta { display: block; color: var(--tenue); font-size: 13px; }
+
+/* Qué revisar: cada consejo con su icono y su nivel (el color nunca va solo: icono + texto). */
+.revisar { list-style: none; margin: 0; padding: 0; }
+.revisar li { display: flex; gap: .8rem; padding: 14px 0; border-top: 1px solid var(--borde); }
+.revisar li:first-child { border-top: 0; padding-top: 0; }
+.revisar h3 { font-size: 14.5px; margin-bottom: .25rem; }
+.revisar p { font-size: 14px; margin: 0; }
+.revisar-icono { flex: none; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--panel-2); color: var(--tenue); }
+.revisar-icono .ico { width: 16px; height: 16px; }
+.revisar-aviso .revisar-icono { background: color-mix(in srgb, var(--ambar) 13%, var(--panel)); color: var(--ambar); }
+.revisar-idea .revisar-icono { background: var(--niebla); color: var(--acento); }
+.revisar-bien .revisar-icono { background: color-mix(in srgb, var(--verde) 13%, var(--panel)); color: var(--verde); }
+.revisar .revisar-enlaces { display: flex; flex-wrap: wrap; gap: .3rem 1rem; margin-top: .4rem; font-size: 13.5px; }
+
+/* Frente a tus ingresos: tres cifras con su referencia. */
+.cifras { display: grid; gap: 12px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 760px) { .cifras { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.cifra { display: flex; flex-direction: column; background: var(--panel-2); border-radius: var(--radio-md); padding: 16px 18px; }
+.cifra-estado { display: inline-flex; align-items: center; gap: 5px; align-self: flex-start; padding: 3px 10px; border-radius: var(--pildora); background: var(--panel); color: var(--tenue); font-size: 12.5px; font-weight: 650; }
+.cifra-aviso .cifra-estado { color: var(--ambar); }
+.cifra-idea .cifra-estado { color: var(--acento); }
+.cifra-bien .cifra-estado { color: var(--verde); }
+.cifra-valor { margin-top: .5rem; font-size: 30px; font-weight: 850; letter-spacing: -.04em; line-height: 1.1; color: var(--texto); font-variant-numeric: tabular-nums; }
+.cifra-titulo { margin-bottom: .5rem; font-size: 14px; font-weight: 600; color: var(--texto); }
+.cifra p { margin: 0; font-size: 13.5px; }
+
+/* Mes a mes: una fila por mes; lo de cada mes en tenue y lo que no es mensual en el acento. */
+.cal-punto-base, .cal-base { background: color-mix(in srgb, var(--acento) 35%, var(--panel)); }
+.cal-punto-extra, .cal-extra { background: var(--acento); }
+.calendario { list-style: none; margin: 1rem 0 0; padding: 0; }
+.calendario li { display: grid; grid-template-columns: 4.8rem minmax(0, 1fr) auto; align-items: center; gap: 4px 12px; padding: 7px 0; font-size: 14px; }
+.cal-nombre { color: var(--texto-2); font-weight: 500; white-space: nowrap; }
+.cal-barra { display: flex; gap: 2px; height: 10px; }
+.cal-barra > span { display: block; height: 100%; }
+.cal-barra > span:last-child { border-radius: 0 4px 4px 0; }
+.cal-total { color: var(--texto); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.cal-pico .cal-nombre, .cal-pico .cal-total { color: var(--texto); font-weight: 750; }
+.cal-cargos { grid-column: 2 / -1; font-size: 13px; color: var(--tenue); }
+.partida-items.cosas { padding-left: 0; margin-top: 0; }
+.partida-items .num .partida-meta { text-align: right; }

@@ -51,6 +51,7 @@ if ($clave === 'salud' && elementos_peso($pdo)) {
     $botones .= '<a class="btn btn-sutil" href="' . e(url('peso.php')) . '">' . icono('bascula') . 'Peso y pautas</a>';
 }
 if ($clave === 'contratos') {
+    $botones .= '<a class="btn btn-sutil" href="' . e(url('gastos-fijos.php')) . '">' . icono('cartera') . 'Gastos fijos</a>';
     $botones .= '<a class="btn btn-sutil" href="' . e(url('gasto-suministros.php')) . '">' . icono('historial') . 'Gasto en suministros</a>';
     if (elementos_comunidad($pdo)) {
         $botones .= '<a class="btn btn-sutil" href="' . e(url('gasto-comunidad.php')) . '">' . icono('historial') . 'Gasto en comunidad</a>';

@@ -41,9 +41,10 @@ cabecera_pagina(saludo() . ', ' . nombre_corto($usuario_actual['nombre']), e(ucf
   <div class="kpi">
     <span class="kpi-num"><?= $en_30 ?></span><span class="kpi-txt">en 30 días</span>
   </div>
-  <div class="kpi">
+  <a class="kpi kpi-enlace" href="<?= e(url('gastos-fijos.php')) ?>">
     <span class="kpi-num kpi-num-texto"><?= $gasto_fijo > 0 ? e(eur($gasto_fijo)) : '—' ?></span><span class="kpi-txt">gastos fijos al mes</span>
-  </div>
+    <span class="kpi-mas">A dónde va <?= icono('atras', 'ico ico-mini ico-girado') ?></span>
+  </a>
 </section>
 
 <div class="panel-rejilla">

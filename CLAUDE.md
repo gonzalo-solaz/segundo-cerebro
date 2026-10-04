@@ -448,3 +448,25 @@ Al pasar una pantalla a esta app sobre la API, se borra de la lista `$pantallas`
 página propia; el resto no cambia. Límite conocido: si caduca la sesión de ESTA app (2 días)
 con el marco abierto, el login no se puede mostrar dentro del iframe (CSP `frame-ancestors`)
 y sale en blanco: basta recargar la página entera.
+
+**Gastos fijos: a dónde va (4/10/2026, petición de Gonzalo: «saber a dónde se va el gasto…
+actúa como experto en finanzas»).** La cifra del panel («gastos fijos al mes») lleva a
+`gastos-fijos.php` (página y no popover: la CSP no deja JS en línea y en el móvil se lee mejor;
+también hay botón en Contratos). Mismo total que el panel. Lógica pura en `includes/gastos.php`;
+lecturas por `elementos_con_coste()` (elementos.php) e `historial_de_gastos()` (registros.php).
+Enseña: reparto por partida (orden y colores FIJOS, `--serie-N` en `app.css`, validados con la
+skill dataviz para daltonismo y tema oscuro: si se añade una partida, revalidar), lo que cuesta
+cada cosa (la casa, cada vehículo; más lo apuntado en su historial en 12 meses, sin compras),
+mes a mes 12 meses (fecha de cargo = renovación de la ficha o, si no hay, último Recibo/Factura +
+periodicidad, marcado ≈; sin ninguna, se reparte) con lo que hay que apartar al mes para lo no
+mensual, y «Qué revisar»: importes que faltan, seguros que renuevan con el plazo para no renovar
+(un mes antes, art. 22 de la Ley de Contrato de Seguro), permanencias, ficha que no cuadra con
+sus facturas (≥10 % y ≥3 €/mes), suministros estacionales y la hipoteca. **Con finanzas (solo
+admin, acción `resumen`, copia de 1 h):** finanzas lleva las cuentas de Gonzalo, no las de la casa
+(allí la «Hipoteca» es su 60 %, ~367 €/mes), así que NO se divide el gasto fijo de la casa entre
+sus ingresos: se compara la hipoteca por su parte (`porcentaje_pago`) con el límite bancario del
+30-35 %, el ahorro (12 meses completos, referencia 20 %) y el colchón (saldo de las cuentas activas
+/ gasto medio, referencia 3-6 meses); y avisa de categorías del banco que parecen fijas y aquí no
+están. Visto en producción el 4/10/2026: Agua de casa sin importe, y en el banco «Garaje» (~112 €/mes)
+y «Suscripciones» (~41 €/mes) sin ficha aquí: preguntar a Gonzalo antes de darlas de alta (no hay
+tipo «Alquiler» para una plaza de garaje). API: acción `gastos` (`php remoto.php gastos`).

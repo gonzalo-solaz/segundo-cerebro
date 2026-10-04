@@ -1,0 +1,193 @@
+<?php
+// A dónde va el gasto fijo: el desglose de la cifra del panel, lo que
+// conviene revisar y, para los admin con finanzas, cómo queda frente a los
+// ingresos. Toda la lógica está en includes/gastos.php.
+require_once __DIR__ . '/includes/auth.php';
+
+$hoy = hoy();
+$an = analisis_gastos_fijos(elementos_con_coste($pdo), historial_de_gastos($pdo, $hoy), $hoy);
+
+// Finanzas: solo admin (como su sección), con la copia de una hora de finanzas_leer().
+$fin = null;
+$fin_leido = null;
+$fin_error = null;
+if (es_admin() && finanzas_configurada() && $an['total'] > 0) {
+    $r = finanzas_leer('resumen');
+    $fin = $r['datos'] ? salud_finanzas($r['datos'], $an, $hoy) : null;
+    [$fin_leido, $fin_error] = [$r['leido_en'], $r['error']];
+    if ($fin) $an['revisar'] = ordenar_revisar(array_merge($an['revisar'], $fin['revisar']));
+}
+
+$iconos_nivel = ['aviso' => 'alerta', 'idea' => 'bombilla', 'bien' => 'check', 'dato' => 'cartera'];
+$estado_nivel = ['aviso' => 'Atención', 'idea' => 'Mejorable', 'bien' => 'Bien'];
+$mes_nombre = static function (string $mes, int $i): string {
+    $m = (int)substr($mes, 5, 2);
+    return MESES_CORTOS[$m - 1] . ($i === 0 || $m === 1 ? ' ' . substr($mes, 0, 4) : '');
+};
+$pico = $an['pico'] !== null ? $an['calendario'][$an['pico']] : null;
+
+cabecera('Gastos fijos', 'index');
+cabecera_pagina('Gastos fijos', '<a href="' . e(url('index.php')) . '">Panel</a>',
+    '<a class="btn btn-sutil" href="' . e(url('index.php')) . '">' . icono('atras') . 'Panel</a>', 'cartera', '#405189');
+?>
+
+<?php if ($an['total'] <= 0): ?>
+  <div class="tarjeta vacio">
+    <p>Aún no hay gastos fijos. Ponles coste y periodicidad a tus contratos (luz, seguros, hipoteca, comunidad…) y aquí verás a dónde va cada euro.</p>
+    <a class="btn" href="<?= e(url('seccion.php?s=contratos')) ?>"><?= icono('contrato') ?>Ir a Contratos</a>
+  </div>
+<?php pie(); exit; endif; ?>
+
+<section class="kpis">
+  <div class="kpi"><span class="kpi-num kpi-num-texto"><?= e(eur($an['total'])) ?></span><span class="kpi-txt">al mes</span></div>
+  <div class="kpi"><span class="kpi-num kpi-num-texto"><?= e(eur($an['anual'])) ?></span><span class="kpi-txt">al año</span></div>
+  <div class="kpi"><span class="kpi-num kpi-num-texto"><?= e(eur($an['provision'])) ?></span><span class="kpi-txt">al mes para apartar: lo que no se paga cada mes</span></div>
+  <?php if ($pico): ?>
+    <div class="kpi"><span class="kpi-num kpi-num-texto"><?= e(eur($pico['total'])) ?></span>
+      <span class="kpi-txt">el mes más caro: <?= e(MESES[(int)substr($pico['mes'], 5, 2) - 1] . ' de ' . substr($pico['mes'], 0, 4)) ?></span></div>
+  <?php else: ?>
+    <div class="kpi"><span class="kpi-num kpi-num-texto"><?= count($an['items']) ?></span><span class="kpi-txt">contratos con importe</span></div>
+  <?php endif; ?>
+</section>
+
+<div class="panel-rejilla">
+  <section class="tarjeta" id="reparto">
+    <div class="tarjeta-cabecera"><h2><?= icono('cartera') ?>A dónde va</h2><span class="tenue">al mes</span></div>
+    <div class="reparto" role="img" aria-label="<?= e(implode(', ', array_map(static fn($p) => $p['nombre'] . ' ' . pct_es($p['pct']), $an['partidas']))) ?>">
+      <?php foreach ($an['partidas'] as $p): ?>
+        <span class="reparto-tramo serie-<?= (int)$p['serie'] ?>" style="flex-grow:<?= e(number_format($p['mensual'], 2, '.', '')) ?>"
+              title="<?= e($p['nombre'] . ' · ' . eur($p['mensual']) . ' al mes · ' . pct_es($p['pct'])) ?>"></span>
+      <?php endforeach; ?>
+    </div>
+    <?php foreach ($an['partidas'] as $p): ?>
+      <div class="partida">
+        <div class="partida-cabecera">
+          <span class="punto serie-<?= (int)$p['serie'] ?>"></span>
+          <h3><?= e($p['nombre']) ?></h3>
+          <span class="tenue"><?= e(pct_es($p['pct'])) ?></span>
+          <strong class="partida-importe"><?= e(eur($p['mensual'])) ?></strong>
+        </div>
+        <ul class="partida-items">
+          <?php foreach ($p['items'] as $i): ?>
+            <li>
+              <div>
+                <a href="<?= e(url('elemento.php?id=' . $i['id'])) ?>"><?= e($i['nombre']) ?></a>
+                <span class="partida-meta">
+                  <?php if ($i['meses'] > 1): ?>
+                    <?= e(coste_y_periodo($i['coste'], $i['periodicidad'])) ?><?php if ($i['proximo']): ?> · próximo cargo <?= $i['aprox'] ? '≈ ' : '' ?><?= e(fecha_corta($i['proximo'])) ?><?php endif; ?>
+                  <?php elseif ($i['real']): ?>
+                    según <?= (int)$i['real']['n'] ?> facturas: <?= e(eur($i['real']['mensual'])) ?> de media
+                  <?php else: ?>
+                    <?= e($i['tipo_nombre']) ?>, cada mes
+                  <?php endif; ?>
+                </span>
+              </div>
+              <span class="num"><?= e(eur($i['mensual'])) ?></span>
+            </li>
+          <?php endforeach; ?>
+        </ul>
+      </div>
+    <?php endforeach; ?>
+    <?php if ($an['sin_importe']): ?>
+      <p class="tenue nota-pequena">Sin importe, no cuentan:
+        <?php foreach ($an['sin_importe'] as $n => $s): ?><?= $n ? ', ' : '' ?><a href="<?= e(url('elemento.php?id=' . $s['id'])) ?>"><?= e($s['nombre']) ?></a><?php endforeach; ?>.</p>
+    <?php endif; ?>
+  </section>
+
+  <aside class="tarjeta" id="revisar">
+    <div class="tarjeta-cabecera"><h2><?= icono('bombilla') ?>Qué revisar</h2></div>
+    <?php if (!$an['revisar']): ?><p class="vacio-mini">Nada que revisar ahora mismo.</p><?php endif; ?>
+    <ul class="revisar">
+      <?php foreach ($an['revisar'] as $r): ?>
+        <li class="revisar-<?= e($r['nivel']) ?>">
+          <span class="revisar-icono"><?= icono($iconos_nivel[$r['nivel']]) ?></span>
+          <div>
+            <h3><?= e($r['titulo']) ?></h3>
+            <p><?= e($r['texto']) ?></p>
+            <?php if ($r['enlaces']): ?>
+              <p class="revisar-enlaces">
+                <?php foreach ($r['enlaces'] as [$texto, $ruta]): ?><a href="<?= e(url($ruta)) ?>"><?= e($texto) ?></a><?php endforeach; ?>
+              </p>
+            <?php endif; ?>
+          </div>
+        </li>
+      <?php endforeach; ?>
+    </ul>
+  </aside>
+</div>
+
+<?php if ($fin): ?>
+  <section class="tarjeta" id="ingresos">
+    <div class="tarjeta-cabecera">
+      <h2><?= icono('cartera') ?>Frente a tus ingresos</h2>
+      <span class="tenue">según finanzas, media de <?= (int)$fin['meses'] ?> meses</span>
+    </div>
+    <div class="cifras">
+      <?php foreach ($fin['cifras'] as $c): ?>
+        <div class="cifra cifra-<?= e($c['nivel']) ?>">
+          <span class="cifra-estado"><?= icono($iconos_nivel[$c['nivel']], 'ico ico-mini') ?><?= e($estado_nivel[$c['nivel']] ?? '') ?></span>
+          <span class="cifra-valor"><?= e($c['valor']) ?></span>
+          <span class="cifra-titulo"><?= e($c['titulo']) ?></span>
+          <p><?= e($c['texto']) ?></p>
+        </div>
+      <?php endforeach; ?>
+    </div>
+    <p class="tenue nota-pequena">Finanzas lleva tus cuentas, no las de toda la casa: por eso aquí no se divide el gasto fijo de la casa entre tus ingresos y la hipoteca se compara por tu parte.
+      <?php if ($fin_leido): ?>Leído el <?= e(fecha_es($fin_leido)) ?> a las <?= e(substr($fin_leido, 11, 5)) ?>.<?php endif; ?></p>
+  </section>
+<?php elseif ($fin_error && es_admin()): ?>
+  <p class="nota nota-pequena"><?= icono('alerta', 'ico ico-mini') ?> Sin la comparación con tus ingresos: <?= e($fin_error) ?></p>
+<?php endif; ?>
+
+<section class="tarjeta" id="cosas">
+  <div class="tarjeta-cabecera"><h2><?= icono('casa') ?>Lo que cuesta cada cosa</h2></div>
+  <ul class="partida-items cosas">
+    <?php foreach ($an['cosas'] as $c): ?>
+      <li>
+        <div>
+          <?php if ($c['id']): ?><a href="<?= e(url('elemento.php?id=' . $c['id'])) ?>"><?= e($c['nombre']) ?></a><?php else: ?><strong><?= e($c['nombre']) ?></strong><?php endif; ?>
+          <span class="partida-meta"><?= e(implode(', ', $c['items'])) ?></span>
+          <span class="partida-meta"><?= e(eur($c['mensual'] * 12)) ?> al año<?php if ($c['otros_12m'] > 0): ?> · y <?= e(eur($c['otros_12m'])) ?> más en su historial del último año<?php endif; ?></span>
+        </div>
+        <span class="num"><strong><?= e(eur($c['mensual'])) ?></strong><span class="partida-meta"><?= e(pct_es($c['pct'])) ?></span></span>
+      </li>
+    <?php endforeach; ?>
+  </ul>
+  <p class="tenue nota-pequena">Lo del historial es lo apuntado en la ficha de la cosa (taller, ITV, reparaciones, reformas), sin compras: no es fijo, pero también es lo que cuesta tenerla.</p>
+</section>
+
+<section class="tarjeta" id="meses">
+  <div class="tarjeta-cabecera">
+    <h2><?= icono('agenda') ?>Mes a mes</h2>
+    <span class="leyenda"><span><span class="punto cal-punto-base"></span>Cada mes</span><span><span class="punto cal-punto-extra"></span>Lo que no es mensual</span></span>
+  </div>
+  <?php if ($an['provision'] > 0): ?>
+    <p>Lo que no se paga cada mes (seguros, comunidad…) suma <strong><?= e(eur($an['provision'] * 12)) ?></strong> al año.
+      Si apartas <strong><?= e(eur($an['provision'])) ?></strong> cada mes en una cuenta aparte, <?= $pico ? 'el mes más caro (' . e(MESES[(int)substr($pico['mes'], 5, 2) - 1]) . ', ' . e(eur($pico['total'])) . ')' : 'los meses más caros' ?> no te pillará por sorpresa.</p>
+  <?php endif; ?>
+  <ol class="calendario">
+    <?php foreach ($an['calendario'] as $n => $m): ?>
+      <li class="<?= $n === $an['pico'] ? 'cal-pico' : '' ?>">
+        <span class="cal-nombre"><?= e($mes_nombre($m['mes'], $n)) ?></span>
+        <span class="cal-barra" title="<?= e(eur($m['base']) . ' cada mes + ' . eur($m['extra']) . ' no mensual') ?>">
+          <?php if ($an['max_mes'] > 0): ?>
+            <span class="cal-base" style="width:<?= e(number_format($m['base'] / $an['max_mes'] * 100, 2, '.', '')) ?>%"></span><?php if ($m['extra'] > 0): ?><span class="cal-extra" style="width:<?= e(number_format($m['extra'] / $an['max_mes'] * 100, 2, '.', '')) ?>%"></span><?php endif; ?>
+          <?php endif; ?>
+        </span>
+        <span class="cal-total"><?= e(eur($m['total'])) ?></span>
+        <?php if ($m['cargos']): ?>
+          <span class="cal-cargos">
+            <?php foreach ($m['cargos'] as $k => $c): ?><?= $k ? ' · ' : '' ?><a href="<?= e(url('elemento.php?id=' . $c['id'])) ?>"><?= e($c['nombre']) ?></a> <?= $c['aprox'] ? '≈ ' : '' ?><?= e((int)substr($c['fecha'], 8, 2) . ' ' . MESES_CORTOS[(int)substr($c['fecha'], 5, 2) - 1]) ?>, <?= e(eur($c['importe'])) ?><?php endforeach; ?>
+          </span>
+        <?php endif; ?>
+      </li>
+    <?php endforeach; ?>
+  </ol>
+  <?php if ($an['sin_fecha']): ?>
+    <p class="tenue nota-pequena">Sin fecha de cargo, repartidos por igual entre los meses: <?= e(implode(', ', $an['sin_fecha'])) ?>. Pon la renovación en su ficha (o apunta su último recibo) y saldrán en su mes.</p>
+  <?php endif; ?>
+  <p class="tenue nota-pequena">Las fechas salen de la renovación de cada ficha o, si no la tiene, del último recibo más su periodicidad (≈: aproximada). Luz y gas cuentan su importe medio todos los meses.</p>
+</section>
+
+<p class="tenue nota-pequena">Cómo se calcula: cada contrato cuenta su coste entre los meses de su periodicidad (un seguro de 240 € al año son 20 € al mes). El total es el mismo que el del panel.</p>
+<?php pie();

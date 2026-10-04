@@ -376,6 +376,21 @@ function coste_mensual_total(PDO $pdo): float {
     return round($total, 2);
 }
 
+// Los elementos activos de los tipos que llevan «coste» (contratos,
+// actividades…), lo tengan puesto o no: los que no lo tienen también
+// interesan, porque sin ellos el total se queda corto (gastos-fijos.php).
+function elementos_con_coste(PDO $pdo): array {
+    $con_coste = [];
+    foreach (secciones() as $k => $s) foreach ($s['tipos'] as $t => $def) {
+        if (isset($def['campos']['coste'])) $con_coste[$k][$t] = true;
+    }
+    $out = [];
+    foreach ($pdo->query(SQL_ELEMENTO . ' WHERE e.activo = 1 ORDER BY e.seccion, e.tipo, e.nombre') as $f) {
+        if (isset($con_coste[$f['seccion']][$f['tipo']])) $out[] = decodificar_elemento($f);
+    }
+    return $out;
+}
+
 function contar_elementos(PDO $pdo): array {
     $out = array_fill_keys(array_keys(secciones()), 0);
     foreach ($pdo->query('SELECT seccion, COUNT(*) AS n FROM elementos WHERE activo = 1 GROUP BY seccion') as $f) {

@@ -126,6 +126,58 @@ comprueba('borrar quita sus avisos y documentos', (int)$pdo->query('SELECT COUNT
     && documentos_de($pdo, $id['dni']) === []);
 comprueba('y el archivo del disco', !is_file($ruta));
 
+echo "\nGastos fijos\n";
+// Base nueva: arriba se marcó hecha la renovación del seguro (ya es de 2027).
+$pg = bd_nueva();
+$ig = sembrar($pg);
+$hist = historial_de_gastos($pg, hoy());
+comprueba('historial: lo gastado en la furgo en 12 meses y el último cargo de la luz', abs($hist[$ig['furgo']]['otros'] - 189.90) < 0.001 && $hist[$ig['luz']]['ultimo'] === '2026-09-09');
+$gf = analisis_gastos_fijos(elementos_con_coste($pg), $hist, hoy());
+comprueba('el total es el mismo que el del panel', abs($gf['total'] - coste_mensual_total($pg)) < 0.001, (string)$gf['total']);
+comprueba('por partidas, en su orden fijo', array_keys($gf['partidas']) === ['suministro', 'seguro', 'suscripcion', 'otros'], implode(',', array_keys($gf['partidas'])));
+comprueba('un contrato sin coste no cuenta, pero se dice', array_column($gf['sin_importe'], 'nombre') === ['Comunidad de prueba']);
+comprueba('lo mensual cuenta todos los meses', count($gf['calendario']) === 12 && abs($gf['calendario'][0]['total'] - 107.99) < 0.001);
+comprueba('el seguro anual se cobra en el mes de su renovación (el más caro)', $gf['calendario'][1]['mes'] === '2026-11' && abs($gf['calendario'][1]['extra'] - 240) < 0.001 && $gf['pico'] === 1);
+comprueba('para apartar: lo no mensual, al mes', abs($gf['provision'] - 20) < 0.001);
+$luz = array_values(array_filter($gf['items'], static fn($i) => $i['id'] === $ig['luz']))[0];
+comprueba('lo real de la luz sale de sus facturas, sin la incidencia', $luz['real']['n'] === 3 && abs($luz['real']['mensual'] - 251.12 / 3) < 0.001);
+$cosas = array_column($gf['cosas'], 'mensual', 'nombre');
+comprueba('por cosa: la natación es de Leo', abs(($cosas['Leo Prueba'] ?? 0) - 35) < 0.001, implode(',', array_keys($cosas)));
+comprueba('revisar: lo primero, el importe que falta', $gf['revisar'][0]['nivel'] === 'aviso' && str_contains($gf['revisar'][0]['titulo'], 'Comunidad de prueba'));
+comprueba('revisar: la luz no cuadra con sus facturas', (bool)array_filter($gf['revisar'], static fn($r) => $r['titulo'] === '«Luz» no cuadra con sus facturas'));
+comprueba('revisar: el seguro se renueva y ya pasó el mes para no renovar', (bool)array_filter($gf['revisar'],
+    static fn($r) => str_contains($r['titulo'], 'Seguro de hogar') && str_contains($r['texto'], 'Ya no da tiempo')));
+$c = fechas_de_cargo(['renovacion' => '2025-03-12'], 12, null, '2026-10-01', '2027-09-30');
+comprueba('una renovación vieja se lleva hacia delante', $c['fechas'] === ['2027-03-12'] && !$c['aprox']);
+$c = fechas_de_cargo([], 3, '2026-09-30', '2026-10-01', '2027-09-30');
+comprueba('sin renovación: el último recibo + su periodicidad (aproximado)', $c['fechas'] === ['2026-12-30', '2027-03-30', '2027-06-30', '2027-09-30'] && $c['aprox']);
+$c = fechas_de_cargo([], 3, '2026-01-31', '2026-01-01', '2026-12-31');
+comprueba('sin arrastrar el fin de mes', $c['fechas'] === ['2026-04-30', '2026-07-31', '2026-10-31'], implode(',', $c['fechas']));
+comprueba('sin ancla no se inventa la fecha', fechas_de_cargo([], 12, null, '2026-10-01', '2027-09-30') === null);
+$hip = ['id' => 90, 'seccion' => 'contratos', 'tipo' => 'hipoteca', 'nombre' => 'Hipoteca', 'enlace_id' => 2, 'enlace_nombre' => 'Casa', 'persona_nombre' => null,
+        'datos' => ['coste' => 600, 'periodicidad' => 'Mensual', 'porcentaje_pago' => 60, 'fecha_fin' => '2042-11-07', 'revision_interes' => 'Trimestral']];
+$an = analisis_gastos_fijos([$hip], [], '2026-10-04');
+$r = $an['revisar'][0];
+comprueba('la hipoteca: su peso, lo que queda y tu parte', $r['titulo'] === 'La hipoteca es el 100 % del gasto fijo'
+    && str_contains($r['texto'], 'Quedan 16 años y 1 mes') && str_contains($r['texto'], 'tu parte (60 %) son 360,00 €'), $r['titulo'] . ' / ' . $r['texto']);
+$corta = analisis_gastos_fijos([array_replace_recursive($hip, ['datos' => ['fecha_fin' => '2027-03-07']])], [], '2026-10-04');
+comprueba('tras la última cuota, la hipoteca deja de contar', $corta['calendario'][5]['total'] == 600 && $corta['calendario'][6]['total'] == 0);
+$meses_fin = [];
+for ($i = 0; $i < 12; $i++) $meses_fin[] = ['mes' => substr(sumar_meses('2025-10-01', $i), 0, 7), 'gasto' => 2500, 'ingreso' => 3000];
+$meses_fin[] = ['mes' => '2026-10', 'gasto' => 0, 'ingreso' => 0];
+$res = ['saldos' => [['saldo' => 5000, 'activa' => true], ['saldo' => 900, 'activa' => false]],
+        'gasto' => ['meses' => $meses_fin, 'categorias' => [
+            ['categoria' => 'Garaje', 'mes' => 113.63, 'media' => 112.24], ['categoria' => 'Hipoteca', 'mes' => 360, 'media' => 377.09],
+            ['categoria' => 'Suscripciones', 'mes' => 49.78, 'media' => 41.07], ['categoria' => 'Vehículos', 'mes' => 434.07, 'media' => 392.32],
+            ['categoria' => 'Sin categorizar', 'mes' => 286.64, 'media' => 30.14]]]];
+$sf = salud_finanzas($res, $an, '2026-10-04');
+comprueba('finanzas: la media de los 12 meses completos, sin el actual', $sf['meses'] === 12 && abs($sf['ingreso'] - 3000) < 0.001 && abs($sf['gasto'] - 2500) < 0.001);
+comprueba('ahorro del 16,7 % y colchón de 2 meses (solo las cuentas activas)', abs($sf['ahorro_pct'] - 50 / 3) < 0.001 && abs($sf['colchon_meses'] - 2) < 0.001);
+comprueba('la hipoteca, por tu parte: 360 de 3.000 = 12 %, holgado', $sf['hipoteca_tuya'] && abs($sf['hipoteca_pct'] - 12) < 0.001 && $sf['cifras'][2]['nivel'] === 'bien');
+comprueba('lo que se repite en el banco y aquí no está: garaje y suscripciones, no la hipoteca',
+    array_column($sf['repetidos'], 'categoria') === ['Garaje', 'Suscripciones'], implode(',', array_column($sf['repetidos'], 'categoria')));
+comprueba('con menos de 6 meses de finanzas no se opina', salud_finanzas(['gasto' => ['meses' => [['mes' => '2026-09', 'gasto' => 1, 'ingreso' => 1]]]], $an, '2026-10-04') === null);
+
 echo "\nControl de peso\n";
 comprueba('IMC de 85,5 kg y 180 cm = 26,4 (sobrepeso)', imc(85.5, 180) === 26.4 && categoria_imc(26.4)[0] === 'Sobrepeso');
 comprueba('los cortes del IMC son los de la OMS', categoria_imc(18.4)[0] === 'Bajo peso' && categoria_imc(24.9)[0] === 'Peso normal'

@@ -12,6 +12,9 @@ $api = static fn(string $accion, array $datos = [], ?array $archivo = null) =>
 
 $r = $api('estado');
 comprueba('estado: hoy, avisos y gasto fijo', $r['hoy'] === '2026-10-03' && count($r['avisos']) > 0 && abs($r['gasto_fijo_mensual'] - 127.99) < 0.001);
+$r = $api('gastos');
+comprueba('gastos: el total del panel, por partidas, mes a mes y qué revisar (sin los datos en bruto)', abs($r['total'] - 127.99) < 0.001
+    && isset($r['partidas']['seguro']) && count($r['calendario']) === 12 && $r['revisar'] && !isset($r['items'][0]['datos']) && !isset($r['partidas']['seguro']['items'][0]['datos']));
 $r = $api('esquema');
 comprueba('esquema: describe campos con sus opciones y avisos', $r['secciones']['vehiculos']['tipos']['vehiculo']['campos']['proxima_itv']['vence'] === 'Pasar la ITV'
     && in_array('Diésel', $r['secciones']['vehiculos']['tipos']['vehiculo']['campos']['combustible']['opciones'], true));

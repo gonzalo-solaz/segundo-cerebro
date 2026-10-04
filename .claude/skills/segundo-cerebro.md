@@ -115,7 +115,8 @@ Sobre el contexto de la casa:
    - **Próximas semanas**.
 3. Para cada cosa, di qué hay que hacer en concreto si es obvio (pedir cita ITV, comparar el seguro antes de que renueve).
 4. **No marques nada como hecho sin que el usuario lo confirme.**
-5. Si `vigilancia` dice que el cron no corre, avísalo al final con el paso 6 de `INSTRUCCIONES.md`.
+5. Si pregunta **a dónde va el dinero o por los gastos fijos**: `php remoto.php gastos` (partidas, cosas, mes a mes y «revisar», lo mismo que `gastos-fijos.php`). Cuenta el total, las 2-3 partidas que más pesan, el mes más caro y lo que hay que apartar al mes; luego lo de «revisar». No recalcules a ojo.
+6. Si `vigilancia` dice que el cron no corre, avísalo al final con el paso 6 de `INSTRUCCIONES.md`.
 
 ---
 

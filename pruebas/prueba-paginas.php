@@ -86,6 +86,16 @@ pinta_bien('Salud enlaza al control de peso', pedir('seccion.php', ['s' => 'salu
 pinta_bien('la tarjeta del control de peso enseña el último peso', pedir('seccion.php', ['s' => 'salud']), '85,5 kg');
 pinta_bien('la ficha del control de peso lleva a la evolución', pedir('elemento.php', ['id' => (string)$id['peso']]), 'Evolución y pautas');
 pinta_bien('el panel enseña el último peso', pedir('index.php'), 'Gonzalo: 85,5 kg');
+pinta_bien('el panel lleva al desglose del gasto fijo', pedir('index.php'), 'gastos-fijos.php');
+$r = pedir('gastos-fijos.php');
+pinta_bien('gastos fijos: el mismo total que el panel', $r, '127,99 €');
+pinta_bien('…por partidas, con cada contrato', $r, 'Natación');
+pinta_bien('…con el mes del seguro anual', $r, 'el mes más caro: noviembre de 2026');
+pinta_bien('…y lo que hay que revisar', $r, e('Falta el importe de «Comunidad de prueba»'));
+pinta_bien('…y lo que cuesta cada cosa', $r, 'Lo que cuesta cada cosa');
+comprueba('…sin finanzas configurada no lo intenta', !str_contains($r['html'], 'Frente a tus ingresos'));
+pinta_bien('un miembro también ve los gastos fijos', pedir('gastos-fijos.php', [], null, $id['miembro']), 'A dónde va');
+pinta_bien('Contratos enlaza a los gastos fijos', pedir('seccion.php', ['s' => 'contratos']), 'gastos-fijos.php');
 pinta_bien('sección que no existe → página de error', pedir('seccion.php', ['s' => 'nada']), 'Esa sección no existe');
 foreach (['furgo', 'casa', 'ficha_leo', 'dni', 'seguro', 'netflix', 'cole', 'cumple', 'fontanero', 'trat'] as $k) {
     pinta_bien("ficha de {$k}", pedir('elemento.php', ['id' => (string)$id[$k]]), 'Avisos');
@@ -201,6 +211,19 @@ comprueba('y sus datos, sin que un concepto pueda cerrar el script', str_contain
 comprueba('y NO pinta «Qué mirar» (lo quitó Gonzalo)', !str_contains($r['html'], 'Qué mirar') && !str_contains($r['html'], 'Revolut lleva 20 días sin importar'));
 pinta_bien('y los botones a finanzas van por el pase', $r, 'finanzas-entrar.php?a=importador.php');
 pinta_bien('si finanzas no contesta, lo dice y enseña la última copia', $r, 'Enseño la última copia');
+// Gastos fijos frente a los ingresos: la acción «resumen» de finanzas, de la copia (sin red).
+$meses_fin = [];
+for ($i = 0; $i < 12; $i++) $meses_fin[] = ['mes' => substr(sumar_meses('2025-10-01', $i), 0, 7), 'gasto' => 2500, 'ingreso' => 3000];
+$meses_fin[] = ['mes' => '2026-10', 'gasto' => 0, 'ingreso' => 0];
+file_put_contents($cache . '/finanzas-resumen.json', json_encode(['t' => time(), 'leido_en' => '2026-10-03 08:00:00', 'datos' => [
+    'saldos' => [['cuenta' => 'Banco', 'saldo' => 9000, 'activa' => true]],
+    'gasto' => ['meses' => $meses_fin, 'categorias' => [['categoria' => 'Garaje', 'mes' => 113.63, 'media' => 112.24]]]]]));
+$r = pedir('gastos-fijos.php');
+pinta_bien('gastos fijos: con finanzas, frente a los ingresos', $r, 'Frente a tus ingresos');
+pinta_bien('…con el ahorro de los 12 meses completos', $r, '<span class="cifra-valor">17 %</span>');
+pinta_bien('…y lo que se repite en el banco y aquí no está', $r, e('«Garaje» (112,24 € al mes de media)'));
+comprueba('…pero un miembro no ve nada de finanzas', !str_contains(pedir('gastos-fijos.php', [], null, $id['miembro'])['html'], 'Frente a tus ingresos'));
+@unlink($cache . '/finanzas-resumen.json');
 @unlink($cache . '/finanzas-panel.json');
 putenv('SC_CACHE');
 putenv('SC_FINANZAS_CLAVE');

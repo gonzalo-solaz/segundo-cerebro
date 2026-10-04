@@ -81,6 +81,38 @@ function borrar_registro(PDO $pdo, int $id, int $elemento_id, ?int $usuario_id =
     anotar($pdo, $usuario_id, "borró el apunte «{$titulo}»");
 }
 
+/**
+ * Lo que dice el historial de cada elemento para los gastos fijos, en una
+ * sola consulta: [elemento_id => ['ultimo' => fecha del último cargo
+ * («Factura» o «Recibo» con coste: de ahí sale cuándo toca el siguiente),
+ * 'n', 'total', 'max', 'min' => los cargos de los últimos 12 meses,
+ * 'otros' => lo demás gastado en 12 meses (taller, ITV, reparaciones…; sin
+ * «Compra o venta», que no es mantener)]].
+ */
+function historial_de_gastos(PDO $pdo, string $hoy): array {
+    $desde = sumar_meses($hoy, -12);
+    $out = [];
+    foreach ($pdo->query('SELECT elemento_id, fecha, tipo, coste FROM registros WHERE coste IS NOT NULL ORDER BY fecha, id') as $f) {
+        $o = &$out[(int)$f['elemento_id']];
+        $o ??= ['ultimo' => null, 'n' => 0, 'total' => 0.0, 'max' => null, 'min' => null, 'otros' => 0.0];
+        $c = (float)$f['coste'];
+        $cargo = in_array($f['tipo'], ['Factura', 'Recibo'], true);
+        if ($cargo) $o['ultimo'] = $f['fecha'];
+        if ($f['fecha'] > $desde && $f['fecha'] <= $hoy) {
+            if ($cargo) {
+                $o['n']++;
+                $o['total'] += $c;
+                $o['max'] = max($o['max'] ?? $c, $c);
+                $o['min'] = min($o['min'] ?? $c, $c);
+            } elseif ($f['tipo'] !== 'Compra o venta') {
+                $o['otros'] += $c;
+            }
+        }
+        unset($o);
+    }
+    return $out;
+}
+
 // Lo gastado en los últimos 12 meses (suma de costes del historial).
 function gasto_ultimo_ano(PDO $pdo, int $elemento_id): float {
     $st = $pdo->prepare('SELECT COALESCE(SUM(coste), 0) FROM registros WHERE elemento_id = ? AND fecha > ?');
