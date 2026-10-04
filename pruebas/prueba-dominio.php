@@ -243,7 +243,11 @@ $v = interanual_item($itl, [], $hl, '2026-10-03');
 comprueba('por facturas: diciembre, agosto y septiembre de los dos años, 200 € → 251,12 €', $v['como'] === 'facturas' && abs($v['pct'] - (251.12 / 200 - 1) * 100) < 0.001
     && abs($v['antes'] - 200 / 3 * 0.5) < 0.001, json_encode($v));
 comprueba('un mes suelto no basta para lo mensual', interanual_item($itl, [], ['cargos' => [['2025-09-10', 80], ['2026-09-09', 100]]], '2026-10-03') === null);
-comprueba('las facturas mandan sobre el precio', interanual_item($itl, [['desde' => '2020-01-01', 'coste' => 1, 'periodicidad' => 'Mensual', 'nota' => '']], $hl, '2026-10-03')['como'] === 'facturas');
+// Cambio de compañía: bimestral (Naturgy) frente a mensual (Pepeenergy) no se empareja por mes.
+$hg = ['cargos' => [['2025-04-15', 140.47], ['2025-06-11', 31.90], ['2025-08-19', 29.44], ['2026-04-09', 83.86], ['2026-06-08', 27.52], ['2026-06-29', 27.29], ['2026-08-19', 14.62]]];
+comprueba('bimestral frente a mensual no se compara por facturas', interanual_item($itl, [], $hg, '2026-10-03') === null);
+comprueba('el mismo ritmo en los dos años sí se compara', interanual_item($itl, [], $hl, '2026-10-03') !== null);
+comprueba('las facturas mandan sobre el precio',interanual_item($itl, [['desde' => '2020-01-01', 'coste' => 1, 'periodicidad' => 'Mensual', 'nota' => '']], $hl, '2026-10-03')['como'] === 'facturas');
 // Con obras extraordinarias: se compara lo normal con lo normal y las obras van aparte.
 $itc = ['tipo' => 'comunidad', 'meses' => 3, 'parte' => 50, 'tuyo' => 150, 'mensual' => 100, 'coste' => 300, 'periodicidad' => 'Trimestral', 'real' => null];
 $hc = ['cargos' => [['2025-03-31', 300], ['2025-06-30', 300], ['2026-03-31', 330], ['2026-06-30', 900, 540]]];

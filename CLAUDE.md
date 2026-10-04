@@ -507,6 +507,21 @@ internet (facturas de 2025), comunidad (recibos de 2025), hipoteca (la cuota de 
 finanzas son transferencias redondas, 407 € hasta enero y 360 € desde febrero, no la cuota) y la
 prima anterior de la Hanway.
 
+**Suministros de 2025 para comparar con 2026 (4/10/2026, Gonzalo pasó el extracto del banco y las capturas de
+Pepeenergy, Aguas de Valencia y Naturgy).** Grabados en producción 37 apuntes `Factura` SIN PDF (registros 223-259):
+luz 12 meses (ficha 6), Pepephone 13 (ficha 3: 12 cargos del extracto, con dos cargos sumados hasta julio, y la factura
+de diciembre de 2025, 49,16 €), agua 4 recibos (ficha 5) y gas 8 (ficha 4: 7 cargos de **Naturgy**, la compañía anterior,
+y la primera factura de Pepeenergy de diciembre, 108,91 €). No repetir. **Fechas:** la del cargo o recibo cuando consta;
+si no (luz de abril a diciembre, gas de Pepeenergy, Pepephone de diciembre) es aproximada y la nota lo dice, siempre en el
+MES de emisión (el de la factura, no el del consumo) para que `interanual_item()` empareje con 2026. Lo que dicen: luz
+ene-ago +11,5 % (julio y agosto, +88 €: aire acondicionado), agua +2,6 %, Pepephone +2,7 % (el descuento de 3 € del gas
+tapa la subida de tarifa a 52,90 €). El gas de invierno es más caro por los radiadores de gas (Gonzalo). **Gas: no se
+compara por facturas** (Naturgy factura cada 2 meses; Pepeenergy, cada mes): `interanual_item()` ahora lo salta cuando el
+ritmo de los dos años no coincide (salía −24 % falso). Para comparar de verdad hacen falta los PDF de Naturgy (periodo y
+kWh), y los de luz de 2025 para separar precio de consumo. **Por revisar:** los 108,91 € de Pepeenergy y los
+86,50 € + 9,93 € de Naturgy caen en las mismas semanas de diciembre (¿solapados?). Ojo con el balance por años: la
+fecha es la de emisión, no la del consumo.
+
 **Impuestos: IBI e impuesto de circulación (4/10/2026, petición de Gonzalo: «en vehículos habrá que
 añadir los impuestos de circulación; también el IBI para la vivienda»).** Tipo `contratos/impuesto`
 («Impuesto o tasa»), enlazable a una vivienda o a un vehículo, así que sale solo con su botón «Impuesto o

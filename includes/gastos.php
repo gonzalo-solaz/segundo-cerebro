@@ -290,12 +290,20 @@ function interanual_item(array $it, array $precios, ?array $h, string $hoy): ?ar
     $antes = [];
     $ahora_x = [];
     $antes_x = [];
+    $f_ahora = [];
+    $f_antes = [];
     foreach ($h['cargos'] ?? [] as $cargo) {
         [$f, $c, $x] = $cargo + [2 => 0.0];
         $ym = substr($f, 0, 7);
-        if ($ym >= $corte) { $ahora[$ym] = ($ahora[$ym] ?? 0) + $c; $ahora_x[$ym] = ($ahora_x[$ym] ?? 0) + $x; }
-        else { $antes[$ym] = ($antes[$ym] ?? 0) + $c; $antes_x[$ym] = ($antes_x[$ym] ?? 0) + $x; }
+        if ($ym >= $corte) { $ahora[$ym] = ($ahora[$ym] ?? 0) + $c; $ahora_x[$ym] = ($ahora_x[$ym] ?? 0) + $x; $f_ahora[] = $f; }
+        else { $antes[$ym] = ($antes[$ym] ?? 0) + $c; $antes_x[$ym] = ($antes_x[$ym] ?? 0) + $x; $f_antes[] = $f; }
     }
+    // Si un año se factura cada 2 meses y el otro cada mes (cambio de compañía: el gas de
+    // Naturgy frente a Pepeenergy), emparejar por mes enfrenta una factura de dos meses con
+    // una de uno y sale una bajada falsa: no se compara por facturas.
+    $ritmo_antes = intervalo_facturas($f_antes);
+    $ritmo_ahora = intervalo_facturas($f_ahora);
+    $mismo_ritmo = $ritmo_antes === null || $ritmo_ahora === null || $ritmo_antes === $ritmo_ahora;
     // $a/$b = lo pagado en los meses comunes (antes/ahora); $xa/$xb = de ello, lo extraordinario (obras).
     [$a, $b, $k, $xa, $xb] = [0.0, 0.0, 0, 0.0, 0.0];
     foreach ($ahora as $ym => $c) {
@@ -308,7 +316,7 @@ function interanual_item(array $it, array $precios, ?array $h, string $hoy): ?ar
     $cada = $it['real']['cada'] ?? $it['meses'];
     // Se compara lo normal con lo normal: las obras extraordinarias van aparte, no inflan la subida.
     [$na, $nb] = [$a - $xa, $b - $xb];
-    if ($na > 0 && $k >= ($cada >= 3 ? 1 : 2)) {
+    if ($mismo_ritmo && $na > 0 && $k >= ($cada >= 3 ? 1 : 2)) {
         $mes = static fn(float $x): float => $x / ($k * $cada) * $parte;
         $detalle = ($k === 1 ? 'la misma factura' : 'las facturas de los mismos ' . $k . ' meses') . ' de los dos años: ' . eur($a) . ' → ' . eur($b);
         if ($xa > 0.005 || $xb > 0.005) {
