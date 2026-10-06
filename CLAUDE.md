@@ -626,10 +626,7 @@ contrato con aviso. **Horario** (en el empleo y en cada persona) en formato list
 una línea «Desde: …» no cuenta como día. Los datos de RRHH los manda **Workday** (Gonzalo tiene acceso):
 aquí se copian los que conviene tener a mano. Quién lo ve: de momento solo entra Gonzalo (su decisión:
 «no me preocupa de momento»); si da de alta a Pilar, revisar si Trabajo debe ser solo suyo (datos de
-terceros: evaluaciones, incidencias). **Pendiente de grabar en producción** (en el equipo de la oficina,
-`C:\Users\gsolaz`, no hay `acceso.json`): `private/importar-notion/equipo/*.json` (6 personas de Notion
-y, en la ficha 35, horario y trayectoria) con `php remoto.php elemento <archivo>`; antes, `buscar trabajo`
-para no duplicar. **Siguientes pasos hablados, sin hacer:** plan de desarrollo (objetivos por curso con
+terceros: evaluaciones, incidencias). **Grabado en producción (6/10/2026):** las 6 personas = elementos 43-48 (Teresa, Javier, Borja, Alejandro, Patricia, Maite; Javier con puesto «Técnico de Marketing Digital» y servicio continuo 13/06/2022 según Workday) y, en la ficha 35, el horario y la trayectoria. No repetir. Sin rellenar a propósito: «relación» y contrato de casi todos (Notion no lo dice), la incorporación de Borja y el puesto/contrato de la ficha 35. Los JSON están en `private/importar-notion/equipo/`; en este equipo (`gsolaz`) `acceso.json` ya existe. **Siguientes pasos hablados, sin hacer:** plan de desarrollo (objetivos por curso con
 niveles 0-4 y notas desde 20-21), formación, saldo de horas/días debidos (falta decidir cuánto vale un día),
 evaluaciones del periodo de prueba (PDF en Notion), licencias del servicio con aviso de renovación (su
 importe NO en `coste`: sumaría al gasto fijo de casa), documentos (puestos, normas, protocolos) y la
