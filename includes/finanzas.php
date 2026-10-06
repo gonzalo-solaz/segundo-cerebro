@@ -14,6 +14,10 @@
 // =====================================================================
 
 const FINANZAS_CACHE_SEGUNDOS = 3600;
+// Sube este número cuando finanzas añada campos a lo que se lee (o aquí se empiecen a usar):
+// las copias de otro formato no se dan por buenas y se vuelve a pedir. Sin esto, tras
+// desplegar el `variable` de las nóminas la ficha seguía una hora con la copia sin él (6/10/2026).
+const FINANZAS_CACHE_FORMATO = 2;
 
 function finanzas_configurada(): bool {
     return FINANZAS_URL !== '' && FINANZAS_API_CLAVE !== '';
@@ -62,13 +66,13 @@ function finanzas_leer(string $accion, bool $forzar = false): array {
     }
     $ruta = finanzas_ruta_cache($accion);
     $copia = is_file($ruta) ? json_array((string)@file_get_contents($ruta)) : [];
-    if (!$forzar && $copia && time() - (int)($copia['t'] ?? 0) < FINANZAS_CACHE_SEGUNDOS) {
+    if (!$forzar && $copia && (int)($copia['f'] ?? 0) === FINANZAS_CACHE_FORMATO && time() - (int)($copia['t'] ?? 0) < FINANZAS_CACHE_SEGUNDOS) {
         return ['datos' => $copia['datos'] ?? [], 'leido_en' => $copia['leido_en'] ?? null, 'error' => null];
     }
     try {
         $datos = finanzas_pedir(['accion' => $accion]);
         unset($datos['ok']);
-        $nueva = ['t' => time(), 'leido_en' => ahora(), 'datos' => $datos];
+        $nueva = ['t' => time(), 'f' => FINANZAS_CACHE_FORMATO, 'leido_en' => ahora(), 'datos' => $datos];
         if (!is_dir(dirname($ruta))) @mkdir(dirname($ruta), 0750, true);
         @file_put_contents($ruta, json_texto($nueva), LOCK_EX);
         return ['datos' => $datos, 'leido_en' => $nueva['leido_en'], 'error' => null];
@@ -97,7 +101,7 @@ function finanzas_panel(): array {
         $datos = finanzas_pedir(['accion' => 'panel'], 25);
         unset($datos['ok']);
         if (!is_dir(dirname($ruta))) @mkdir(dirname($ruta), 0750, true);
-        @file_put_contents($ruta, json_encode(['t' => time(), 'leido_en' => ahora(), 'datos' => $datos], JSON_UNESCAPED_UNICODE), LOCK_EX);
+        @file_put_contents($ruta, json_encode(['t' => time(), 'f' => FINANZAS_CACHE_FORMATO, 'leido_en' => ahora(), 'datos' => $datos], JSON_UNESCAPED_UNICODE), LOCK_EX);
         return ['datos' => $datos, 'leido_en' => ahora(), 'error' => null];
     } catch (RuntimeException $ex) {
         $copia = is_file($ruta) ? json_array((string)@file_get_contents($ruta)) : [];

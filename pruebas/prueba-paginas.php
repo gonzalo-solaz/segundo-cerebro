@@ -368,7 +368,7 @@ pinta_bien('…y su horario como lista', pedir('elemento.php', ['id' => (string)
 pinta_bien('la ficha del empleo también lleva las pestañas', pedir('elemento.php', ['id' => (string)$id['empleo']]), 'aria-current="page">Equipo');
 $cache = sys_get_temp_dir() . '/sc-cache-' . getmypid();
 @mkdir($cache, 0777, true);
-file_put_contents($cache . '/finanzas-nomina_estado.json', json_encode(['t' => time(), 'leido_en' => '2026-10-03 08:00:00', 'datos' => ['anios' => nominas_de_ejemplo()]]));
+file_put_contents($cache . '/finanzas-nomina_estado.json', json_encode(['t' => time(), 'f' => FINANZAS_CACHE_FORMATO, 'leido_en' => '2026-10-03 08:00:00', 'datos' => ['anios' => nominas_de_ejemplo()]]));
 putenv('SC_CACHE=' . $cache);
 putenv('SC_FINANZAS_CLAVE=clave-de-finanzas');
 $r = pedir('elemento.php', ['id' => (string)$id['empleo']]);
