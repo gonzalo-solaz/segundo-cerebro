@@ -241,6 +241,11 @@ function longitud(string $s): int {
     return function_exists('mb_strlen') ? mb_strlen($s, 'UTF-8') : (int)preg_match_all('/./us', $s);
 }
 
+function minusculas(string $s): string {
+    if (function_exists('mb_strtolower')) return mb_strtolower($s, 'UTF-8');
+    return strtr(strtolower($s), ['Á' => 'á', 'É' => 'é', 'Í' => 'í', 'Ó' => 'ó', 'Ú' => 'ú', 'Ü' => 'ü', 'Ñ' => 'ñ']);
+}
+
 /**
  * Un texto de varias líneas como lista: cada línea es un punto; una línea que
  * acaba en «:» abre un grupo con ese título; «Etiqueta: valor» pone la etiqueta
