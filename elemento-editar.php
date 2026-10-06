@@ -87,6 +87,7 @@ cabecera_pagina($titulo, '<a href="' . e(url('seccion.php?s=' . $s)) . '">' . e(
   <?php endif; ?>
 
   <?php foreach ($def['campos'] as $clave => $c): ?>
+    <?php if (!empty($c['sin_finanzas']) && ($valores['datos']['nominas_finanzas'] ?? '') === 'Sí') continue; ?>
     <?= campo_formulario($clave, $c, $valores['datos'][$clave] ?? null) ?>
   <?php endforeach; ?>
 

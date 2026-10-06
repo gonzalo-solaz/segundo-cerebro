@@ -951,3 +951,8 @@ a.kpi-enlace:hover .kpi-mas { text-decoration: underline; text-underline-offset:
 .casillas legend { font-size: 14px; font-weight: 600; margin-bottom: .5rem; padding: 0; }
 .casilla { display: inline-flex; align-items: center; gap: .4rem; font-size: 15px; cursor: pointer; }
 .casilla input { width: 18px; height: 18px; accent-color: var(--acento); }
+
+/* Botones de una tarjeta junto a un desplegable (Formación: «Apuntar un curso» y «Curso nuevo»):
+   sin los márgenes del desplegable, el enlace se estiraba hasta su altura (6/10/2026). */
+.botones-tarjeta { align-items: flex-start; }
+.botones-tarjeta > details.desplegable { margin: 0; }

@@ -171,6 +171,13 @@ if ($el['seccion'] === 'trabajo') {
             <dd><a href="<?= e(url('elemento.php?id=' . $el['enlace_id'])) ?>"><?= e($el['enlace_nombre']) ?></a></dd>
           </div>
         <?php endif; ?>
+        <?php // El bruto del empleo con nóminas en finanzas: calculado de ellas, no apuntado a mano. ?>
+        <?php if ($nominas !== null && ($bn = $nominas['resumen']['bruto_anterior'] ?? null)): $alguno = true; ?>
+          <div><dt>Salario bruto <?= (int)$bn['anio'] ?></dt><dd><?= e(eur($bn['proyectado'])) ?></dd></div>
+        <?php endif; ?>
+        <?php if ($nominas !== null && ($bn = $nominas['resumen']['bruto'] ?? null)): $alguno = true; ?>
+          <div><dt>Salario bruto <?= (int)$bn['anio'] ?><?= $bn['completo'] ? '' : ' (previsto)' ?></dt><dd><?= e(($bn['completo'] ? '' : '≈ ') . eur($bn['proyectado'])) ?></dd></div>
+        <?php endif; ?>
         <?php if (($cm = coste_mensual($el['datos'])) > 0 && ($el['datos']['periodicidad'] ?? '') !== 'Mensual'): ?>
           <div><dt>Equivale a</dt><dd><?= e(eur($cm)) ?> al mes</dd></div>
         <?php endif; ?>

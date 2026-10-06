@@ -376,6 +376,10 @@ pinta_bien('con clave, enseña el líquido del año leído de finanzas', $r, '9.
 pinta_bien('las nóminas nacen plegadas, con el bruto previsto a la vista', $r, '<details class="tarjeta tarjeta-plegable" id="nominas">');
 pinta_bien('…bruto previsto en la línea de resumen', $r, 'Bruto 2026: ≈ 23.135,95 € previsto');
 pinta_bien('y avisa de la nómina que falta', $r, 'Falta grabar la nómina de septiembre 2026');
+pinta_bien('en Datos, el bruto del año pasado sale de las nóminas', $r, '<dt>Salario bruto 2025</dt>');
+pinta_bien('…y el de este año, previsto', $r, '<dt>Salario bruto 2026 (previsto)</dt><dd>≈ 23.135,95 €</dd>');
+$r_ed = pedir('elemento-editar.php', ['id' => (string)$id['empleo']]);
+comprueba('con las nóminas en finanzas, el bruto anual no se pide a mano', $r_ed['codigo'] === 0 && !str_contains($r_ed['html'], 'name="datos[bruto_anual]"') && str_contains($r_ed['html'], 'name="datos[jornada]"'));
 pinta_bien('el variable de enero, en la columna de la paga extra', $r, '368,04 €<br><span class="tenue">variable</span>');
 comprueba('sin columna de diferencia ni avisos de descuadre', !str_contains($r['html'], '>Diferencia</th>') && !str_contains($r['html'], 'no cuadra'));
 pinta_bien('el plan de desarrollo también nace plegado', pedir('elemento.php', ['id' => (string)$id['empleo']]), '<details class="tarjeta tarjeta-plegable" id="plan">');

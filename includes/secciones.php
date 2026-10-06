@@ -582,7 +582,9 @@ function secciones(): array {
                         'contrato' => ['etiqueta' => 'Tipo de contrato', 'tipo' => 'opcion', 'resumen' => true,
                             'opciones' => ['Indefinido', 'Temporal', 'Fijo discontinuo', 'Prácticas o formación', 'Funcionario', 'Autónomo', 'Otro']],
                         'jornada' => ['etiqueta' => 'Jornada', 'tipo' => 'texto', 'ayuda' => 'Ej.: completa, 37,5 h a la semana.'],
-                        'bruto_anual' => ['etiqueta' => 'Salario bruto anual', 'tipo' => 'importe'],
+                        // Con las nóminas en finanzas, el bruto sale de ellas (Datos enseña el del año
+                        // pasado y el previsto) y el campo no se pide: un dato, un origen (6/10/2026).
+                        'bruto_anual' => ['etiqueta' => 'Salario bruto anual', 'tipo' => 'importe', 'sin_finanzas' => true],
                         'pagas' => ['etiqueta' => 'Número de pagas', 'tipo' => 'numero'],
                         'nominas_finanzas' => ['etiqueta' => 'Sus nóminas se llevan en Finanzas', 'tipo' => 'opcion', 'opciones' => ['Sí', 'No'], 'oculto' => true,
                             'ayuda' => 'Con «Sí», la ficha enseña las nóminas del año y el cuadre con el banco, leídos de la app de finanzas. No se repite en Datos: ya se ve con la propia tarjeta de nóminas.'],
