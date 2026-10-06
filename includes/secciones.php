@@ -26,6 +26,8 @@
 //    lista      (con aparte) Se pinta como lista: una línea = un punto; una línea
 //               que acaba en «:» abre un grupo; «Etiqueta: valor» pone la etiqueta
 //               en negrita (ver lista_campo() en funciones.php).
+//    destacado  (con aparte) Desplegado y arriba de la segunda columna de la
+//               ficha, no plegado bajo «Datos» (el horario: Gonzalo, 6/10/2026).
 //    vence      (tipo fecha) Crea y mantiene SOLO un aviso con ese título
 //               («Renovar el DNI» → «Renovar el DNI · DNI de Ana»). Si el
 //               título lleva {nombre}, se sustituye por el nombre del elemento.
@@ -102,7 +104,7 @@ function secciones(): array {
     // En las actividades, la persona es quien va (un hijo), no quien paga.
     $parte_tuya = ['etiqueta' => 'Parte que pagas tú', 'tipo' => 'numero', 'unidad' => '%',
                    'ayuda' => 'Si lo pagáis entre dos: el % que pagas tú. Vacío = lo pagas entero.'];
-    $horario = ['etiqueta' => 'Horario', 'tipo' => 'area', 'aparte' => true, 'lista' => true,
+    $horario = ['etiqueta' => 'Horario', 'tipo' => 'area', 'aparte' => true, 'lista' => true, 'destacado' => true,
                 'ayuda' => 'Una línea por día: «Lunes: 8:00-14:00 y 15:00-17:30». Otra con «Desde: 17/11/2025» si quieres.'];
 
     $s = [

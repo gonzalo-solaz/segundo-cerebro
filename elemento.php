@@ -174,7 +174,7 @@ if ($el['seccion'] === 'trabajo') {
     <?php endif; ?>
 
     <?php foreach ($def['campos'] as $clave => $c): ?>
-      <?php if (empty($c['aparte']) || trim((string)($el['datos'][$clave] ?? '')) === '') continue; ?>
+      <?php if (empty($c['aparte']) || !empty($c['destacado']) || trim((string)($el['datos'][$clave] ?? '')) === '') continue; ?>
       <details class="tarjeta tarjeta-plegable">
         <summary><h2><?= e($c['etiqueta']) ?></h2></summary>
         <?php if (!empty($c['lista'])): ?>
@@ -301,6 +301,18 @@ if ($el['seccion'] === 'trabajo') {
   </div>
 
   <div class="ficha-columna">
+    <?php // Los campos «destacado» (el horario) van desplegados, lo primero de esta columna. ?>
+    <?php foreach ($def['campos'] as $clave => $c): ?>
+      <?php if (empty($c['destacado']) || trim((string)($el['datos'][$clave] ?? '')) === '') continue; ?>
+      <section class="tarjeta" id="<?= e($clave) ?>">
+        <div class="tarjeta-cabecera"><h2><?= icono('reloj') ?><?= e($c['etiqueta']) ?></h2></div>
+        <?php if (!empty($c['lista'])): ?>
+          <?= lista_campo((string)$el['datos'][$clave]) ?>
+        <?php else: ?>
+          <p class="notas"><?= nl2br(e($el['datos'][$clave])) ?></p>
+        <?php endif; ?>
+      </section>
+    <?php endforeach; ?>
     <section class="tarjeta" id="avisos">
       <div class="tarjeta-cabecera"><h2><?= icono('agenda') ?>Avisos</h2></div>
       <?php if (!$avisos): ?><p class="vacio-mini">Nada pendiente.</p><?php endif; ?>
