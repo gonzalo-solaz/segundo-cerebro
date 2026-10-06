@@ -296,6 +296,13 @@ pinta_bien('la pestaña agrupa por curso académico', $r, 'Curso 2024-25');
 pinta_bien('…y dice quién lo hizo', $r, '>Ana</a>');
 pinta_bien('…con filtro por persona', $r, 'trabajo.php?p=formacion&amp;persona=' . $id['companera']);
 pinta_bien('filtrada, enseña el estado de esa persona', pedir('trabajo.php', ['p' => 'formacion', 'persona' => (string)$id['companera']]), 'Finalizado');
+$id['curso2'] = guardar_elemento($pdo, 'trabajo', 'curso', ['nombre' => 'Premiere a medias', 'datos' => ['termina' => '2026-11-24']]);
+guardar_formacion($pdo, $id['curso2'], $id['companera'], ['inscripcion' => '2026-07-29', 'estado' => 'En curso']);
+$h = pedir('trabajo.php', ['p' => 'formacion'])['html'];
+$ec = (int)strpos($h, '>En curso</h2>');
+comprueba('lo que está en curso va arriba, en su grupo, no en el curso de la inscripción',
+    $ec > 0 && strpos($h, 'Premiere a medias', $ec) < strpos($h, 'Curso 2024-25'));
+comprueba('…con el día en que termina', str_contains($h, 'termina el 24 nov 2026'));
 $r = pedir('elemento.php', ['id' => (string)$id['curso']], ['accion' => 'formacion', 'personas' => [], 'inscripcion' => '']);
 comprueba('sin marcar a nadie no se guarda', str_contains($r['html'], 'FLASH:error'), substr($r['html'], -300));
 $ficha_casa = pedir('elemento.php', ['id' => (string)$id['casa']]);

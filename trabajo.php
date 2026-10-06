@@ -98,10 +98,14 @@ if ($p === 'formacion'):
         $fs = $por_curso[$c['id']] ?? [];
         if ($quien && !$fs) continue;
         $fecha = $fs ? max(array_map('fecha_formacion', $fs)) : '';
-        $g = $fecha !== '' ? curso_de($fecha) : ($fs ? 'Sin fecha' : 'Sin nadie apuntado');
+        // Lo que está a medias (inscrito o en curso, sin fecha de fin) va arriba en «En curso»: con solo la
+        // inscripción caería en el curso anterior (Premiere avanzado: inscripción el 29/07/2026, se da en 2026-27).
+        $a_medias = array_filter($fs, static fn($f) => !$f['finalizacion'] && in_array($f['estado'], ['Inscrito', 'En curso'], true));
+        $g = $a_medias ? 'En curso' : ($fecha !== '' ? curso_de($fecha) : ($fs ? 'Sin fecha' : 'Sin nadie apuntado'));
         $grupos_f[$g][] = ['curso' => $c, 'filas' => $fs, 'fecha' => $fecha];
     }
-    uksort($grupos_f, static fn($a, $b) => [!curso_valido($a), $b] <=> [!curso_valido($b), $a]);
+    $rango = static fn(string $g): int => $g === 'En curso' ? 0 : (curso_valido($g) ? 1 : 2);
+    uksort($grupos_f, static fn($a, $b) => [$rango((string)$a), (string)$b] <=> [$rango((string)$b), (string)$a]);
     foreach ($grupos_f as &$g) usort($g, static fn($x, $y) => [$y['fecha'], $x['curso']['nombre']] <=> [$x['fecha'], $y['curso']['nombre']]);
     unset($g);
     $este = curso_de($hoy);
@@ -169,7 +173,9 @@ if ($p === 'formacion'):
                       <?= implode(', ', array_map(static fn($f) => '<a href="' . e(url('elemento.php?id=' . $f['elemento_id'])) . '">' . e($nombre_p($f)) . '</a>'
                           . (!in_array($f['estado'], ['Finalizado', ''], true) ? ' <span class="tenue">(' . e(mb_strtolower($f['estado'], 'UTF-8')) . ')</span>' : ''), $it['filas'])) ?>
                     <?php endif; ?></td>
-                  <td><?= $it['fecha'] !== '' ? e(fecha_es($it['fecha'])) : '—' ?></td>
+                  <td><?php if ($g_nombre === 'En curso'): $t = (string)($d['termina'] ?? ''); ?>
+                      <?= $t !== '' ? 'termina el ' . e(fecha_es($t)) : '—' ?>
+                    <?php else: ?><?= $it['fecha'] !== '' ? e(fecha_es($it['fecha'])) : '—' ?><?php endif; ?></td>
                 </tr>
               <?php endforeach; ?>
             </tbody>
