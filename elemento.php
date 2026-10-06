@@ -128,7 +128,7 @@ if ($el['seccion'] === 'contratos' && $el['tipo'] === 'comunidad') {
 $migas = '<a href="' . e(url('seccion.php?s=' . $el['seccion'] . '&lista=1')) . '">' . e($sec['nombre']) . '</a> · ' . e($def['nombre']);
 if ($el['seccion'] === 'trabajo') {
     $migas = '<a href="' . e(url('trabajo.php')) . '">' . e($sec['nombre']) . '</a> · '
-           . ($el['tipo'] === 'miembro' ? '<a href="' . e(url('trabajo.php?p=equipo')) . '">Equipo</a>'
+           . (in_array($el['tipo'], ['miembro', 'empleo'], true) ? '<a href="' . e(url('trabajo.php?p=equipo')) . '">Equipo</a>'
               : ($el['tipo'] === 'compra' ? '<a href="' . e(url('trabajo.php?p=compras')) . '">Compras</a>'
               : ($el['tipo'] === 'curso' ? '<a href="' . e(url('trabajo.php?p=formacion')) . '">Formación</a>'
               : ($el['tipo'] === 'hito' ? '<a href="' . e(url('trabajo.php?p=hitos')) . '">Hitos</a>' : e($def['nombre'])))));
@@ -137,8 +137,8 @@ cabecera($el['nombre'], 'seccion:' . $el['seccion']);
 cabecera_pagina($el['nombre'], $migas, $acciones, $sec['icono'], $sec['color']);
 if ($el['seccion'] === 'trabajo') {
     $mi = mi_empleo($pdo, (int)($usuario_actual['persona_id'] ?? 0) ?: null);
-    $activa = ['miembro' => 'equipo', 'compra' => 'compras', 'curso' => 'formacion', 'hito' => 'hitos'][$el['tipo']] ?? ($mi && $mi['id'] === $id ? 'puesto' : '');
-    pestanas_trabajo($activa, $mi, count(equipo_trabajo($pdo)), count(compras_trabajo($pdo)), count(cursos_trabajo($pdo)), count(hitos_trabajo($pdo)));
+    $activa = ['miembro' => 'equipo', 'compra' => 'compras', 'curso' => 'formacion', 'hito' => 'hitos'][$el['tipo']] ?? ($mi && $mi['id'] === $id ? 'equipo' : '');
+    pestanas_trabajo($activa, count(equipo_trabajo($pdo)), count(compras_trabajo($pdo)), count(cursos_trabajo($pdo)), count(hitos_trabajo($pdo)));
 }
 ?>
 <?php if (!$el['activo']): ?>

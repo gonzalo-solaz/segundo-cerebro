@@ -420,6 +420,9 @@ a.chip:hover { text-decoration: none; background: color-mix(in srgb, var(--c) 20
 .tarjeta-miembro .te-cabecera { padding-left: 0; align-items: center; flex-wrap: nowrap; gap: .75rem; }
 .tarjeta-miembro .te-cabecera::before { display: none; }
 .tarjeta-miembro .avatar { flex: none; }
+/* Tú, el responsable, delante en el Equipo: borde del color de Trabajo y la etiqueta «Responsable». */
+.tarjeta-responsable { border-color: var(--c-tinta); box-shadow: inset 0 0 0 1px var(--c-tinta); }
+.chip-responsable { --c: var(--c-tinta); flex: none; color: var(--c-tinta); }
 .resumen { margin: .9rem 0 0; display: grid; gap: .35rem; }
 .resumen div { display: flex; justify-content: space-between; gap: .75rem; font-size: 13.5px; }
 .resumen dt { color: var(--tenue); }

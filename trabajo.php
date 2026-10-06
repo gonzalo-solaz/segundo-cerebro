@@ -1,7 +1,7 @@
 <?php
 // Trabajo: el panel (avisos, equipo de hoy, mi puesto, historial), el Equipo y
-// las Compras. «Mi puesto» es la ficha del empleo (elemento.php), con estas mismas
-// pestañas. Gonzalo, 6/10/2026: «no entrar directamente en Mi puesto: un panel
+// las Compras. Tu ficha (la del empleo, elemento.php) va la primera del Equipo, como
+// responsable; ya no hay pestaña «Mi puesto» (Gonzalo, 6/10/2026). Gonzalo, 6/10/2026: «no entrar directamente en Mi puesto: un panel
 // principal con avisos, historial, datos en cards», pestañas Mi puesto y Equipo y,
 // después, «una pestaña Compras con el listado de software que pido, con el CECO» y
 // «una pestaña de formación que además vaya a persona/s» y «una parte de hitos para ir añadiendo items».
@@ -9,7 +9,7 @@ require_once __DIR__ . '/includes/auth.php';
 
 $sec = seccion('trabajo');
 $p = in_array($_GET['p'] ?? '', ['equipo', 'formacion', 'compras', 'hitos'], true) ? $_GET['p'] : 'panel';
-$antiguos = in_array($p, ['equipo', 'compras'], true) && !empty($_GET['antiguos']);
+$antiguos = $p === 'compras' && !empty($_GET['antiguos']);
 $hoy = hoy();
 
 $empleo = mi_empleo($pdo, (int)($usuario_actual['persona_id'] ?? 0) ?: null);
@@ -29,60 +29,67 @@ $boton = [
 $a_trabajo = '<a href="' . e(url('trabajo.php')) . '">Trabajo</a> · ';
 [$titulo, $migas, $icono_p] = [
     'panel' => [$sec['nombre'], e($sec['descripcion']), $sec['icono']],
-    'equipo' => ['Equipo', $a_trabajo . ($antiguos ? 'Los que ya no están' : 'Las personas que diriges'), 'familia'],
+    'equipo' => ['Equipo', $a_trabajo . 'Las personas que diriges', 'familia'],
     'formacion' => ['Formación', $a_trabajo . 'Los cursos que has hecho tú y tu equipo', 'birrete'],
     'compras' => ['Compras', $a_trabajo . ($antiguos ? 'Canceladas' : 'Licencias y compras del servicio'), $sec['icono']],
     'hitos' => ['Hitos', $a_trabajo . 'Lanzamientos, proyectos y logros del servicio', 'bandera'],
 ][$p];
 cabecera($sec['nombre'], 'seccion:trabajo');
 cabecera_pagina($titulo, $migas, $boton, $icono_p, $sec['color']);
-pestanas_trabajo($p, $empleo, count($equipo), count($compras), count($cursos), count($hitos));
+pestanas_trabajo($p, count($equipo), count($compras), count($cursos), count($hitos));
 
 // Una persona del equipo en tarjeta: puesto, cuánto lleva, su horario de hoy y su próximo aviso.
-$tarjeta_miembro = static function (array $m) use ($sec, $hoy, $proximo): void {
+// Con $tu, la ficha del empleo (tú, el responsable): tu nombre, tu puesto y los años en la empresa.
+$tarjeta_miembro = static function (array $m, bool $tu = false) use ($sec, $hoy, $proximo): void {
     $d = $m['datos'];
+    $nombre = $tu ? ($m['persona_nombre'] ?: $m['nombre']) : $m['nombre'];
     $hoy_h = horario_de_hoy((string)($d['horario'] ?? ''), $hoy);
     $baja = (string)($d['baja'] ?? '');
-    $en_equipo = tiempo_desde($d['incorporacion'] ?? ($d['servicio_continuo'] ?? null), $baja !== '' && $baja < $hoy ? $baja : $hoy);
+    $en_equipo = $tu ? tiempo_desde($d['fecha_alta'] ?? null, $hoy)
+        : tiempo_desde($d['incorporacion'] ?? ($d['servicio_continuo'] ?? null), $baja !== '' && $baja < $hoy ? $baja : $hoy);
     $prox = $proximo[$m['id']] ?? null;
     ?>
-    <a class="tarjeta tarjeta-elemento tarjeta-miembro" href="<?= e(url('elemento.php?id=' . $m['id'])) ?>" style="--c:<?= e($sec['color']) ?>">
+    <a class="tarjeta tarjeta-elemento tarjeta-miembro<?= $tu ? ' tarjeta-responsable' : '' ?>" href="<?= e(url('elemento.php?id=' . $m['id'])) ?>" style="--c:<?= e($sec['color']) ?>">
       <div class="te-cabecera">
-        <?= avatar($m['nombre'], $sec['color']) ?>
-        <h3><?= e($m['nombre']) ?></h3>
+        <?= avatar($nombre, $sec['color']) ?>
+        <h3><?= e($nombre) ?></h3>
+        <?php if ($tu): ?><span class="chip chip-responsable">Responsable</span><?php endif; ?>
       </div>
       <dl class="resumen">
         <?php if (!empty($d['puesto'])): ?><div><dt>Puesto</dt><dd><?= e($d['puesto']) ?></dd></div><?php endif; ?>
-        <?php if ($en_equipo !== ''): ?><div><dt><?= $baja !== '' ? 'Estuvo' : 'En el equipo' ?></dt><dd><?= e($en_equipo) ?></dd></div><?php endif; ?>
+        <?php if ($en_equipo !== ''): ?><div><dt><?= $tu ? 'En la empresa' : ($baja !== '' ? 'Estuvo' : 'En el equipo') ?></dt><dd><?= e($en_equipo) ?></dd></div><?php endif; ?>
         <?php if ($baja !== ''): ?><div><dt>Se fue</dt><dd><?= e(fecha_es($baja)) ?></dd></div><?php endif; ?>
         <?php if (!empty($d['relacion']) && $d['relacion'] !== 'Plantilla'): ?><div><dt>Relación</dt><dd><?= e($d['relacion']) ?></dd></div><?php endif; ?>
         <?php if (!empty($d['horario'])): ?><div><dt>Hoy</dt><dd><?= e($hoy_h ?? 'No trabaja') ?></dd></div><?php endif; ?>
       </dl>
       <?php if ($prox): ?>
-        <p class="ts-proximo venc-<?= e($prox['situacion']) ?>"><?= icono('reloj', 'ico ico-mini') ?><span><?= e(titulo_sin_elemento($prox['titulo'], $m['nombre'])) ?> · <?= e(fecha_corta($prox['fecha'])) ?> · <?= e(relativo($prox['dias'])) ?></span></p>
+        <p class="ts-proximo venc-<?= e($prox['situacion']) ?>"><?= icono('reloj', 'ico ico-mini') ?><span><?= e(titulo_sin_elemento($prox['titulo'], $nombre)) ?> · <?= e(fecha_corta($prox['fecha'])) ?> · <?= e(relativo($prox['dias'])) ?></span></p>
       <?php endif; ?>
     </a>
     <?php
 };
 
+// Equipo (Gonzalo, 6/10/2026): tú delante, como responsable del servicio; luego los que están y,
+// debajo, en su propio bloque, las Bajas (las fichas archivadas), de la más reciente a la más antigua.
 if ($p === 'equipo'):
-    $lista = $antiguos ? equipo_trabajo($pdo, false) : $equipo;
+    $bajas = equipo_trabajo($pdo, false);
+    usort($bajas, static fn($a, $b) => strcmp((string)($b['datos']['baja'] ?? ''), (string)($a['datos']['baja'] ?? '')));
     ?>
-    <?php if (!$lista): ?>
+    <?php if (!$equipo && !$empleo): ?>
       <div class="tarjeta vacio">
-        <p><?= $antiguos ? 'No hay nadie archivado.' : 'Aún no hay nadie en el equipo. Añade a cada persona con el botón de arriba: puesto, desde cuándo está, su horario…' ?></p>
+        <p>Aún no hay nadie en el equipo. Añade a cada persona con el botón de arriba: puesto, desde cuándo está, su horario…</p>
       </div>
     <?php endif; ?>
     <div class="rejilla rejilla-elementos">
-      <?php foreach ($lista as $m) $tarjeta_miembro($m); ?>
+      <?php if ($empleo) $tarjeta_miembro($empleo, true); ?>
+      <?php foreach ($equipo as $m) $tarjeta_miembro($m); ?>
     </div>
-    <p class="pie-seccion">
-      <?php if ($antiguos): ?>
-        <a class="enlace-tenue" href="<?= e(url('trabajo.php?p=equipo')) ?>"><?= icono('atras', 'ico ico-mini') ?>Volver al equipo</a>
-      <?php else: ?>
-        <a class="enlace-tenue" href="<?= e(url('trabajo.php?p=equipo&antiguos=1')) ?>"><?= icono('archivar', 'ico ico-mini') ?>Los que ya no están (archivados)</a>
-      <?php endif; ?>
-    </p>
+    <?php if ($bajas): ?>
+      <h2 class="titulo-bloque">Bajas <span class="tenue">(<?= count($bajas) ?>)</span></h2>
+      <div class="rejilla rejilla-elementos">
+        <?php foreach ($bajas as $m) $tarjeta_miembro($m); ?>
+      </div>
+    <?php endif; ?>
 <?php pie(); return; endif;
 
 // ---------------------------- Formación ----------------------------

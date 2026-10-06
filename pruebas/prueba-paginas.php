@@ -212,7 +212,7 @@ $id['convenio'] = guardar_elemento($pdo, 'trabajo', 'convenio', ['nombre' => 'Co
     'datos' => ['publicacion' => 'BOE-A-2024-10663']]);
 pinta_bien('sin clave de finanzas, la ficha del empleo lo explica', pedir('elemento.php', ['id' => (string)$id['empleo']]), 'Falta la clave de finanzas');
 pinta_bien('la ficha del empleo lista su convenio', pedir('elemento.php', ['id' => (string)$id['empleo']]), 'Convenio de prueba');
-// Trabajo: panel propio con pestañas (Panel · Mi puesto · Equipo).
+// Trabajo: panel propio con pestañas (Panel · Equipo · …; sin «Mi puesto»: tu ficha va delante en el Equipo).
 $r = pedir('seccion.php', ['s' => 'trabajo']);
 comprueba('Trabajo abre su panel, no el listado', $r['redireccion'] === '/segundo-cerebro/trabajo.php', (string)$r['redireccion']);
 pinta_bien('el panel de Trabajo sin equipo invita a añadirlo', pedir('trabajo.php'), 'Añade a la primera persona');
@@ -229,11 +229,15 @@ pinta_bien('el panel enseña el equipo de hoy', $r, 'Ana Prueba Equipo');
 pinta_bien('…su mi puesto', $r, 'Universidad de prueba');
 pinta_bien('…el convenio colgado del empleo', $r, 'Convenio de prueba');
 pinta_bien('…y los avisos de la sección (fin del periodo de prueba)', $r, 'Evaluar el periodo de prueba');
-pinta_bien('…con la pestaña Mi puesto llevando a la ficha del empleo', $r, 'elemento.php?id=' . $id['empleo']);
+pinta_bien('…con la tarjeta Mi puesto llevando a la ficha del empleo', $r, 'elemento.php?id=' . $id['empleo']);
+comprueba('…y ya sin pestaña «Mi puesto»', !str_contains($r['html'], '>Mi puesto</a>'));
 $r = pedir('trabajo.php', ['p' => 'equipo']);
 pinta_bien('la pestaña Equipo lista a las personas', $r, 'Diseñadora web');
-comprueba('…sin las archivadas', !str_contains($r['html'], 'Persona Que Se Fue'));
-pinta_bien('…que salen en «los que ya no están»', pedir('trabajo.php', ['p' => 'equipo', 'antiguos' => '1']), 'Persona Que Se Fue');
+pinta_bien('…contigo delante, como responsable', $r, 'Responsable');
+$pos = static fn(string $t) => strpos($r['html'], $t);
+comprueba('…tú primero, luego el equipo y al final las Bajas con los archivados',
+    $pos('Gonzalo Prueba') !== false && $pos('Gonzalo Prueba') < $pos('Diseñadora web')
+    && $pos('Diseñadora web') < $pos('>Bajas') && $pos('>Bajas') < $pos('Persona Que Se Fue'));
 // Trabajo: la pestaña Compras (licencias del servicio, con el CECO del empleo).
 pinta_bien('sin compras, la pestaña Compras invita a añadirlas', pedir('trabajo.php', ['p' => 'compras']), 'Aún no hay compras');
 guardar_elemento($pdo, 'trabajo', 'empleo', ['nombre' => 'Universidad de prueba', 'persona_id' => $id['yo'],
@@ -336,13 +340,13 @@ $emp = elemento($pdo, $id['empleo']);
 guardar_elemento($pdo, 'trabajo', 'empleo', ['nombre' => $emp['nombre'], 'persona_id' => $emp['persona_id'],
     'datos' => $emp['datos'] + ['fecha_alta' => '2004-10-01']], $id['empleo']);
 comprueba('…y tu entrada en la empresa (fecha de alta del empleo)', str_contains(pedir('trabajo.php', ['p' => 'hitos'])['html'], ' a Universidad de prueba'));
-pinta_bien('en «Los que ya no están», cuánto estuvo', pedir('trabajo.php', ['p' => 'equipo', 'antiguos' => '1']), 'Estuvo');
+pinta_bien('en las Bajas, cuánto estuvo', pedir('trabajo.php', ['p' => 'equipo']), 'Estuvo');
 pinta_bien('el panel enseña los últimos hitos', pedir('trabajo.php'), 'Lanzamiento de Oneweb');
 pinta_bien('la ficha del hito lleva la pestaña Hitos activa', pedir('elemento.php', ['id' => (string)$id['hito']]), 'aria-current="page">Hitos · 6');
 $ficha_casa = pedir('elemento.php', ['id' => (string)$id['casa']]);
 comprueba('una casa no lleva plan de desarrollo', !str_contains($ficha_casa['html'], 'Plan de desarrollo'));
 pinta_bien('…y su horario como lista', pedir('elemento.php', ['id' => (string)$id['companera']]), '<strong>Martes:</strong>');
-pinta_bien('la ficha del empleo también lleva las pestañas', pedir('elemento.php', ['id' => (string)$id['empleo']]), 'aria-current="page">Mi puesto');
+pinta_bien('la ficha del empleo también lleva las pestañas', pedir('elemento.php', ['id' => (string)$id['empleo']]), 'aria-current="page">Equipo');
 $cache = sys_get_temp_dir() . '/sc-cache-' . getmypid();
 @mkdir($cache, 0777, true);
 file_put_contents($cache . '/finanzas-nomina_estado.json', json_encode(['t' => time(), 'leido_en' => '2026-10-03 08:00:00', 'datos' => ['anios' => nominas_de_ejemplo()]]));

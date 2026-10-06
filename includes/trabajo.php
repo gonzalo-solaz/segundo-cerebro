@@ -1,7 +1,7 @@
 <?php
 // =====================================================================
-//  Trabajo: el panel (trabajo.php), Mi puesto (la ficha del empleo), el
-//  Equipo (las fichas «Persona del equipo») y las Compras del servicio. Gonzalo, 6/10/2026: «el cerebro
+//  Trabajo: el panel (trabajo.php), el Equipo (tu ficha del empleo delante y
+//  las fichas «Persona del equipo») y las Compras del servicio. Gonzalo, 6/10/2026: «el cerebro
 //  de todo lo relacionado con el trabajo»; la gestión del servicio sigue en
 //  las herramientas de la empresa, aquí va lo que hay que tener controlado.
 //  Las lecturas pasan por elementos_de() (el filtro de privacidad, si un día
@@ -110,10 +110,10 @@ function tiempo_desde(?string $desde, string $hoy): string {
     return $d->m > 0 ? $m : 'menos de un mes';
 }
 
-// Las pestañas de Trabajo: Panel · Mi puesto · Equipo · Formación · Compras · Hitos. Salen en trabajo.php y en las fichas de la sección.
-function pestanas_trabajo(string $activa, ?array $empleo, int $n_equipo, int $n_compras = 0, int $n_cursos = 0, int $n_hitos = 0): void {
-    $mi_puesto = $empleo ? 'elemento.php?id=' . $empleo['id'] : 'elemento-editar.php?s=trabajo&t=empleo';
-    $p = ['panel' => ['trabajo.php', 'Panel'], 'puesto' => [$mi_puesto, 'Mi puesto'],
+// Las pestañas de Trabajo: Panel · Equipo · Formación · Compras · Hitos. Salen en trabajo.php y en las fichas de la sección.
+// Sin «Mi puesto» (Gonzalo, 6/10/2026): tu ficha se abre desde la primera tarjeta del Equipo.
+function pestanas_trabajo(string $activa, int $n_equipo, int $n_compras = 0, int $n_cursos = 0, int $n_hitos = 0): void {
+    $p = ['panel' => ['trabajo.php', 'Panel'],
           'equipo' => ['trabajo.php?p=equipo', 'Equipo' . ($n_equipo ? ' · ' . $n_equipo : '')],
           'formacion' => ['trabajo.php?p=formacion', 'Formación' . ($n_cursos ? ' · ' . $n_cursos : '')],
           'compras' => ['trabajo.php?p=compras', 'Compras' . ($n_compras ? ' · ' . $n_compras : '')],
