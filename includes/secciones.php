@@ -102,6 +102,8 @@ function secciones(): array {
     // En las actividades, la persona es quien va (un hijo), no quien paga.
     $parte_tuya = ['etiqueta' => 'Parte que pagas tú', 'tipo' => 'numero', 'unidad' => '%',
                    'ayuda' => 'Si lo pagáis entre dos: el % que pagas tú. Vacío = lo pagas entero.'];
+    $horario = ['etiqueta' => 'Horario', 'tipo' => 'area', 'aparte' => true, 'lista' => true,
+                'ayuda' => 'Una línea por día: «Lunes: 8:00-14:00 y 15:00-17:30». Otra con «Desde: 17/11/2025» si quieres.'];
 
     $s = [
         // -------------------------------------------------------------
@@ -550,9 +552,13 @@ function secciones(): array {
         // y los PDF. La ficha del empleo con «nominas_finanzas» = Sí enseña
         // lo que hay en finanzas (includes/finanzas.php). Decisión de Gonzalo,
         // 3/10/2026: no duplicar los recibos.
+        // Trabajo se abre en trabajo.php (panel · Mi puesto · Equipo), no en el listado
+        // genérico (Gonzalo, 6/10/2026: «el cerebro de todo lo del trabajo»). El horario
+        // va en formato lista, una línea por día («Lunes: 8:00-14:00 y 15:00-17:30»): de ahí
+        // sale «hoy» en el panel y en el equipo (horario_de_hoy() en includes/trabajo.php).
         'trabajo' => [
             'nombre' => 'Trabajo', 'icono' => 'maletin', 'color' => '#1d8291',
-            'descripcion' => 'Empresa, contrato, convenio y nóminas de cada uno.',
+            'descripcion' => 'Mi puesto, el equipo, el convenio y las nóminas.',
             'tipos' => [
                 'empleo' => [
                     'nombre' => 'Empleo', 'ejemplo' => 'Universidad CEU Cardenal Herrera', 'persona' => 'obligatoria',
@@ -577,8 +583,38 @@ function secciones(): array {
                             'vence' => 'Fin del contrato', 'aviso' => 60],
                         'beneficios' => ['etiqueta' => 'Beneficios y retribución flexible', 'tipo' => 'area', 'aparte' => true,
                             'ayuda' => 'Seguro médico, ticket restaurante, transporte, colegio, guardería…'],
+                        'horario' => $horario,
+                        'trayectoria' => ['etiqueta' => 'Puestos, contratos y categorías', 'tipo' => 'area', 'aparte' => true, 'lista' => true,
+                            'ayuda' => 'Una línea por cambio: «01/05/2010: responsable del servicio».'],
                         'condiciones' => ['etiqueta' => 'Condiciones y acuerdos', 'tipo' => 'area', 'aparte' => true,
-                            'ayuda' => 'Horario, teletrabajo, vacaciones, lo pactado con RRHH.'],
+                            'ayuda' => 'Teletrabajo, vacaciones, lo pactado con RRHH.'],
+                    ],
+                ],
+                // Las personas del equipo que diriges: fichas de trabajo, no personas de
+                // la familia (no entran en la app ni salen en Personas). Los datos de RRHH
+                // los manda Workday: aquí, lo que conviene tener a mano.
+                'miembro' => [
+                    'nombre' => 'Persona del equipo', 'ejemplo' => 'Nombre y apellidos', 'persona' => null,
+                    'campos' => [
+                        'puesto' => ['etiqueta' => 'Puesto', 'tipo' => 'texto', 'resumen' => true],
+                        'categoria' => ['etiqueta' => 'Categoría', 'tipo' => 'texto', 'ayuda' => 'Ej.: Titulado superior.'],
+                        'relacion' => ['etiqueta' => 'Relación', 'tipo' => 'opcion',
+                            'opciones' => ['Plantilla', 'Externo (ETT o empresa)', 'Becario', 'Otro']],
+                        'contrato' => ['etiqueta' => 'Contrato', 'tipo' => 'opcion',
+                            'opciones' => ['Indefinido', 'Temporal', 'Prácticas o formación', 'Otro']],
+                        'incorporacion' => ['etiqueta' => 'En el equipo desde', 'tipo' => 'fecha'],
+                        'servicio_continuo' => ['etiqueta' => 'Fecha de servicio continuo', 'tipo' => 'fecha',
+                            'ayuda' => 'La de Workday (la antigüedad en la empresa).'],
+                        'fin_prueba' => ['etiqueta' => 'Fin del periodo de prueba', 'tipo' => 'fecha',
+                            'vence' => 'Evaluar el periodo de prueba', 'aviso' => 30],
+                        'fin_contrato' => ['etiqueta' => 'Fin del contrato', 'tipo' => 'fecha',
+                            'vence' => 'Fin del contrato', 'aviso' => 60],
+                        'email' => ['etiqueta' => 'Email', 'tipo' => 'email'],
+                        'telefono' => ['etiqueta' => 'Teléfono', 'tipo' => 'tel'],
+                        'horario' => $horario,
+                        'trayectoria' => ['etiqueta' => 'Contratos y categorías', 'tipo' => 'area', 'aparte' => true, 'lista' => true,
+                            'ayuda' => 'Una línea por cambio: «15/11/2012: contrato indefinido».'],
+                        'funciones' => ['etiqueta' => 'Funciones', 'tipo' => 'area', 'aparte' => true],
                     ],
                 ],
                 'convenio' => [

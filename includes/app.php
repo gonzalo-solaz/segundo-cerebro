@@ -18,6 +18,7 @@ require_once __DIR__ . '/ipc.php';
 require_once __DIR__ . '/gastos.php';
 require_once __DIR__ . '/finanzas.php';
 require_once __DIR__ . '/peso.php';
+require_once __DIR__ . '/trabajo.php';
 require_once __DIR__ . '/documentos.php';
 require_once __DIR__ . '/avisos.php';
 require_once __DIR__ . '/iconos.php';

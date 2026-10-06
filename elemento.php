@@ -97,10 +97,19 @@ if ($el['seccion'] === 'salud' && $el['tipo'] === 'peso') {
 if ($el['seccion'] === 'contratos' && $el['tipo'] === 'comunidad') {
     $acciones = '<a class="btn btn-sutil" href="' . e(url('gasto-comunidad.php?id=' . $id)) . '">' . icono('historial') . 'Gasto por partidas</a>' . $acciones;
 }
+// Trabajo vive en trabajo.php: las migas y las pestañas llevan allí (la persona del equipo, al Equipo).
+$migas = '<a href="' . e(url('seccion.php?s=' . $el['seccion'] . '&lista=1')) . '">' . e($sec['nombre']) . '</a> · ' . e($def['nombre']);
+if ($el['seccion'] === 'trabajo') {
+    $migas = '<a href="' . e(url('trabajo.php')) . '">' . e($sec['nombre']) . '</a> · '
+           . ($el['tipo'] === 'miembro' ? '<a href="' . e(url('trabajo.php?p=equipo')) . '">Equipo</a>' : e($def['nombre']));
+}
 cabecera($el['nombre'], 'seccion:' . $el['seccion']);
-cabecera_pagina($el['nombre'],
-    '<a href="' . e(url('seccion.php?s=' . $el['seccion'] . '&lista=1')) . '">' . e($sec['nombre']) . '</a> · ' . e($def['nombre']),
-    $acciones, $sec['icono'], $sec['color']);
+cabecera_pagina($el['nombre'], $migas, $acciones, $sec['icono'], $sec['color']);
+if ($el['seccion'] === 'trabajo') {
+    $mi = mi_empleo($pdo, (int)($usuario_actual['persona_id'] ?? 0) ?: null);
+    $activa = $el['tipo'] === 'miembro' ? 'equipo' : ($mi && $mi['id'] === $id ? 'puesto' : '');
+    pestanas_trabajo($activa, $mi, count(equipo_trabajo($pdo)));
+}
 ?>
 <?php if (!$el['activo']): ?>
   <div class="flash flash-aviso">Este elemento está archivado: sus avisos no salen en la agenda.</div>

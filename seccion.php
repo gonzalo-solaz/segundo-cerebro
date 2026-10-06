@@ -16,6 +16,8 @@ if ($clave === 'vivienda' && !$archivados && empty($_GET['lista'])) {
     $casas = array_values(array_filter($elementos, static fn($el) => $el['tipo'] === 'inmueble'));
     if (count($casas) === 1) redirigir('elemento.php?id=' . $casas[0]['id']);
 }
+// Trabajo tiene su propio panel con pestañas (Panel · Mi puesto · Equipo).
+if ($clave === 'trabajo' && !$archivados && empty($_GET['lista'])) redirigir('trabajo.php');
 
 // Lo que cuelga de otro elemento de esta misma sección (el equipamiento de una
 // vivienda) se ve dentro de la ficha del padre, no suelto en el listado. Si el

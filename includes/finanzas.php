@@ -35,7 +35,6 @@ function finanzas_pedir(array $campos, int $segundos = 8): array {
                                CURLOPT_CONNECTTIMEOUT => 4, CURLOPT_TIMEOUT => $segundos]);
         $txt = curl_exec($c);
         $codigo = (int)curl_getinfo($c, CURLINFO_HTTP_CODE);
-        curl_close($c);
     } else {
         $ctx = stream_context_create(['http' => ['method' => 'POST', 'timeout' => $segundos, 'ignore_errors' => true,
             'header' => "Content-Type: application/x-www-form-urlencoded\r\n", 'content' => $cuerpo]]);

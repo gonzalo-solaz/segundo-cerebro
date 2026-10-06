@@ -43,7 +43,6 @@ function ipc_serie(): array {
             curl_setopt_array($c, [CURLOPT_RETURNTRANSFER => true, CURLOPT_CONNECTTIMEOUT => 3, CURLOPT_TIMEOUT => 6]);
             $txt = curl_exec($c);
             if ((int)curl_getinfo($c, CURLINFO_HTTP_CODE) !== 200) $txt = false;
-            curl_close($c);
         } else {
             $txt = @file_get_contents(IPC_URL, false, stream_context_create(['http' => ['timeout' => 6]]));
         }

@@ -71,6 +71,16 @@ function registros_de(PDO $pdo, int $elemento_id, int $n = 100): array {
     return $st->fetchAll();
 }
 
+// Los últimos apuntes de toda una sección (el panel de Trabajo), con el nombre de su ficha.
+// Los de fichas archivadas no salen.
+function registros_de_seccion(PDO $pdo, string $seccion, int $n = 10): array {
+    $st = $pdo->prepare('SELECT r.*, e.nombre AS elemento_nombre, u.nombre AS autor FROM registros r
+                         JOIN elementos e ON e.id = r.elemento_id LEFT JOIN usuarios u ON u.id = r.creado_por
+                         WHERE e.seccion = ? AND e.activo = 1 ORDER BY r.fecha DESC, r.id DESC LIMIT ' . max(1, $n));
+    $st->execute([$seccion]);
+    return $st->fetchAll();
+}
+
 function borrar_registro(PDO $pdo, int $id, int $elemento_id, ?int $usuario_id = null): void {
     $st = $pdo->prepare('SELECT titulo FROM registros WHERE id = ? AND elemento_id = ?');
     $st->execute([$id, $elemento_id]);

@@ -459,4 +459,22 @@ comprueba('al cambiarla deja de ser temporal', (int)usuario($pdo, $nuevo)['debe_
 $e = lanza(static fn() => guardar_persona($pdo, ['nombre' => 'Futuro', 'fecha_nacimiento' => '2099-01-01']));
 comprueba('no se nace en el futuro', $e instanceof ErrorValidacion);
 comprueba('la actividad apunta quién hizo qué', count(actividad_reciente($pdo, 100)) > 20);
+
+echo "\nTrabajo: horario de hoy y antigüedad\n";
+$horario = "Lunes: 8:00-15:00\nMiercoles: 8:45-15:45\nJUEVES : 8:00-14:00 y 15:00-17:30\nDesde: 17/11/2025";
+comprueba('el horario del lunes', horario_de_hoy($horario, '2026-10-05') === '8:00-15:00');
+comprueba('«Miercoles» sin tilde vale para el miércoles', horario_de_hoy($horario, '2026-10-07') === '8:45-15:45');
+comprueba('mayúsculas y espacios antes de los dos puntos', horario_de_hoy($horario, '2026-10-08') === '8:00-14:00 y 15:00-17:30');
+comprueba('un día sin línea no tiene horario', horario_de_hoy($horario, '2026-10-06') === null);
+comprueba('el sábado, tampoco', horario_de_hoy($horario, '2026-10-10') === null);
+comprueba('«Desde:» no es un día', horario_de_hoy("Desde: 17/11/2025", '2026-10-05') === null);
+comprueba('la franja va de la entrada a la salida', horario_franja('8:30-14:00 y 15:00-17:15') === '8:30 – 17:15');
+comprueba('una franja de un tramo', horario_franja('8:00-15:00') === '8:00 – 15:00');
+comprueba('un horario sin horas se deja como está', horario_franja('Teletrabajo') === 'Teletrabajo' && horario_franja(null) === null);
+comprueba('22 años', tiempo_desde('2004-10-01', '2026-10-06') === '22 años');
+comprueba('1 año y 8 meses', tiempo_desde('2025-02-01', '2026-10-06') === '1 año y 8 meses');
+comprueba('2 años justos', tiempo_desde('2024-10-01', '2026-10-06') === '2 años');
+comprueba('5 meses', tiempo_desde('2026-05-01', '2026-10-06') === '5 meses');
+comprueba('recién llegado', tiempo_desde('2026-09-20', '2026-10-06') === 'menos de un mes');
+comprueba('fecha futura o vacía: nada', tiempo_desde('2027-01-01', '2026-10-06') === '' && tiempo_desde(null, '2026-10-06') === '');
 terminar();

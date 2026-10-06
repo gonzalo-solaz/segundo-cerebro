@@ -199,6 +199,29 @@ $id['convenio'] = guardar_elemento($pdo, 'trabajo', 'convenio', ['nombre' => 'Co
     'datos' => ['publicacion' => 'BOE-A-2024-10663']]);
 pinta_bien('sin clave de finanzas, la ficha del empleo lo explica', pedir('elemento.php', ['id' => (string)$id['empleo']]), 'Falta la clave de finanzas');
 pinta_bien('la ficha del empleo lista su convenio', pedir('elemento.php', ['id' => (string)$id['empleo']]), 'Convenio de prueba');
+// Trabajo: panel propio con pestañas (Panel · Mi puesto · Equipo).
+$r = pedir('seccion.php', ['s' => 'trabajo']);
+comprueba('Trabajo abre su panel, no el listado', $r['redireccion'] === '/segundo-cerebro/trabajo.php', (string)$r['redireccion']);
+pinta_bien('el panel de Trabajo sin equipo invita a añadirlo', pedir('trabajo.php'), 'Añade a la primera persona');
+$id['companera'] = guardar_elemento($pdo, 'trabajo', 'miembro', ['nombre' => 'Ana Prueba Equipo',
+    'datos' => ['puesto' => 'Diseñadora web', 'incorporacion' => '2012-09-03', 'fin_prueba' => '2026-12-01',
+                'horario' => "Lunes: 8:00-15:00\nMartes: 8:00-14:00 y 15:00-17:30\nMiércoles: 8:00-15:00\nJueves: 8:00-14:00 y 15:00-17:30\nViernes: 8:00-15:00"]]);
+$id['antiguo'] = guardar_elemento($pdo, 'trabajo', 'miembro', ['nombre' => 'Persona Que Se Fue', 'datos' => ['puesto' => 'Community manager']]);
+cambiar_activo_elemento($pdo, $id['antiguo'], false);
+$r = pedir('trabajo.php');
+pinta_bien('el panel enseña el equipo de hoy', $r, 'Ana Prueba Equipo');
+pinta_bien('…su mi puesto', $r, 'Universidad de prueba');
+pinta_bien('…el convenio colgado del empleo', $r, 'Convenio de prueba');
+pinta_bien('…y los avisos de la sección (fin del periodo de prueba)', $r, 'Evaluar el periodo de prueba');
+pinta_bien('…con la pestaña Mi puesto llevando a la ficha del empleo', $r, 'elemento.php?id=' . $id['empleo']);
+$r = pedir('trabajo.php', ['p' => 'equipo']);
+pinta_bien('la pestaña Equipo lista a las personas', $r, 'Diseñadora web');
+comprueba('…sin las archivadas', !str_contains($r['html'], 'Persona Que Se Fue'));
+pinta_bien('…que salen en «los que ya no están»', pedir('trabajo.php', ['p' => 'equipo', 'antiguos' => '1']), 'Persona Que Se Fue');
+$r = pedir('elemento.php', ['id' => (string)$id['companera']]);
+pinta_bien('la ficha de una persona del equipo lleva las pestañas de Trabajo', $r, 'trabajo.php?p=equipo');
+pinta_bien('…y su horario como lista', $r, '<strong>Martes:</strong>');
+pinta_bien('la ficha del empleo también lleva las pestañas', pedir('elemento.php', ['id' => (string)$id['empleo']]), 'aria-current="page">Mi puesto');
 $cache = sys_get_temp_dir() . '/sc-cache-' . getmypid();
 @mkdir($cache, 0777, true);
 file_put_contents($cache . '/finanzas-nomina_estado.json', json_encode(['t' => time(), 'leido_en' => '2026-10-03 08:00:00', 'datos' => ['anios' => nominas_de_ejemplo()]]));

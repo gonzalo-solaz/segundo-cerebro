@@ -4,7 +4,7 @@ Memoria viva del proyecto. Se actualiza **a la vez que el código**, con el
 *porqué* de cada decisión no obvia (fecha y caso que la motivó). Lo que ya se
 deduce leyendo el código no se repite aquí.
 
-Última revisión: **3/10/2026**. Estado: **app base escrita y probada en local
+Última revisión: **6/10/2026**. Estado: **app base escrita y probada en local
 (5/5 pruebas), sin desplegar todavía** (ver «Estado»).
 
 ## Comportamiento al iniciar
@@ -609,3 +609,33 @@ que mide qué se sale de la pantalla, más capturas. Lo que se corrigió y por q
 - **Sin arreglar a propósito:** la página Finanzas y sus pantallas no se pudieron revisar en local (el
   panel lo da la API de finanzas, que necesita `FINANZAS_API_CLAVE`). Las tablas anchas que quedan
   («Recibo a recibo» de la comunidad, que crece una columna por trimestre) se deslizan dentro de su tarjeta.
+
+**Trabajo: panel propio con pestañas y el Equipo (6/10/2026, Gonzalo: «ampliar esta parte como cerebro
+de todo lo relacionado con el trabajo»; tiene un equipo de 6 y entra una 7.ª persona).** La gestión del
+servicio sigue en las herramientas de la empresa (Asana, Workday…); aquí, lo que hay que tener controlado.
+Gonzalo primero pidió entrar directo a la ficha del CEU y luego lo cambió: «un panel principal con avisos,
+historial, datos en cards», con pestañas **Mi puesto** y **Equipo**. Así: `seccion.php?s=trabajo` redirige a
+`trabajo.php` (el listado genérico sigue con `&lista=1`); pestañas Panel · Mi puesto (= la ficha del
+empleo, `elemento.php`) · Equipo (`trabajo.php?p=equipo`), pintadas por `pestanas_trabajo()` también en
+las fichas de la sección. Panel: cifras (avisos, personas, antigüedad, tu horario de hoy), avisos, el equipo
+hoy, historial reciente de toda la sección (`registros_de_seccion()`), mi puesto y convenio/contactos.
+Tipo nuevo `trabajo/miembro` («Persona del equipo»: ficha de trabajo, NO una persona de la familia; sin
+enlace al empleo para que no salga en «Convenio y contactos»), con fin del periodo de prueba y fin de
+contrato con aviso. **Horario** (en el empleo y en cada persona) en formato lista, una línea por día
+(«Martes: 8:00-14:00 y 15:00-17:30»): de ahí sale «hoy» (`horario_de_hoy()`, `includes/trabajo.php`);
+una línea «Desde: …» no cuenta como día. Los datos de RRHH los manda **Workday** (Gonzalo tiene acceso):
+aquí se copian los que conviene tener a mano. Quién lo ve: de momento solo entra Gonzalo (su decisión:
+«no me preocupa de momento»); si da de alta a Pilar, revisar si Trabajo debe ser solo suyo (datos de
+terceros: evaluaciones, incidencias). **Pendiente de grabar en producción** (en el equipo de la oficina,
+`C:\Users\gsolaz`, no hay `acceso.json`): `private/importar-notion/equipo/*.json` (6 personas de Notion
+y, en la ficha 35, horario y trayectoria) con `php remoto.php elemento <archivo>`; antes, `buscar trabajo`
+para no duplicar. **Siguientes pasos hablados, sin hacer:** plan de desarrollo (objetivos por curso con
+niveles 0-4 y notas desde 20-21), formación, saldo de horas/días debidos (falta decidir cuánto vale un día),
+evaluaciones del periodo de prueba (PDF en Notion), licencias del servicio con aviso de renovación (su
+importe NO en `coste`: sumaría al gasto fijo de casa), documentos (puestos, normas, protocolos) y la
+acogida de la 7.ª persona. Sin decidir: si traer el diario de incidencias (Javier; Emilio ya no está:
+propuesto no traerlo) y a los que se fueron. Notion: página «Equipo» (una por persona) y «Compras del
+servicio de Com. Digital».
+
+**PHP 8.5 en el equipo de la oficina (6/10/2026):** marca `curl_close()` como obsoleta y las pruebas de
+finanzas fallaban; se quitó (no hace nada desde PHP 8.0) de `includes/finanzas.php` e `includes/ipc.php`.
