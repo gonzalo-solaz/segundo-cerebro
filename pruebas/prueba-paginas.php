@@ -233,6 +233,15 @@ pinta_bien('…y el total al año', $r, 'al año en renovaciones');
 comprueba('…sin las canceladas', !str_contains($r['html'], 'Evernote de prueba'));
 pinta_bien('…que salen en «Canceladas»', pedir('trabajo.php', ['p' => 'compras', 'antiguos' => '1']), 'Evernote de prueba');
 pinta_bien('el panel avisa de la renovación', pedir('trabajo.php'), 'Renovar la licencia');
+$id['licencia2'] = guardar_elemento($pdo, 'trabajo', 'compra', ['nombre' => 'Aaa sin fecha', 'datos' => ['importe' => '10', 'periodicidad' => 'Anual']]);
+$id['licencia3'] = guardar_elemento($pdo, 'trabajo', 'compra', ['nombre' => 'Zzz pronto', 'datos' => ['importe' => '5', 'periodicidad' => 'Anual',
+    'renovacion' => substr(hoy(), 0, 4) . '-12-31']]);
+$h = strstr(pedir('trabajo.php', ['p' => 'compras', 'orden' => 'fecha'])['html'], '<tbody>');
+comprueba('ordenar por renovación: la más cercana primero y las sin fecha al final',
+    strpos($h, 'Zzz pronto') < strpos($h, 'Asana de prueba') && strpos($h, 'Asana de prueba') < strpos($h, 'Aaa sin fecha'));
+comprueba('…y la tabla pone siempre el año, también el del año en curso', str_contains($h, '31 dic ' . substr(hoy(), 0, 4)));
+$h = strstr(pedir('trabajo.php', ['p' => 'compras', 'orden' => 'importe'])['html'], '<tbody>');
+comprueba('ordenar por importe: de mayor a menor', strpos($h, 'Asana de prueba') < strpos($h, 'Aaa sin fecha') && strpos($h, 'Aaa sin fecha') < strpos($h, 'Zzz pronto'));
 $r = pedir('elemento.php', ['id' => (string)$id['licencia']]);
 pinta_bien('la ficha de una licencia lleva la pestaña Compras activa', $r, 'aria-current="page">Compras');
 comprueba('…y no lleva plan de desarrollo', !str_contains($r['html'], 'Plan de desarrollo'));

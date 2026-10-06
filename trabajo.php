@@ -81,6 +81,23 @@ if ($p === 'equipo'):
 // por dónde se compra. Arriba, el CECO del servicio (ficha del empleo), que es lo que se pide al comprar.
 if ($p === 'compras'):
     $lista = $antiguos ? compras_trabajo($pdo, false) : $compras;
+    // Ordenar por las cabeceras (enlaces, sin JS: la CSP no deja scripts en línea). Lo que no
+    // tiene fecha o importe va al final; a igualdad, por nombre.
+    $col_fecha = $antiguos ? 'primera_compra' : 'renovacion';
+    $orden = in_array($_GET['orden'] ?? '', ['fecha', 'importe'], true) ? $_GET['orden'] : 'nombre';
+    if ($orden === 'fecha') {
+        usort($lista, static fn($a, $b) => [($a['datos'][$col_fecha] ?? '') === '', $a['datos'][$col_fecha] ?? '', $a['nombre']]
+                                       <=> [($b['datos'][$col_fecha] ?? '') === '', $b['datos'][$col_fecha] ?? '', $b['nombre']]);
+    } elseif ($orden === 'importe') {
+        $clave = static fn($c) => [!is_numeric($c['datos']['importe'] ?? null), -(float)($c['datos']['importe'] ?? 0), $c['nombre']];
+        usort($lista, static fn($a, $b) => $clave($a) <=> $clave($b));
+    }
+    $th = static function (string $clave, string $texto, string $clase = '') use ($orden, $antiguos): string {
+        $href = url('trabajo.php?p=compras' . ($antiguos ? '&antiguos=1' : '') . ($clave === 'nombre' ? '' : '&orden=' . $clave));
+        $activa = $orden === $clave;
+        return '<th' . ($clase ? ' class="' . $clase . '"' : '') . ($activa ? ' aria-sort="' . ($clave === 'importe' ? 'descending' : 'ascending') . '"' : '') . '>'
+             . '<a class="th-orden' . ($activa ? ' th-activa' : '') . '" href="' . e($href) . '">' . e($texto) . ($activa ? ($clave === 'importe' ? ' ↓' : ' ↑') : '') . '</a></th>';
+    };
     $ceco = trim((string)($empleo['datos']['ceco'] ?? ''));
     $al_anio = 0.0; $sin_importe = 0;
     foreach ($compras as $c) {
@@ -107,7 +124,7 @@ if ($p === 'compras'):
         <span class="kpi-txt"><?= count($compras) === 1 ? 'compra activa' : 'compras activas' ?></span>
       </div>
       <div class="kpi">
-        <span class="kpi-num kpi-num-texto"><?= $siguiente ? e(fecha_corta($siguiente['datos']['renovacion'])) : '—' ?></span>
+        <span class="kpi-num kpi-num-texto"><?= $siguiente ? e(fecha_es($siguiente['datos']['renovacion'])) : '—' ?></span>
         <span class="kpi-txt"><?= $siguiente ? 'próxima renovación · ' . e($siguiente['nombre']) : 'sin renovaciones apuntadas' ?></span>
       </div>
     </section>
@@ -119,7 +136,7 @@ if ($p === 'compras'):
       <?php else: ?>
         <div class="tabla-scroll">
           <table class="tabla">
-            <thead><tr><th>Compra</th><th class="num">Importe</th><th><?= $antiguos ? 'Primera compra' : 'Renovación' ?></th><th>Cómo se compra</th></tr></thead>
+            <thead><tr><?= $th('nombre', 'Compra') ?><?= $th('importe', 'Importe', 'num') ?><?= $th('fecha', $antiguos ? 'Primera compra' : 'Renovación') ?><th>Cómo se compra</th></tr></thead>
             <tbody>
               <?php foreach ($lista as $c): $d = $c['datos']; $f = (string)($antiguos ? ($d['primera_compra'] ?? '') : ($d['renovacion'] ?? '')); ?>
                 <tr>
@@ -127,7 +144,7 @@ if ($p === 'compras'):
                     <?php $sub = array_filter([$d['uso'] ?? '', $d['plazas'] ?? '']); if ($sub): ?><div class="tenue"><?= e(implode(' · ', $sub)) ?></div><?php endif; ?></td>
                   <td class="num"><?= is_numeric($d['importe'] ?? null) ? e(eur($d['importe'])) : '—' ?>
                     <?php if (!empty($d['periodicidad'])): ?><div class="tenue"><?= e(mb_strtolower($d['periodicidad'], 'UTF-8')) ?></div><?php endif; ?></td>
-                  <td><?= $f !== '' ? e(fecha_corta($f)) : '—' ?>
+                  <td><?= $f !== '' ? e(fecha_es($f)) : '—' ?>
                     <?php if (!$antiguos && $f !== ''): ?><div class="tenue"><?= e(relativo(dias_entre($hoy, $f))) ?></div><?php endif; ?></td>
                   <td><?= e($d['gestion'] ?? '—') ?>
                     <?php if (($d['ceco'] ?? '') !== ''): ?><div class="tenue">CECO <?= e($d['ceco']) ?></div><?php endif; ?></td>
