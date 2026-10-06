@@ -84,7 +84,8 @@ if ($p === 'compras'):
     // Ordenar por las cabeceras (enlaces, sin JS: la CSP no deja scripts en línea). Lo que no
     // tiene fecha o importe va al final; a igualdad, por nombre.
     $col_fecha = $antiguos ? 'primera_compra' : 'renovacion';
-    $orden = in_array($_GET['orden'] ?? '', ['fecha', 'importe'], true) ? $_GET['orden'] : 'nombre';
+    // Por defecto, por renovación: lo primero que caduca, arriba (Gonzalo, 6/10/2026).
+    $orden = in_array($_GET['orden'] ?? '', ['nombre', 'importe'], true) ? $_GET['orden'] : 'fecha';
     if ($orden === 'fecha') {
         usort($lista, static fn($a, $b) => [($a['datos'][$col_fecha] ?? '') === '', $a['datos'][$col_fecha] ?? '', $a['nombre']]
                                        <=> [($b['datos'][$col_fecha] ?? '') === '', $b['datos'][$col_fecha] ?? '', $b['nombre']]);
@@ -93,7 +94,7 @@ if ($p === 'compras'):
         usort($lista, static fn($a, $b) => $clave($a) <=> $clave($b));
     }
     $th = static function (string $clave, string $texto, string $clase = '') use ($orden, $antiguos): string {
-        $href = url('trabajo.php?p=compras' . ($antiguos ? '&antiguos=1' : '') . ($clave === 'nombre' ? '' : '&orden=' . $clave));
+        $href = url('trabajo.php?p=compras' . ($antiguos ? '&antiguos=1' : '') . ($clave === 'fecha' ? '' : '&orden=' . $clave));
         $activa = $orden === $clave;
         return '<th' . ($clase ? ' class="' . $clase . '"' : '') . ($activa ? ' aria-sort="' . ($clave === 'importe' ? 'descending' : 'ascending') . '"' : '') . '>'
              . '<a class="th-orden' . ($activa ? ' th-activa' : '') . '" href="' . e($href) . '">' . e($texto) . ($activa ? ($clave === 'importe' ? ' ↓' : ' ↑') : '') . '</a></th>';

@@ -236,10 +236,12 @@ pinta_bien('el panel avisa de la renovación', pedir('trabajo.php'), 'Renovar la
 $id['licencia2'] = guardar_elemento($pdo, 'trabajo', 'compra', ['nombre' => 'Aaa sin fecha', 'datos' => ['importe' => '10', 'periodicidad' => 'Anual']]);
 $id['licencia3'] = guardar_elemento($pdo, 'trabajo', 'compra', ['nombre' => 'Zzz pronto', 'datos' => ['importe' => '5', 'periodicidad' => 'Anual',
     'renovacion' => substr(hoy(), 0, 4) . '-12-31']]);
-$h = strstr(pedir('trabajo.php', ['p' => 'compras', 'orden' => 'fecha'])['html'], '<tbody>');
-comprueba('ordenar por renovación: la más cercana primero y las sin fecha al final',
+$h = strstr(pedir('trabajo.php', ['p' => 'compras'])['html'], '<tbody>');
+comprueba('por defecto, por renovación: la más cercana primero y las sin fecha al final',
     strpos($h, 'Zzz pronto') < strpos($h, 'Asana de prueba') && strpos($h, 'Asana de prueba') < strpos($h, 'Aaa sin fecha'));
 comprueba('…y la tabla pone siempre el año, también el del año en curso', str_contains($h, '31 dic ' . substr(hoy(), 0, 4)));
+$h = strstr(pedir('trabajo.php', ['p' => 'compras', 'orden' => 'nombre'])['html'], '<tbody>');
+comprueba('ordenar por nombre sigue disponible', strpos($h, 'Aaa sin fecha') < strpos($h, 'Asana de prueba') && strpos($h, 'Asana de prueba') < strpos($h, 'Zzz pronto'));
 $h = strstr(pedir('trabajo.php', ['p' => 'compras', 'orden' => 'importe'])['html'], '<tbody>');
 comprueba('ordenar por importe: de mayor a menor', strpos($h, 'Asana de prueba') < strpos($h, 'Aaa sin fecha') && strpos($h, 'Aaa sin fecha') < strpos($h, 'Zzz pronto'));
 $id['ordenador'] = guardar_elemento($pdo, 'trabajo', 'compra', ['nombre' => 'Ordenador de Ana', 'enlace_id' => $id['companera'],
