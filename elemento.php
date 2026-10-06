@@ -109,6 +109,13 @@ foreach ($titulos_hijos as $gs => [$titulo, $icono_g]) {
     $gt = array_values(array_filter($tipos_hijos, static fn($t) => $t[0] === $gs));
     if ($gh || $gt) $grupos_hijos[$gs] = ['titulo' => $titulo, 'icono' => $icono_g, 'hijos' => $gh, 'tipos' => $gt];
 }
+// La ficha médica reúne lo de su persona: tratamientos, graduación de gafas y control de peso.
+$de_la_ficha = [];
+if ($el['seccion'] === 'salud' && $el['tipo'] === 'ficha' && $el['persona_id']) {
+    foreach (elementos_de($pdo, 'salud') as $x) {
+        if ($x['persona_id'] === $el['persona_id'] && isset(tipos_de_la_ficha_medica()[$x['tipo']])) $de_la_ficha[$x['tipo']][] = $x;
+    }
+}
 
 $acciones = '<a class="btn btn-sutil" href="' . e(url('elemento-editar.php?id=' . $id)) . '">' . icono('editar') . 'Editar</a>';
 if ($el['seccion'] === 'salud' && $el['tipo'] === 'peso') {
@@ -264,6 +271,37 @@ if ($el['seccion'] === 'trabajo') {
         </div>
       </section>
     <?php endforeach; ?>
+
+    <?php if ($el['seccion'] === 'salud' && $el['tipo'] === 'ficha' && $el['persona_id']): ?>
+      <?php foreach (tipos_de_la_ficha_medica() as $ts => $icono_f): ?>
+        <?php $tdef = $sec['tipos'][$ts]; $suyos = $de_la_ficha[$ts] ?? []; ?>
+        <section class="tarjeta" id="ficha-<?= e($ts) ?>">
+          <div class="tarjeta-cabecera"><h2><?= icono($icono_f) ?><?= e($tdef['nombre']) ?></h2></div>
+          <?php if (!$suyos): ?><p class="vacio-mini">Aún no hay nada apuntado.</p><?php endif; ?>
+          <ul class="lista-docs">
+            <?php foreach ($suyos as $h): ?>
+              <?php
+                $linea = [];
+                foreach (resumen_elemento($h) as [$etq, $val]) $linea[] = $etq . ': ' . recortar($val, 40);
+                if ($ts === 'peso') foreach (resumen_peso($pdo, $h) as [$etq, $val]) $linea[] = $etq . ': ' . $val;
+                $prox = agenda($pdo, 36500, null, $h['id'])[0] ?? null;
+                if ($prox) $linea[] = titulo_sin_elemento($prox['titulo'], $h['nombre']) . ' · ' . fecha_corta($prox['fecha']) . ' (' . relativo($prox['dias']) . ')';
+              ?>
+              <li>
+                <a href="<?= e(url('elemento.php?id=' . $h['id'])) ?>"><?= e($h['nombre']) ?></a>
+                <span class="tenue"><?= e(implode(' · ', $linea)) ?></span>
+              </li>
+            <?php endforeach; ?>
+          </ul>
+          <div class="botones-tarjeta">
+            <a class="btn btn-sutil" href="<?= e(url('elemento-editar.php?s=salud&t=' . $ts . '&persona=' . $el['persona_id'])) ?>"><?= icono('mas') ?><?= e($tdef['nombre']) ?></a>
+            <?php if ($ts === 'peso' && $suyos): ?>
+              <a class="btn btn-sutil" href="<?= e(url('peso.php?id=' . $suyos[0]['id'])) ?>"><?= icono('bascula') ?>Evolución y pautas</a>
+            <?php endif; ?>
+          </div>
+        </section>
+      <?php endforeach; ?>
+    <?php endif; ?>
 
     <?php if ($el['seccion'] === 'vivienda' && $el['tipo'] === 'inmueble'): ?>
       <section class="tarjeta" id="contactos">

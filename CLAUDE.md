@@ -167,7 +167,10 @@ avisa por correo.
 - **Reglas de código:** sentencias preparadas siempre; todo formulario con
   `csrf_input()`/`csrf_ok()`; todo lo impreso con `e()`; nada de
   `"«$var»"` (PHP se come el `»`: siempre `"«{$var}»"`, la prueba lo caza).
-  Cualquier cambio de datos deja rastro con `anotar()`.
+  Cualquier cambio de datos deja rastro con `anotar()`. Nada de `mb_*` a
+  pelo: el PHP de este equipo no carga mbstring y la página revienta en las
+  pruebas (6/10/2026, 13 fallos de Trabajo por `mb_strtolower`). Usar
+  `longitud()`, `recortar()`, `minusculas()` de `funciones.php`.
 
 ## El usuario te pasa papeles y tú los grabas
 
@@ -368,6 +371,8 @@ menores no se juzga el IMC ni se dan calorías (percentiles del pediatra). Las p
 control de nadie (no inventar altura ni peso; preguntar).
 
 **Graduación de gafas (3/10/2026, petición de Gonzalo):** tipo `salud/gafas` (una ficha por graduación: esfera, cilindro, eje y adición de cada ojo, DIP, fecha y «próxima revisión» con aviso) para comparar graduaciones y saber si toca cambiar de gafas. Origen: Notion, Personal > Gafas (2024 y 2026, sin día exacto). No inventar fechas ni valores que Notion no da.
+
+**Gafas, peso y tratamientos, dentro de la ficha médica (6/10/2026, Gonzalo: «lo de las gafas y peso no debería estar dentro de cada ficha?»).** La ficha médica de una persona pinta una tarjeta por cada tipo de `tipos_de_la_ficha_medica()` (`includes/elementos.php`) con lo de SU persona y su botón de añadir (con `&persona=`). Va por persona, no por `enlace_id`: la ficha es una por persona y así no hubo que tocar datos ni migrar. El listado de Salud los oculta si su persona tiene ficha (si no, siguen sueltos para no perderlos) y su cabecera ya no lleva esos tres botones. Sus avisos siguen en «Avisos de Salud».
 
 **Notas cortas, detalle en campos plegados (3/10/2026, queja de Gonzalo: «tanta información amontonada no la veo útil»).** Las notas de los coches (hasta 3.400 caracteres) mezclaban origen, equipamiento, recambios y papeles. Ahora `vehiculo` tiene tres campos `aparte` con `lista` (tarjetas plegadas pintadas como lista por `lista_campo()`: una línea = un punto, «Grupo:» abre un grupo, «Etiqueta: valor» pone la etiqueta en negrita): `equipamiento` (lo que lleva: motor, caja, ruedas y neumáticos, batería, extras), `recambios` (mantenimiento: aceite, filtros, frenos, plan de mantenimiento, defectos a vigilar; **no** componentes) y `origen` (procedencia, compra, papeles, seguros anteriores). `notas` queda para lo breve y accionable (avería pendiente, baja temporal, importado sin matricular); si pasan de 500 caracteres, la ficha las pliega sola. **Al traer un vehículo de Notion, repartir así, no volcarlo todo en `notas`.** Repartidos en producción los 7 vehículos (ids 11, 13, 15, 17, 18, 19, 24), ya en formato lista; no repetir. Copia de las notas originales en `private/importar-notion/copia-notas/` y script en `repartir-notas-vehiculos.py` (gitignored). Las compras que ya constan en el historial se quitaron de las notas del Mini; el resto del texto se movió tal cual.
 

@@ -26,6 +26,14 @@ $en_lista = array_flip(array_column($elementos, 'id'));
 $elementos = array_values(array_filter($elementos, static fn($el) => $el['enlace_id'] === null || !isset($en_lista[$el['enlace_id']])));
 $avisos = agenda($pdo, 365, $clave);
 
+// En Salud, tratamientos, gafas y peso viven dentro de la ficha médica de su
+// persona. Solo se dejan sueltos los de quien aún no tiene ficha (para no perderlos).
+if ($clave === 'salud') {
+    $con_ficha = [];
+    foreach ($elementos as $el) if ($el['tipo'] === 'ficha' && $el['persona_id']) $con_ficha[$el['persona_id']] = true;
+    $elementos = array_values(array_filter($elementos, static fn($el) => !isset(tipos_de_la_ficha_medica()[$el['tipo']]) || !isset($con_ficha[$el['persona_id']])));
+}
+
 // «persona=ID» (desde la tarjeta de la persona): solo lo suyo y sus avisos.
 $filtro_persona = !empty($_GET['persona']) ? persona($pdo, (int)$_GET['persona']) : null;
 if ($filtro_persona) {
@@ -45,7 +53,8 @@ $volver = 'seccion.php?s=' . $clave . ($filtro_persona ? '&persona=' . $filtro_p
 
 $botones = '';
 foreach ($sec['tipos'] as $t => $def) {
-    $botones .= '<a class="btn btn-sutil" href="' . e(url('elemento-editar.php?s=' . $clave . '&t=' . $t)) . '">'
+    if ($clave === 'salud' && isset(tipos_de_la_ficha_medica()[$t])) continue;   // se añaden desde la ficha
+    $botones .='<a class="btn btn-sutil" href="' . e(url('elemento-editar.php?s=' . $clave . '&t=' . $t)) . '">'
               . icono('mas') . e($def['nombre']) . '</a>';
 }
 

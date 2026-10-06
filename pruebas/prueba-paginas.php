@@ -90,6 +90,19 @@ pinta_bien('Salud enlaza al control de peso', pedir('seccion.php', ['s' => 'salu
 pinta_bien('la tarjeta del control de peso enseña el último peso', pedir('seccion.php', ['s' => 'salud']), '85,5 kg');
 pinta_bien('la ficha del control de peso lleva a la evolución', pedir('elemento.php', ['id' => (string)$id['peso']]), 'Evolución y pautas');
 pinta_bien('el panel enseña el último peso', pedir('index.php'), 'Gonzalo: 85,5 kg');
+// Con ficha médica, el peso y las gafas viven dentro de ella y salen del listado de Salud.
+$gafas_yo = guardar_elemento($pdo, 'salud', 'gafas', ['nombre' => 'Graduación de prueba', 'persona_id' => $id['yo'], 'datos' => ['esf_od' => '2.5']]);
+$r = pedir('seccion.php', ['s' => 'salud']);
+pinta_bien('sin ficha médica, el peso y las gafas siguen sueltos en Salud', $r, 'Graduación de prueba');
+$ficha_yo = guardar_elemento($pdo, 'salud', 'ficha', ['nombre' => 'Ficha de prueba', 'persona_id' => $id['yo']]);
+$r = pedir('seccion.php', ['s' => 'salud']);
+comprueba('con ficha médica, el peso y las gafas salen del listado de Salud', !str_contains($r['html'], 'Graduación de prueba') && !str_contains(str_replace(NBSP, ' ', $r['html']), '85,5 kg'));
+comprueba('…y los botones de añadirlos ya no están en la cabecera', !str_contains($r['html'], 't=gafas') && str_contains($r['html'], 't=ficha'));
+$r = pedir('elemento.php', ['id' => (string)$ficha_yo]);
+pinta_bien('la ficha médica enseña las gafas de su persona', $r, 'Graduación de prueba');
+pinta_bien('…el último peso y su evolución', $r, '85,5 kg');
+pinta_bien('…y deja añadir una graduación con la persona ya puesta', $r, 't=gafas&amp;persona=' . $id['yo']);
+comprueba('la ficha de otra persona no se llena con lo de esta', !str_contains(pedir('elemento.php', ['id' => (string)$id['ficha_leo']])['html'], 'Graduación de prueba'));
 pinta_bien('el panel lleva al desglose del gasto fijo', pedir('index.php'), 'gastos-fijos.php');
 $r = pedir('gastos-fijos.php');
 pinta_bien('gastos fijos: el mismo total que el panel', $r, '127,99 €');

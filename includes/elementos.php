@@ -68,6 +68,12 @@ function resumen_enlazados(PDO $pdo): array {
     return $out;
 }
 
+// Lo que vive dentro de la ficha médica de cada persona (por persona, sin
+// enlace: la ficha es una por persona): [tipo de salud => icono de su tarjeta].
+function tipos_de_la_ficha_medica(): array {
+    return ['tratamiento' => 'contrato', 'gafas' => 'ojo', 'peso' => 'bascula'];
+}
+
 // Los tipos que pueden colgar de un elemento de esta sección y tipo:
 // [[seccion, tipo, nombre del tipo], ...]. Vacío si nada puede enlazarse a él.
 function tipos_que_enlazan(string $seccion, string $tipo): array {
