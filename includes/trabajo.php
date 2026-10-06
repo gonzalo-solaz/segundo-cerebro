@@ -110,11 +110,12 @@ function tiempo_desde(?string $desde, string $hoy): string {
     return $d->m > 0 ? $m : 'menos de un mes';
 }
 
-// Las pestañas de Trabajo: Panel · Equipo · Formación · Compras · Hitos. Salen en trabajo.php y en las fichas de la sección.
+// Las pestañas de Trabajo: Panel · Equipo · Plan de desarrollo · Formación · Compras · Hitos. Salen en trabajo.php y en las fichas de la sección.
 // Sin «Mi puesto» (Gonzalo, 6/10/2026): tu ficha se abre desde la primera tarjeta del Equipo.
 function pestanas_trabajo(string $activa, int $n_equipo, int $n_compras = 0, int $n_cursos = 0, int $n_hitos = 0): void {
     $p = ['panel' => ['trabajo.php', 'Panel'],
           'equipo' => ['trabajo.php?p=equipo', 'Equipo' . ($n_equipo ? ' · ' . $n_equipo : '')],
+          'plan' => ['trabajo.php?p=plan', 'Plan de desarrollo'],
           'formacion' => ['trabajo.php?p=formacion', 'Formación' . ($n_cursos ? ' · ' . $n_cursos : '')],
           'compras' => ['trabajo.php?p=compras', 'Compras' . ($n_compras ? ' · ' . $n_compras : '')],
           'hitos' => ['trabajo.php?p=hitos', 'Hitos' . ($n_hitos ? ' · ' . $n_hitos : '')]];

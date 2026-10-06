@@ -115,6 +115,11 @@ function plan_del_curso(PDO $pdo, string $curso): array {
     return $out;
 }
 
+// Todos los planes, del curso más reciente al más antiguo: la pestaña «Plan de desarrollo» de Trabajo.
+function plan_todo(PDO $pdo): array {
+    return array_map('decodificar_plan', $pdo->query('SELECT * FROM plan_desarrollo ORDER BY curso DESC, id')->fetchAll());
+}
+
 // La nota final más reciente de cada ficha: [elemento_id => ['curso', 'nota']].
 function ultima_nota_por_elemento(PDO $pdo): array {
     $out = [];

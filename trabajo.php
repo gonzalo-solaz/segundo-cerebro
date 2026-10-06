@@ -4,11 +4,12 @@
 // responsable; ya no hay pestaña «Mi puesto» (Gonzalo, 6/10/2026). Gonzalo, 6/10/2026: «no entrar directamente en Mi puesto: un panel
 // principal con avisos, historial, datos en cards», pestañas Mi puesto y Equipo y,
 // después, «una pestaña Compras con el listado de software que pido, con el CECO» y
-// «una pestaña de formación que además vaya a persona/s» y «una parte de hitos para ir añadiendo items».
+// «una pestaña de formación que además vaya a persona/s» y «una parte de hitos para ir añadiendo items»;
+// y el plan de desarrollo, «una sección al igual que formación, compras…».
 require_once __DIR__ . '/includes/auth.php';
 
 $sec = seccion('trabajo');
-$p = in_array($_GET['p'] ?? '', ['equipo', 'formacion', 'compras', 'hitos'], true) ? $_GET['p'] : 'panel';
+$p = in_array($_GET['p'] ?? '', ['equipo', 'plan', 'formacion', 'compras', 'hitos'], true) ? $_GET['p'] : 'panel';
 $antiguos = $p === 'compras' && !empty($_GET['antiguos']);
 $hoy = hoy();
 
@@ -25,11 +26,13 @@ $boton = [
     'compras' => '<a class="btn btn-sutil" href="' . e(url('elemento-editar.php?s=trabajo&t=compra')) . '">' . icono('mas') . 'Compra o licencia</a>',
     'formacion' => '<a class="btn btn-sutil" href="' . e(url('elemento-editar.php?s=trabajo&t=curso')) . '">' . icono('mas') . 'Curso</a>',
     'hitos' => '<a class="btn btn-sutil" href="' . e(url('elemento-editar.php?s=trabajo&t=hito')) . '">' . icono('mas') . 'Hito</a>',
+    'plan' => '',
 ][$p] ?? '<a class="btn btn-sutil" href="' . e(url('elemento-editar.php?s=trabajo&t=miembro')) . '">' . icono('mas') . 'Persona del equipo</a>';
 $a_trabajo = '<a href="' . e(url('trabajo.php')) . '">Trabajo</a> · ';
 [$titulo, $migas, $icono_p] = [
     'panel' => [$sec['nombre'], e($sec['descripcion']), $sec['icono']],
     'equipo' => ['Equipo', $a_trabajo . 'Las personas que diriges', 'familia'],
+    'plan' => ['Plan de desarrollo', $a_trabajo . 'Objetivos y notas de cada curso, tuyos y de tu equipo', 'bombilla'],
     'formacion' => ['Formación', $a_trabajo . 'Los cursos que has hecho tú y tu equipo', 'birrete'],
     'compras' => ['Compras', $a_trabajo . ($antiguos ? 'Canceladas' : 'Licencias y compras del servicio'), $sec['icono']],
     'hitos' => ['Hitos', $a_trabajo . 'Lanzamientos, proyectos y logros del servicio', 'bandera'],
@@ -98,6 +101,141 @@ if ($p === 'equipo'):
         <?php foreach ($bajas as $m) $tarjeta_miembro($m); ?>
       </div>
     <?php endif; ?>
+<?php pie(); return; endif;
+
+// ---------------------------- Plan de desarrollo ----------------------------
+// Gonzalo, 6/10/2026: «plan de desarrollo debería ser una sección al igual que formación, compras…».
+// Un bloque por curso (el más reciente arriba) con el objetivo y la nota de cada persona y, encima,
+// la evolución de las notas de todos. Se edita en el bloque «Plan de desarrollo» de cada ficha.
+if ($p === 'plan'):
+    $fichas = fichas_trabajo($pdo);
+    $planes = array_values(array_filter(plan_todo($pdo), static fn($f) => isset($fichas[$f['elemento_id']])));
+    // Tú, tu equipo y, detrás, los que se fueron y tienen algún curso apuntado.
+    $con_plan_ids = array_unique(array_column($planes, 'elemento_id'));
+    $gente = array_merge($empleo ? [$empleo] : [], $equipo);
+    $ids_gente = array_column($gente, 'id');
+    foreach ($fichas as $f) {
+        if (lleva_plan($f) && !$f['activo'] && in_array($f['id'], $con_plan_ids, true) && !in_array($f['id'], $ids_gente, true)) $gente[] = $f;
+    }
+    $quien = (int)($_GET['persona'] ?? 0);
+    if ($quien && !in_array($quien, array_column($gente, 'id'), true)) $quien = 0;
+    $nombre_f = static fn(array $f): string => $f['tipo'] === 'empleo' ? 'Yo' : nombre_corto($f['nombre']);
+    $este = curso_de($hoy);
+    $pasado = curso_de(((int)substr($este, 0, 4) - 1) . '-09-01');
+    $por_curso = [];
+    foreach ($planes as $f) $por_curso[$f['curso']][$f['elemento_id']] = $f;
+    if ($gente) $por_curso += [$este => []];
+    krsort($por_curso);
+    $activos = array_filter($gente, static fn($f) => $f['activo']);
+    $con_objetivo = count(array_filter($por_curso[$este] ?? [], static fn($f) => $f['objetivo'] !== ''));
+    $sin_nota = count(array_filter($por_curso[$pasado] ?? [], static fn($f) => $f['objetivo'] !== '' && $f['nota'] === null));
+    $notas_de = static fn(array $fs): array => array_values(array_filter(array_column($fs, 'nota'), static fn($n) => $n !== null));
+    // La nota media del curso más reciente con alguna nota final.
+    $ultimo_evaluado = null;
+    foreach ($por_curso as $c => $fs) if ($n = $notas_de($fs)) { $ultimo_evaluado = [(string)$c, array_sum($n) / count($n), count($n)]; break; }
+    // Cursos con alguna nota, de más antiguo a más reciente, para la tabla de evolución.
+    $cursos_nota = array_reverse(array_map('strval', array_keys(array_filter($por_curso, $notas_de))));
+    $vacio_n = '<span class="tenue">—</span>';
+    ?>
+    <section class="kpis">
+      <div class="kpi">
+        <span class="kpi-num"><?= $con_objetivo ?></span>
+        <span class="kpi-txt">de <?= count($activos) ?> con objetivo en el curso <?= e($este) ?></span>
+      </div>
+      <div class="kpi">
+        <span class="kpi-num"><?= $ultimo_evaluado ? e(nota_es($ultimo_evaluado[1])) : '—' ?></span>
+        <span class="kpi-txt"><?= $ultimo_evaluado ? 'nota media del curso ' . e($ultimo_evaluado[0]) . ' · ' . $ultimo_evaluado[2] . ($ultimo_evaluado[2] === 1 ? ' persona' : ' personas') : 'sin notas todavía' ?></span>
+      </div>
+      <div class="kpi<?= $sin_nota ? ' kpi-ambar' : '' ?>">
+        <span class="kpi-num"><?= $sin_nota ?></span>
+        <span class="kpi-txt">sin nota final del curso <?= e($pasado) ?></span>
+      </div>
+      <div class="kpi">
+        <span class="kpi-num"><?= count($planes) ?></span>
+        <span class="kpi-txt"><?= count($planes) === 1 ? 'objetivo apuntado' : 'objetivos apuntados' ?> en total</span>
+      </div>
+    </section>
+
+    <?php if (count($gente) > 1): ?>
+      <nav class="filtros" aria-label="Por persona">
+        <a class="chip chip-boton<?= $quien ? '' : ' chip-activo' ?>" href="<?= e(url('trabajo.php?p=plan')) ?>">Todos</a>
+        <?php foreach ($gente as $g): ?>
+          <a class="chip chip-boton<?= $quien === $g['id'] ? ' chip-activo' : '' ?>" href="<?= e(url('trabajo.php?p=plan&persona=' . $g['id'])) ?>"<?= $quien === $g['id'] ? ' aria-current="page"' : '' ?>><?= e($nombre_f($g)) ?></a>
+        <?php endforeach; ?>
+      </nav>
+    <?php endif; ?>
+
+    <?php if (!$gente): ?>
+      <section class="tarjeta">
+        <p class="vacio-mini">Aparece cuando haya equipo. El objetivo y la nota de cada curso se apuntan en el bloque «Plan de desarrollo» de cada ficha.</p>
+      </section>
+    <?php endif; ?>
+
+    <?php if ($cursos_nota): ?>
+      <section class="tarjeta">
+        <div class="tarjeta-cabecera"><h2><?= icono('historial') ?>Evolución de las notas</h2><span class="tenue">nota final sobre 10</span></div>
+        <div class="tabla-scroll">
+          <table class="tabla">
+            <thead><tr><th>Persona</th><?php foreach ($cursos_nota as $c): ?><th class="num"><?= e($c) ?></th><?php endforeach; ?></tr></thead>
+            <tbody>
+              <?php foreach ($gente as $g): if ($quien && $g['id'] !== $quien) continue; ?>
+                <tr>
+                  <td><a href="<?= e(url('elemento.php?id=' . $g['id'] . '#plan')) ?>"><?= e($nombre_f($g)) ?></a><?= $g['activo'] ? '' : ' <span class="tenue">(baja)</span>' ?></td>
+                  <?php foreach ($cursos_nota as $c): $n = $por_curso[$c][$g['id']]['nota'] ?? null; ?>
+                    <td class="num"><?= $n !== null ? e(nota_es($n)) : $vacio_n ?></td>
+                  <?php endforeach; ?>
+                </tr>
+              <?php endforeach; ?>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    <?php endif; ?>
+
+    <?php foreach ($por_curso as $c => $fs):
+        $c = (string)$c;
+        // En el curso actual salen también los que aún no tienen objetivo, para apuntárselo.
+        $filas_c = [];
+        foreach ($gente as $g) {
+            if ($quien && $g['id'] !== $quien) continue;
+            if (isset($fs[$g['id']])) $filas_c[] = [$g, $fs[$g['id']]];
+            elseif ($c === $este && $g['activo']) $filas_c[] = [$g, null];
+        }
+        if (!$filas_c) continue; ?>
+      <section class="tarjeta">
+        <div class="tarjeta-cabecera">
+          <h2><?= icono('bombilla') ?>Curso <?= e($c) ?></h2>
+          <?php if ($c === $este): ?><span class="chip">Este curso</span><?php endif; ?>
+        </div>
+        <div class="tabla-scroll">
+          <table class="tabla">
+            <thead><tr><th>Persona</th><th>Objetivo</th><th class="num">Autoev.</th><th class="num">Nota</th></tr></thead>
+            <tbody>
+              <?php foreach ($filas_c as [$g, $f]): ?>
+                <tr>
+                  <td><a href="<?= e(url('elemento.php?id=' . $g['id'] . '#plan')) ?>"><strong><?= e($nombre_f($g)) ?></strong></a></td>
+                  <td><?php if (!$f): ?>
+                      <a class="enlace-tenue" href="<?= e(url('elemento.php?id=' . $g['id'] . '#plan')) ?>">Sin objetivo · Apuntarlo</a>
+                    <?php else: ?>
+                      <?= $f['objetivo'] !== '' ? e($f['objetivo']) : '<span class="tenue">Sin objetivo apuntado</span>' ?>
+                      <?php if ($f['descripcion'] !== '' || $f['niveles'] !== ''): ?>
+                        <details class="desplegable plan-detalle">
+                          <summary class="enlace-tenue">Descripción y niveles</summary>
+                          <?php if ($f['descripcion'] !== ''): ?><p class="notas"><?= nl2br(e($f['descripcion'])) ?></p><?php endif; ?>
+                          <?php if ($f['niveles'] !== ''): ?><?= lista_campo($f['niveles']) ?><?php endif; ?>
+                        </details>
+                      <?php endif; ?>
+                      <?php if ($f['notas'] !== ''): ?><div class="tenue"><?= e(recortar($f['notas'], 200)) ?></div><?php endif; ?>
+                    <?php endif; ?></td>
+                  <td class="num"><?= $f && $f['autoevaluacion'] !== null ? e(nota_es($f['autoevaluacion'])) : $vacio_n ?></td>
+                  <td class="num"><?= $f && $f['nota'] !== null ? '<strong>' . e(nota_es($f['nota'])) . '</strong>' : $vacio_n ?></td>
+                </tr>
+              <?php endforeach; ?>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    <?php endforeach; ?>
 <?php pie(); return; endif;
 
 // ---------------------------- Formación ----------------------------
@@ -423,7 +561,10 @@ if ($empleo) {
     </section>
 
     <section class="tarjeta" id="plan-desarrollo">
-      <div class="tarjeta-cabecera"><h2><?= icono('bombilla') ?>Plan de desarrollo <?= e($curso) ?></h2></div>
+      <div class="tarjeta-cabecera">
+        <h2><?= icono('bombilla') ?>Plan de desarrollo <?= e($curso) ?></h2>
+        <a class="enlace-tenue" href="<?= e(url('trabajo.php?p=plan')) ?>">Ver todo</a>
+      </div>
       <?php if (!$con_plan): ?><p class="vacio-mini">Aparece cuando haya equipo.</p><?php endif; ?>
       <ul class="lista-docs">
         <?php foreach ($con_plan as $m): $pl = $plan_curso[$m['id']] ?? null; $un = $ultima_nota[$m['id']] ?? null; ?>
