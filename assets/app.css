@@ -637,6 +637,8 @@ details.tarjeta-plegable > summary:hover::after, .pauta summary:hover::after { b
 details.tarjeta-plegable[open] > summary { margin-bottom: 16px; }
 /* Plegada con su resumen debajo del título (las nóminas: el bruto a la vista). */
 .titulo-plegable { min-width: 0; }
+.titulo-plegable > h2 { display: flex; align-items: center; gap: .6rem; }
+.titulo-plegable > h2 .ico { color: var(--tenue); width: 20px; height: 20px; flex: none; }
 .titulo-plegable > .tenue { display: block; margin-top: 4px; font-size: 13.5px; }
 .datos-nominas { margin-top: 0; padding-top: 0; border-top: 0; }
 #nominas p.tenue { font-size: 13.5px; }
