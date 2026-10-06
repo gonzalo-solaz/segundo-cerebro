@@ -80,7 +80,8 @@ if ($p === 'equipo'):
         <p>Aún no hay nadie en el equipo. Añade a cada persona con el botón de arriba: puesto, desde cuándo está, su horario…</p>
       </div>
     <?php endif; ?>
-    <?php if ($empleo): // Tú, aparte del resto (Gonzalo, 6/10/2026: «ponme separado del resto del equipo»). ?>
+    <?php if ($empleo): // Tú, aparte del resto (Gonzalo, 6/10/2026: «ponme separado del resto del equipo»), bajo «Dirección». ?>
+      <h2 class="titulo-bloque">Dirección</h2>
       <div class="rejilla rejilla-elementos">
         <?php $tarjeta_miembro($empleo, true); ?>
       </div>
