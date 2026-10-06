@@ -42,7 +42,8 @@ pestanas_trabajo($p, $empleo, count($equipo), count($compras), count($cursos), c
 $tarjeta_miembro = static function (array $m) use ($sec, $hoy, $proximo): void {
     $d = $m['datos'];
     $hoy_h = horario_de_hoy((string)($d['horario'] ?? ''), $hoy);
-    $en_equipo = tiempo_desde($d['incorporacion'] ?? ($d['servicio_continuo'] ?? null), $hoy);
+    $baja = (string)($d['baja'] ?? '');
+    $en_equipo = tiempo_desde($d['incorporacion'] ?? ($d['servicio_continuo'] ?? null), $baja !== '' && $baja < $hoy ? $baja : $hoy);
     $prox = $proximo[$m['id']] ?? null;
     ?>
     <a class="tarjeta tarjeta-elemento tarjeta-miembro" href="<?= e(url('elemento.php?id=' . $m['id'])) ?>" style="--c:<?= e($sec['color']) ?>">
@@ -52,7 +53,8 @@ $tarjeta_miembro = static function (array $m) use ($sec, $hoy, $proximo): void {
       </div>
       <dl class="resumen">
         <?php if (!empty($d['puesto'])): ?><div><dt>Puesto</dt><dd><?= e($d['puesto']) ?></dd></div><?php endif; ?>
-        <?php if ($en_equipo !== ''): ?><div><dt>En el equipo</dt><dd><?= e($en_equipo) ?></dd></div><?php endif; ?>
+        <?php if ($en_equipo !== ''): ?><div><dt><?= $baja !== '' ? 'Estuvo' : 'En el equipo' ?></dt><dd><?= e($en_equipo) ?></dd></div><?php endif; ?>
+        <?php if ($baja !== ''): ?><div><dt>Se fue</dt><dd><?= e(fecha_es($baja)) ?></dd></div><?php endif; ?>
         <?php if (!empty($d['relacion']) && $d['relacion'] !== 'Plantilla'): ?><div><dt>Relación</dt><dd><?= e($d['relacion']) ?></dd></div><?php endif; ?>
         <?php if (!empty($d['horario'])): ?><div><dt>Hoy</dt><dd><?= e($hoy_h ?? 'No trabaja') ?></dd></div><?php endif; ?>
       </dl>
@@ -190,7 +192,7 @@ if ($p === 'formacion'):
 
 // ---------------------------- Hitos ----------------------------
 // Una línea de tiempo por año, del más reciente al más antiguo: fecha, qué fue y de qué tipo. Las
-// incorporaciones del equipo salen solas de sus fichas (hitos_trabajo()).
+// incorporaciones y bajas del equipo y tu entrada en la empresa salen solas de sus fichas (hitos_trabajo()).
 if ($p === 'hitos'):
     $por_anio = [];
     foreach ($hitos as $h) $por_anio[($h['datos']['fecha'] ?? '') !== '' ? substr($h['datos']['fecha'], 0, 4) : 'Sin fecha'][] = $h;

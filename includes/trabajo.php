@@ -36,21 +36,27 @@ function documentos_trabajo(PDO $pdo): array {
 }
 
 // Los hitos, del más reciente al más antiguo (los que no tienen fecha, al final). Además de las fichas
-// «Hito», la incorporación de cada persona del equipo (también de las que ya no están) sale sola de su
-// ficha (Gonzalo, 6/10/2026: «utilizar la fecha de incorporación del equipo para añadirlo en hitos»):
-// no se copia, así una persona nueva aparece sin hacer nada y cambiar la fecha en su ficha basta. Lleva
-// el id de la persona (el enlace va a su ficha) y 'auto' => true. Sin «En el equipo desde», se usa la
-// fecha de servicio continuo de Workday, y se dice.
+// «Hito», salen solas de sus fichas la incorporación y la baja de cada persona del equipo (también de las
+// que ya no están) y tu entrada en la empresa (fecha de alta del empleo). Gonzalo, 6/10/2026: «utilizar la
+// fecha de incorporación del equipo para añadirlo en hitos» e «inclúyeme a mí». No se copian: una persona
+// nueva aparece sin hacer nada y cambiar la fecha en su ficha basta. Llevan el id de la ficha (el enlace
+// va a ella) y 'auto' => true. Sin «En el equipo desde», se usa la fecha de servicio continuo, y se dice.
 function hitos_trabajo(PDO $pdo): array {
     $h = array_values(array_filter(elementos_de($pdo, 'trabajo'), static fn($e) => $e['tipo'] === 'hito'));
+    $auto = static fn(array $el, string $nombre, string $fecha, string $categoria, string $notas = ''): array =>
+        ['id' => $el['id'], 'nombre' => $nombre, 'auto' => true, 'notas' => $notas,
+         'datos' => ['fecha' => $fecha, 'categoria' => $categoria, 'quien' => (string)($el['datos']['puesto'] ?? '')]];
     foreach (array_merge(equipo_trabajo($pdo), equipo_trabajo($pdo, false)) as $m) {
         $f = (string)($m['datos']['incorporacion'] ?? '');
         $sc = $f === '' ? (string)($m['datos']['servicio_continuo'] ?? '') : '';
-        if ($f === '' && $sc === '') continue;
-        $h[] = ['id' => $m['id'], 'nombre' => 'Incorporación de ' . $m['nombre'], 'auto' => true,
-                'datos' => ['fecha' => $f !== '' ? $f : $sc, 'categoria' => 'Incorporación',
-                            'quien' => (string)($m['datos']['puesto'] ?? '')],
-                'notas' => $sc !== '' ? 'Fecha de servicio continuo de Workday: falta la de incorporación al equipo en su ficha.' : ''];
+        if ($f !== '' || $sc !== '') {
+            $h[] = $auto($m, 'Incorporación de ' . $m['nombre'], $f !== '' ? $f : $sc, 'Incorporación',
+                $sc !== '' ? 'Fecha de servicio continuo de Workday: falta la de incorporación al equipo en su ficha.' : '');
+        }
+        if (($m['datos']['baja'] ?? '') !== '') $h[] = $auto($m, 'Baja de ' . $m['nombre'], (string)$m['datos']['baja'], 'Baja');
+    }
+    foreach (array_filter(elementos_de($pdo, 'trabajo'), static fn($e) => $e['tipo'] === 'empleo' && ($e['datos']['fecha_alta'] ?? '') !== '') as $e) {
+        $h[] = $auto($e, 'Incorporación de ' . ($e['persona_nombre'] ?: 'tu puesto') . ' a ' . $e['nombre'], (string)$e['datos']['fecha_alta'], 'Incorporación');
     }
     usort($h, static fn($a, $b) => [($a['datos']['fecha'] ?? '') === '', $b['datos']['fecha'] ?? '', $a['nombre']]
                                   <=> [($b['datos']['fecha'] ?? '') === '', $a['datos']['fecha'] ?? '', $b['nombre']]);

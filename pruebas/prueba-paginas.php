@@ -326,8 +326,18 @@ comprueba('…con su fecha', str_contains($h, '23 sep 2026'));
 $con_inc = array_filter(equipo_trabajo($pdo), static fn($m) => !empty($m['datos']['incorporacion']));
 $m = reset($con_inc);
 comprueba('la incorporación de cada persona del equipo sale sola en Hitos', $m && str_contains($h, 'Incorporación de ' . e($m['nombre'])));
+$id['se_fue'] = guardar_elemento($pdo, 'trabajo', 'miembro', ['nombre' => 'Mayra de prueba',
+    'datos' => ['incorporacion' => '2023-11-27', 'baja' => '2024-07-09']]);
+cambiar_activo_elemento($pdo, $id['se_fue'], false);
+$h = pedir('trabajo.php', ['p' => 'hitos'])['html'];
+comprueba('…y la baja de los que ya no están', str_contains($h, 'Baja de Mayra de prueba') && str_contains($h, 'Incorporación de Mayra de prueba'));
+$emp = elemento($pdo, $id['empleo']);
+guardar_elemento($pdo, 'trabajo', 'empleo', ['nombre' => $emp['nombre'], 'persona_id' => $emp['persona_id'],
+    'datos' => $emp['datos'] + ['fecha_alta' => '2004-10-01']], $id['empleo']);
+comprueba('…y tu entrada en la empresa (fecha de alta del empleo)', str_contains(pedir('trabajo.php', ['p' => 'hitos'])['html'], ' a Universidad de prueba'));
+pinta_bien('en «Los que ya no están», cuánto estuvo', pedir('trabajo.php', ['p' => 'equipo', 'antiguos' => '1']), 'Estuvo');
 pinta_bien('el panel enseña los últimos hitos', pedir('trabajo.php'), 'Lanzamiento de Oneweb');
-pinta_bien('la ficha del hito lleva la pestaña Hitos activa', pedir('elemento.php', ['id' => (string)$id['hito']]), 'aria-current="page">Hitos · 3');
+pinta_bien('la ficha del hito lleva la pestaña Hitos activa', pedir('elemento.php', ['id' => (string)$id['hito']]), 'aria-current="page">Hitos · 6');
 $ficha_casa = pedir('elemento.php', ['id' => (string)$id['casa']]);
 comprueba('una casa no lleva plan de desarrollo', !str_contains($ficha_casa['html'], 'Plan de desarrollo'));
 pinta_bien('…y su horario como lista', pedir('elemento.php', ['id' => (string)$id['companera']]), '<strong>Martes:</strong>');

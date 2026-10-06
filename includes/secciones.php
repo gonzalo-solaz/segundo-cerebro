@@ -613,6 +613,9 @@ function secciones(): array {
                             'vence' => 'Evaluar el periodo de prueba', 'aviso' => 30],
                         'fin_contrato' => ['etiqueta' => 'Fin del contrato', 'tipo' => 'fecha',
                             'vence' => 'Fin del contrato', 'aviso' => 60],
+                        // Sin aviso: es pasada. Sale como hito en la pestaña Hitos (hitos_trabajo()); la ficha, además, se archiva.
+                        'baja' => ['etiqueta' => 'Dejó el equipo el', 'tipo' => 'fecha',
+                            'ayuda' => 'Cuando se va. Sale en Hitos; archiva después la ficha para que pase a «Los que ya no están».'],
                         'email' => ['etiqueta' => 'Email', 'tipo' => 'email'],
                         'telefono' => ['etiqueta' => 'Teléfono', 'tipo' => 'tel'],
                         'horario' => $horario,
