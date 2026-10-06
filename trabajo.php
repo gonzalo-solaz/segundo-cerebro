@@ -202,6 +202,7 @@ $plan_curso = plan_del_curso($pdo, $curso);
 $ultima_nota = ultima_nota_por_elemento($pdo);
 $con_plan = array_merge($empleo ? [$empleo] : [], $equipo);
 $colgados = $empleo ? elementos_enlazados($pdo, $empleo['id']) : [];
+$docs_equipo = documentos_trabajo($pdo);
 $datos_puesto = [];
 if ($empleo) {
     foreach (['puesto', 'categoria', 'contrato', 'jornada', 'fecha_alta', 'revision_salarial', 'fin_contrato'] as $k) {
@@ -322,6 +323,26 @@ if ($empleo) {
         </ul>
       </section>
     <?php endif; ?>
+
+    <section class="tarjeta" id="documentos-equipo">
+      <div class="tarjeta-cabecera">
+        <h2><?= icono('documento') ?>Documentos del equipo</h2>
+        <a class="enlace-tenue" href="<?= e(url('elemento-editar.php?s=trabajo&t=documento')) ?>">Añadir</a>
+      </div>
+      <?php if (!$docs_equipo): ?><p class="vacio-mini">Manuales, normas y protocolos que das al equipo.</p><?php endif; ?>
+      <ul class="lista-docs">
+        <?php foreach ($docs_equipo as $d): $pdf = documentos_de($pdo, $d['id'])[0] ?? null; ?>
+          <li>
+            <a href="<?= e(url('elemento.php?id=' . $d['id'])) ?>"><?= e($d['nombre']) ?></a>
+            <span class="tenue"><?= e(implode(' · ', array_filter([$d['datos']['categoria'] ?? '',
+                !empty($d['datos']['enviado']) ? 'enviado el ' . fecha_es($d['datos']['enviado']) : '']))) ?></span>
+            <?php if ($pdf): ?>
+              <a class="enlace-tenue" href="<?= e(url('archivo.php?id=' . $pdf['id'])) ?>" target="_blank" rel="noopener"><?= icono('clip', 'ico ico-mini') ?>Abrir el PDF</a>
+            <?php endif; ?>
+          </li>
+        <?php endforeach; ?>
+      </ul>
+    </section>
   </div>
 </div>
 <?php pie();

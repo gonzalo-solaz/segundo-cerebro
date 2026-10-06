@@ -208,7 +208,10 @@ $id['companera'] = guardar_elemento($pdo, 'trabajo', 'miembro', ['nombre' => 'An
                 'horario' => "Lunes: 8:00-15:00\nMartes: 8:00-14:00 y 15:00-17:30\nMiércoles: 8:00-15:00\nJueves: 8:00-14:00 y 15:00-17:30\nViernes: 8:00-15:00"]]);
 $id['antiguo'] = guardar_elemento($pdo, 'trabajo', 'miembro', ['nombre' => 'Persona Que Se Fue', 'datos' => ['puesto' => 'Community manager']]);
 cambiar_activo_elemento($pdo, $id['antiguo'], false);
+$id['manual'] = guardar_elemento($pdo, 'trabajo', 'documento', ['nombre' => 'Manual de prueba del equipo',
+    'datos' => ['categoria' => 'Procedimientos y normas', 'enviado' => '2026-03-13']]);
 $r = pedir('trabajo.php');
+pinta_bien('el panel lista los documentos del equipo', $r, 'Manual de prueba del equipo');
 pinta_bien('el panel enseña el equipo de hoy', $r, 'Ana Prueba Equipo');
 pinta_bien('…su mi puesto', $r, 'Universidad de prueba');
 pinta_bien('…el convenio colgado del empleo', $r, 'Convenio de prueba');

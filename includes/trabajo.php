@@ -25,6 +25,11 @@ function compras_trabajo(PDO $pdo, bool $activas = true): array {
     return array_values(array_filter(elementos_de($pdo, 'trabajo', $activas), static fn($e) => $e['tipo'] === 'compra'));
 }
 
+// Los documentos del equipo (manuales, normas, protocolos), por nombre.
+function documentos_trabajo(PDO $pdo): array {
+    return array_values(array_filter(elementos_de($pdo, 'trabajo'), static fn($e) => $e['tipo'] === 'documento'));
+}
+
 // Hardware y material van en su propia tabla en Compras (y no se renuevan como una licencia).
 function es_hardware(array $compra): bool {
     return in_array($compra['datos']['categoria'] ?? '', ['Hardware', 'Material'], true);

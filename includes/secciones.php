@@ -673,6 +673,21 @@ function secciones(): array {
                         'analisis' => ['etiqueta' => 'Análisis y preguntas para RRHH', 'tipo' => 'area', 'aparte' => true],
                     ],
                 ],
+                // Manuales, normas y protocolos que Gonzalo da al equipo (6/10/2026: «Procedimientos y
+                // buenas prácticas del equipo»). El PDF va adjunto; el panel de Trabajo los lista debajo de
+                // «Convenio y contactos» con el enlace directo al PDF. Sin enlace al empleo: no son contactos.
+                'documento' => [
+                    'nombre' => 'Documento del equipo', 'ejemplo' => 'Procedimientos y buenas prácticas del equipo', 'persona' => null,
+                    'campos' => [
+                        'categoria' => ['etiqueta' => 'Qué es', 'tipo' => 'opcion', 'resumen' => true,
+                            'opciones' => ['Procedimientos y normas', 'Protocolo', 'Descripción de puesto', 'Plantilla', 'Otro']],
+                        'enviado' => ['etiqueta' => 'Enviado al equipo el', 'tipo' => 'fecha', 'resumen' => true],
+                        'revisar' => ['etiqueta' => 'Revisarlo el', 'tipo' => 'fecha',
+                            'vence' => 'Revisar el documento del equipo', 'aviso' => 15],
+                        'contenido' => ['etiqueta' => 'Qué recoge', 'tipo' => 'area', 'aparte' => true, 'lista' => true,
+                            'ayuda' => 'Una línea por apartado, para verlo sin abrir el PDF.'],
+                    ],
+                ],
                 'contacto' => ['enlace' => ['etiqueta' => 'Empleo', 'a' => [['trabajo', 'empleo']]]]
                               + tipo_contacto('Contacto del trabajo', 'RRHH · nóminas', 'Departamento o cargo'),
             ],
