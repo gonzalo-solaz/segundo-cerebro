@@ -244,6 +244,11 @@ $h = strstr(pedir('trabajo.php', ['p' => 'compras', 'orden' => 'importe'])['html
 comprueba('ordenar por importe: de mayor a menor', strpos($h, 'Asana de prueba') < strpos($h, 'Aaa sin fecha') && strpos($h, 'Aaa sin fecha') < strpos($h, 'Zzz pronto'));
 $id['ordenador'] = guardar_elemento($pdo, 'trabajo', 'compra', ['nombre' => 'Ordenador de Ana', 'enlace_id' => $id['companera'],
     'datos' => ['categoria' => 'Hardware', 'importe' => '3000', 'periodicidad' => 'Una vez', 'primera_compra' => '2021-09-15']]);
+guardar_elemento($pdo, 'trabajo', 'compra', ['nombre' => 'Ordenadores de becarios', 'datos' => ['categoria' => 'Hardware',
+    'estado' => 'Rechazada', 'comentario' => "Rechazada.\nHeredan los de diseño."]]);
+$r = pedir('trabajo.php', ['p' => 'compras']);
+pinta_bien('la tabla enseña el estado de la petición', $r, 'chip-estado-rechazada');
+pinta_bien('…y el comentario, con sus saltos de línea', $r, 'Rechazada.<br />');
 $h = pedir('trabajo.php', ['p' => 'compras'])['html'];
 comprueba('el hardware va en su propia tabla, después del software',
     strpos($h, 'Software y servicios') < strpos($h, 'Asana de prueba') && strpos($h, 'Hardware y material') < strpos($h, 'Ordenador de Ana')

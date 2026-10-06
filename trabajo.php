@@ -158,6 +158,8 @@ if ($p === 'compras'):
                 <tr>
                   <td><a href="<?= e(url('elemento.php?id=' . $c['id'])) ?>"><strong><?= e($c['nombre']) ?></strong></a>
                     <?php $sub = array_filter([$d['uso'] ?? '', $d['plazas'] ?? '']); if ($sub): ?><div class="tenue"><?= e(implode(' · ', $sub)) ?></div><?php endif; ?>
+                    <?php if (!empty($d['estado'])): ?><span class="chip chip-estado-<?= e(mb_strtolower($d['estado'], 'UTF-8')) ?>"><?= e($d['estado']) ?></span><?php endif; ?>
+                    <?php if (!empty($d['comentario'])): ?><div class="compra-comentario"><?= nl2br(e($d['comentario'])) ?></div><?php endif; ?>
                     <?php if ($c['enlace_id']): ?><div class="tenue">Para <a href="<?= e(url('elemento.php?id=' . $c['enlace_id'])) ?>"><?= e($c['enlace_nombre']) ?></a></div><?php endif; ?></td>
                   <td class="num"><?= is_numeric($d['importe'] ?? null) ? e(eur($d['importe'])) : '—' ?>
                     <?php if (!empty($d['periodicidad'])): ?><div class="tenue"><?= e(mb_strtolower($d['periodicidad'], 'UTF-8')) ?></div><?php endif; ?></td>

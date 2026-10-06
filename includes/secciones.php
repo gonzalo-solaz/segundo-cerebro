@@ -645,6 +645,13 @@ function secciones(): array {
                             'opciones' => ['Compra del servicio', 'A través de FUSP', 'Otro']],
                         'ceco' => ['etiqueta' => 'CECO', 'tipo' => 'texto',
                             'ayuda' => 'Solo si va contra otro centro de coste; vacío = el del servicio (ficha del empleo).'],
+                        // Lo que pasa con lo que se pide (Gonzalo, 6/10/2026: le rechazaron los ordenadores de los
+                        // becarios y llegó a un acuerdo). Sale en la tabla de Compras, debajo del nombre.
+                        'estado' => ['etiqueta' => 'Estado de la petición', 'tipo' => 'opcion',
+                            'opciones' => ['Pedida', 'Aprobada', 'Rechazada', 'Comprada'],
+                            'ayuda' => 'Para lo que se pide en el presupuesto. Vacío en las licencias que ya se pagan.'],
+                        'comentario' => ['etiqueta' => 'Comentario o acuerdo', 'tipo' => 'area',
+                            'ayuda' => 'Lo que se ha hablado: por qué se rechazó, qué se acordó… Sale en la tabla de Compras.'],
                         'primera_compra' => ['etiqueta' => 'Fecha de compra', 'tipo' => 'fecha',
                             'ayuda' => 'La de la última compra o renovación del equipo; de una licencia, cuándo se compró la primera vez.'],
                         'web' => ['etiqueta' => 'Web o cuenta', 'tipo' => 'texto'],
