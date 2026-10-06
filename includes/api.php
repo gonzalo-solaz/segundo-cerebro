@@ -243,5 +243,9 @@ function api_guardar_elemento(PDO $pdo, array $d): array {
         $entrada['datos'] = array_map('api_valor_a_texto', (array)($d['datos'] ?? []));
         $id = guardar_elemento($pdo, (string)($d['seccion'] ?? ''), (string)($d['tipo'] ?? ''), $entrada, null, null);
     }
+    // «activo»: false archiva (una licencia cancelada, alguien que se fue), true lo recupera.
+    if (array_key_exists('activo', $d) && (bool)$d['activo'] !== (bool)elemento($pdo, $id)['activo']) {
+        cambiar_activo_elemento($pdo, $id, (bool)$d['activo']);
+    }
     return ['elemento' => elemento($pdo, $id), 'vencimientos' => agenda($pdo, 3650, null, $id)];
 }

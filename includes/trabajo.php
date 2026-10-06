@@ -1,7 +1,7 @@
 <?php
 // =====================================================================
-//  Trabajo: el panel (trabajo.php), Mi puesto (la ficha del empleo) y el
-//  Equipo (las fichas «Persona del equipo»). Gonzalo, 6/10/2026: «el cerebro
+//  Trabajo: el panel (trabajo.php), Mi puesto (la ficha del empleo), el
+//  Equipo (las fichas «Persona del equipo») y las Compras del servicio. Gonzalo, 6/10/2026: «el cerebro
 //  de todo lo relacionado con el trabajo»; la gestión del servicio sigue en
 //  las herramientas de la empresa, aquí va lo que hay que tener controlado.
 //  Las lecturas pasan por elementos_de() (el filtro de privacidad, si un día
@@ -18,6 +18,18 @@ function mi_empleo(PDO $pdo, ?int $persona_id): ?array {
 // Las personas del equipo, por nombre. Con $activos = false, las que ya no están (archivadas).
 function equipo_trabajo(PDO $pdo, bool $activos = true): array {
     return array_values(array_filter(elementos_de($pdo, 'trabajo', $activos), static fn($e) => $e['tipo'] === 'miembro'));
+}
+
+// Las compras y licencias del servicio, por nombre. Con $activas = false, las canceladas (archivadas).
+function compras_trabajo(PDO $pdo, bool $activas = true): array {
+    return array_values(array_filter(elementos_de($pdo, 'trabajo', $activas), static fn($e) => $e['tipo'] === 'compra'));
+}
+
+// Lo que cuesta al año una compra que se repite; null si se paga una vez o falta el importe o la periodicidad.
+function importe_anual(array $datos): ?float {
+    $meses = periodicidades()[$datos['periodicidad'] ?? ''] ?? 0;
+    if ($meses <= 0 || !isset($datos['importe']) || !is_numeric($datos['importe'])) return null;
+    return round((float)$datos['importe'] * 12 / $meses, 2);
 }
 
 /**
@@ -55,11 +67,12 @@ function tiempo_desde(?string $desde, string $hoy): string {
     return $d->m > 0 ? $m : 'menos de un mes';
 }
 
-// Las pestañas de Trabajo: Panel · Mi puesto · Equipo. Salen en trabajo.php y en las fichas de la sección.
-function pestanas_trabajo(string $activa, ?array $empleo, int $n_equipo): void {
+// Las pestañas de Trabajo: Panel · Mi puesto · Equipo · Compras. Salen en trabajo.php y en las fichas de la sección.
+function pestanas_trabajo(string $activa, ?array $empleo, int $n_equipo, int $n_compras = 0): void {
     $mi_puesto = $empleo ? 'elemento.php?id=' . $empleo['id'] : 'elemento-editar.php?s=trabajo&t=empleo';
     $p = ['panel' => ['trabajo.php', 'Panel'], 'puesto' => [$mi_puesto, 'Mi puesto'],
-          'equipo' => ['trabajo.php?p=equipo', 'Equipo' . ($n_equipo ? ' · ' . $n_equipo : '')]];
+          'equipo' => ['trabajo.php?p=equipo', 'Equipo' . ($n_equipo ? ' · ' . $n_equipo : '')],
+          'compras' => ['trabajo.php?p=compras', 'Compras' . ($n_compras ? ' · ' . $n_compras : '')]];
     echo '<nav class="filtros pestanas" aria-label="Trabajo">';
     foreach ($p as $k => [$href, $txt]) {
         echo '<a class="chip chip-boton' . ($k === $activa ? ' chip-activo' : '') . '" href="' . e(url($href)) . '"'

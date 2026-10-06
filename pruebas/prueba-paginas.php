@@ -218,6 +218,24 @@ $r = pedir('trabajo.php', ['p' => 'equipo']);
 pinta_bien('la pestaña Equipo lista a las personas', $r, 'Diseñadora web');
 comprueba('…sin las archivadas', !str_contains($r['html'], 'Persona Que Se Fue'));
 pinta_bien('…que salen en «los que ya no están»', pedir('trabajo.php', ['p' => 'equipo', 'antiguos' => '1']), 'Persona Que Se Fue');
+// Trabajo: la pestaña Compras (licencias del servicio, con el CECO del empleo).
+pinta_bien('sin compras, la pestaña Compras invita a añadirlas', pedir('trabajo.php', ['p' => 'compras']), 'Aún no hay compras');
+guardar_elemento($pdo, 'trabajo', 'empleo', ['nombre' => 'Universidad de prueba', 'persona_id' => $id['yo'],
+    'datos' => ['puesto' => 'Técnico', 'nominas_finanzas' => 'Sí', 'revision_salarial' => '2027-01-01', 'ceco' => 'V010800']], $id['empleo']);
+$id['licencia'] = guardar_elemento($pdo, 'trabajo', 'compra', ['nombre' => 'Asana de prueba',
+    'datos' => ['uso' => 'Gestión de proyectos', 'importe' => '2000', 'periodicidad' => 'Anual', 'renovacion' => '2027-09-26', 'gestion' => 'A través de FUSP']]);
+$id['cancelada'] = guardar_elemento($pdo, 'trabajo', 'compra', ['nombre' => 'Evernote de prueba', 'datos' => ['importe' => '240', 'primera_compra' => '2023-02-26']]);
+cambiar_activo_elemento($pdo, $id['cancelada'], false);
+$r = pedir('trabajo.php', ['p' => 'compras']);
+pinta_bien('la pestaña Compras enseña el CECO del servicio', $r, 'V010800');
+pinta_bien('…la licencia con su importe', $r, '2.000,00 €');
+pinta_bien('…y el total al año', $r, 'al año en renovaciones');
+comprueba('…sin las canceladas', !str_contains($r['html'], 'Evernote de prueba'));
+pinta_bien('…que salen en «Canceladas»', pedir('trabajo.php', ['p' => 'compras', 'antiguos' => '1']), 'Evernote de prueba');
+pinta_bien('el panel avisa de la renovación', pedir('trabajo.php'), 'Renovar la licencia');
+$r = pedir('elemento.php', ['id' => (string)$id['licencia']]);
+pinta_bien('la ficha de una licencia lleva la pestaña Compras activa', $r, 'aria-current="page">Compras');
+comprueba('…y no lleva plan de desarrollo', !str_contains($r['html'], 'Plan de desarrollo'));
 $r = pedir('elemento.php', ['id' => (string)$id['companera']]);
 pinta_bien('la ficha de una persona del equipo lleva las pestañas de Trabajo', $r, 'trabajo.php?p=equipo');
 pinta_bien('…y su bloque de plan de desarrollo', $r, 'Plan de desarrollo');

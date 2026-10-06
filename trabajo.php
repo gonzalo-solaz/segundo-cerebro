@@ -1,28 +1,35 @@
 <?php
-// Trabajo: el panel (avisos, equipo de hoy, mi puesto, historial) y el Equipo.
-// «Mi puesto» es la ficha del empleo (elemento.php), con estas mismas pestañas.
-// Gonzalo, 6/10/2026: «no entrar directamente en Mi puesto: un panel principal
-// con avisos, historial, datos en cards», y pestañas Mi puesto y Equipo.
+// Trabajo: el panel (avisos, equipo de hoy, mi puesto, historial), el Equipo y
+// las Compras. «Mi puesto» es la ficha del empleo (elemento.php), con estas mismas
+// pestañas. Gonzalo, 6/10/2026: «no entrar directamente en Mi puesto: un panel
+// principal con avisos, historial, datos en cards», pestañas Mi puesto y Equipo y,
+// después, «una pestaña Compras con el listado de software que pido, con el CECO».
 require_once __DIR__ . '/includes/auth.php';
 
 $sec = seccion('trabajo');
-$p = ($_GET['p'] ?? '') === 'equipo' ? 'equipo' : 'panel';
-$antiguos = $p === 'equipo' && !empty($_GET['antiguos']);
+$p = in_array($_GET['p'] ?? '', ['equipo', 'compras'], true) ? $_GET['p'] : 'panel';
+$antiguos = $p !== 'panel' && !empty($_GET['antiguos']);
 $hoy = hoy();
 
 $empleo = mi_empleo($pdo, (int)($usuario_actual['persona_id'] ?? 0) ?: null);
 $equipo = equipo_trabajo($pdo);
+$compras = compras_trabajo($pdo);
 $avisos = agenda($pdo, 365, 'trabajo');
 $proximo = [];
 foreach ($avisos as $v) if ($v['elemento_id'] && !isset($proximo[$v['elemento_id']])) $proximo[$v['elemento_id']] = $v;
 
-$boton_miembro = '<a class="btn btn-sutil" href="' . e(url('elemento-editar.php?s=trabajo&t=miembro')) . '">' . icono('mas') . 'Persona del equipo</a>';
+$boton = $p === 'compras'
+    ? '<a class="btn btn-sutil" href="' . e(url('elemento-editar.php?s=trabajo&t=compra')) . '">' . icono('mas') . 'Compra o licencia</a>'
+    : '<a class="btn btn-sutil" href="' . e(url('elemento-editar.php?s=trabajo&t=miembro')) . '">' . icono('mas') . 'Persona del equipo</a>';
+$a_trabajo = '<a href="' . e(url('trabajo.php')) . '">Trabajo</a> · ';
+[$titulo, $migas, $icono_p] = [
+    'panel' => [$sec['nombre'], e($sec['descripcion']), $sec['icono']],
+    'equipo' => ['Equipo', $a_trabajo . ($antiguos ? 'Los que ya no están' : 'Las personas que diriges'), 'familia'],
+    'compras' => ['Compras', $a_trabajo . ($antiguos ? 'Canceladas' : 'Licencias y compras del servicio'), $sec['icono']],
+][$p];
 cabecera($sec['nombre'], 'seccion:trabajo');
-cabecera_pagina($p === 'equipo' ? 'Equipo' : $sec['nombre'],
-    $p === 'equipo' ? '<a href="' . e(url('trabajo.php')) . '">Trabajo</a> · ' . ($antiguos ? 'Los que ya no están' : 'Las personas que diriges')
-                    : e($sec['descripcion']),
-    $boton_miembro, $p === 'equipo' ? 'familia' : $sec['icono'], $sec['color']);
-pestanas_trabajo($p, $empleo, count($equipo));
+cabecera_pagina($titulo, $migas, $boton, $icono_p, $sec['color']);
+pestanas_trabajo($p, $empleo, count($equipo), count($compras));
 
 // Una persona del equipo en tarjeta: puesto, cuánto lleva, su horario de hoy y su próximo aviso.
 $tarjeta_miembro = static function (array $m) use ($sec, $hoy, $proximo): void {
@@ -65,6 +72,77 @@ if ($p === 'equipo'):
         <a class="enlace-tenue" href="<?= e(url('trabajo.php?p=equipo')) ?>"><?= icono('atras', 'ico ico-mini') ?>Volver al equipo</a>
       <?php else: ?>
         <a class="enlace-tenue" href="<?= e(url('trabajo.php?p=equipo&antiguos=1')) ?>"><?= icono('archivar', 'ico ico-mini') ?>Los que ya no están (archivados)</a>
+      <?php endif; ?>
+    </p>
+<?php pie(); return; endif;
+
+// ---------------------------- Compras ----------------------------
+// Una tabla (se compara mejor de un vistazo que en tarjetas): qué es, cuánto, cuándo se renueva y
+// por dónde se compra. Arriba, el CECO del servicio (ficha del empleo), que es lo que se pide al comprar.
+if ($p === 'compras'):
+    $lista = $antiguos ? compras_trabajo($pdo, false) : $compras;
+    $ceco = trim((string)($empleo['datos']['ceco'] ?? ''));
+    $al_anio = 0.0; $sin_importe = 0;
+    foreach ($compras as $c) {
+        $a = importe_anual($c['datos']);
+        if ($a !== null) $al_anio += $a;
+        elseif (($c['datos']['periodicidad'] ?? '') !== 'Una vez') $sin_importe++;
+    }
+    $renovaciones = array_values(array_filter($compras, static fn($c) => ($c['datos']['renovacion'] ?? '') >= $hoy));
+    usort($renovaciones, static fn($a, $b) => strcmp($a['datos']['renovacion'], $b['datos']['renovacion']));
+    $siguiente = $renovaciones[0] ?? null;
+    ?>
+    <?php if (!$antiguos): ?>
+    <section class="kpis">
+      <div class="kpi">
+        <span class="kpi-num kpi-num-texto"><?= $ceco !== '' ? e($ceco) : '—' ?></span>
+        <span class="kpi-txt">CECO del servicio<?php if ($ceco === '' && $empleo): ?> · <a href="<?= e(url('elemento-editar.php?id=' . $empleo['id'])) ?>">apúntalo en tu puesto</a><?php endif; ?></span>
+      </div>
+      <div class="kpi">
+        <span class="kpi-num"><?= e(eur($al_anio)) ?></span>
+        <span class="kpi-txt">al año en renovaciones<?= $sin_importe ? ' · ' . $sin_importe . ' sin importe o periodicidad' : '' ?></span>
+      </div>
+      <div class="kpi">
+        <span class="kpi-num"><?= count($compras) ?></span>
+        <span class="kpi-txt"><?= count($compras) === 1 ? 'compra activa' : 'compras activas' ?></span>
+      </div>
+      <div class="kpi">
+        <span class="kpi-num kpi-num-texto"><?= $siguiente ? e(fecha_corta($siguiente['datos']['renovacion'])) : '—' ?></span>
+        <span class="kpi-txt"><?= $siguiente ? 'próxima renovación · ' . e($siguiente['nombre']) : 'sin renovaciones apuntadas' ?></span>
+      </div>
+    </section>
+    <?php endif; ?>
+
+    <section class="tarjeta">
+      <?php if (!$lista): ?>
+        <p class="vacio-mini"><?= $antiguos ? 'No hay ninguna cancelada.' : 'Aún no hay compras. Añade cada licencia con el botón de arriba: importe, cuándo se renueva y cómo se compra.' ?></p>
+      <?php else: ?>
+        <div class="tabla-scroll">
+          <table class="tabla">
+            <thead><tr><th>Compra</th><th class="num">Importe</th><th><?= $antiguos ? 'Primera compra' : 'Renovación' ?></th><th>Cómo se compra</th></tr></thead>
+            <tbody>
+              <?php foreach ($lista as $c): $d = $c['datos']; $f = (string)($antiguos ? ($d['primera_compra'] ?? '') : ($d['renovacion'] ?? '')); ?>
+                <tr>
+                  <td><a href="<?= e(url('elemento.php?id=' . $c['id'])) ?>"><strong><?= e($c['nombre']) ?></strong></a>
+                    <?php $sub = array_filter([$d['uso'] ?? '', $d['plazas'] ?? '']); if ($sub): ?><div class="tenue"><?= e(implode(' · ', $sub)) ?></div><?php endif; ?></td>
+                  <td class="num"><?= is_numeric($d['importe'] ?? null) ? e(eur($d['importe'])) : '—' ?>
+                    <?php if (!empty($d['periodicidad'])): ?><div class="tenue"><?= e(mb_strtolower($d['periodicidad'], 'UTF-8')) ?></div><?php endif; ?></td>
+                  <td><?= $f !== '' ? e(fecha_corta($f)) : '—' ?>
+                    <?php if (!$antiguos && $f !== ''): ?><div class="tenue"><?= e(relativo(dias_entre($hoy, $f))) ?></div><?php endif; ?></td>
+                  <td><?= e($d['gestion'] ?? '—') ?>
+                    <?php if (($d['ceco'] ?? '') !== ''): ?><div class="tenue">CECO <?= e($d['ceco']) ?></div><?php endif; ?></td>
+                </tr>
+              <?php endforeach; ?>
+            </tbody>
+          </table>
+        </div>
+      <?php endif; ?>
+    </section>
+    <p class="pie-seccion">
+      <?php if ($antiguos): ?>
+        <a class="enlace-tenue" href="<?= e(url('trabajo.php?p=compras')) ?>"><?= icono('atras', 'ico ico-mini') ?>Volver a las compras</a>
+      <?php else: ?>
+        <a class="enlace-tenue" href="<?= e(url('trabajo.php?p=compras&antiguos=1')) ?>"><?= icono('archivar', 'ico ico-mini') ?>Canceladas (archivadas)</a>
       <?php endif; ?>
     </p>
 <?php pie(); return; endif;

@@ -48,6 +48,18 @@ $r = $api('elemento', ['id' => $nuevo, 'enlace_id' => $id['furgo']]);
 comprueba('la API enlaza un seguro a su vehículo', $r['elemento']['enlace_id'] === $id['furgo']);
 $r = $api('elemento', ['id' => $nuevo, 'datos' => ['coste' => 400]]);
 comprueba('y lo conserva al actualizar otro campo', $r['elemento']['enlace_id'] === $id['furgo']);
+// Una licencia del trabajo: su importe no suma al gasto fijo de casa, y «activo» la archiva.
+$gasto_antes = coste_mensual_total($pdo);
+$r = $api('elemento', ['seccion' => 'trabajo', 'tipo' => 'compra', 'nombre' => 'Licencia de prueba',
+    'datos' => ['importe' => 1200, 'periodicidad' => 'Anual', 'renovacion' => '2027-03-20']]);
+$lic = (int)$r['elemento']['id'];
+comprueba('una licencia crea su aviso de renovación', (bool)array_filter($r['vencimientos'], static fn($v) => str_contains($v['titulo'], 'Renovar la licencia')));
+comprueba('…y no suma al gasto fijo de casa', abs(coste_mensual_total($pdo) - $gasto_antes) < 0.001);
+comprueba('importe_anual() la pasa a año', importe_anual($r['elemento']['datos']) === 1200.0);
+$r = $api('elemento', ['id' => $lic, 'activo' => false]);
+comprueba('la API archiva con activo = false', $r['elemento']['activo'] === 0);
+$r = $api('elemento', ['id' => $lic, 'activo' => true]);
+comprueba('…y la recupera con activo = true', $r['elemento']['activo'] === 1);
 $r = $api('esquema');
 comprueba('el esquema explica a qué se puede enlazar', str_contains((string)$r['secciones']['contratos']['tipos']['suministro']['enlace'], 'vivienda/inmueble'));
 $e = lanza(static fn() => $api('elemento', ['seccion' => 'contratos', 'tipo' => 'seguro', 'nombre' => 'X', 'datos' => ['ramo' => 'Barco']]));

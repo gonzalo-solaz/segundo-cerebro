@@ -569,6 +569,8 @@ function secciones(): array {
                             'ayuda' => 'Como sale en la nómina o en el contrato. Ej.: PAS · Titulado.'],
                         'cif' => ['etiqueta' => 'CIF de la empresa', 'tipo' => 'texto'],
                         'centro' => ['etiqueta' => 'Centro de trabajo', 'tipo' => 'texto'],
+                        'ceco' => ['etiqueta' => 'CECO del servicio', 'tipo' => 'texto',
+                            'ayuda' => 'El centro de coste contra el que van las compras. Sale arriba en la pestaña Compras.'],
                         'fecha_alta' => ['etiqueta' => 'Fecha de alta (antigüedad)', 'tipo' => 'fecha'],
                         'contrato' => ['etiqueta' => 'Tipo de contrato', 'tipo' => 'opcion', 'resumen' => true,
                             'opciones' => ['Indefinido', 'Temporal', 'Fijo discontinuo', 'Prácticas o formación', 'Funcionario', 'Autónomo', 'Otro']],
@@ -617,6 +619,32 @@ function secciones(): array {
                         'funciones' => ['etiqueta' => 'Funciones', 'tipo' => 'area', 'aparte' => true],
                     ],
                 ],
+                // Lo que compra el servicio, sobre todo licencias de software que se renuevan
+                // (Gonzalo, 6/10/2026; venía de Notion, «Compras del servicio de Com. Digital»).
+                // El importe va en «importe», NUNCA en «coste»: el coste suma al gasto fijo de
+                // casa. Sin enlace al empleo: no debe salir en «Convenio y contactos». Las que
+                // se dejan de pagar se archivan (pestaña Compras → «Canceladas»).
+                'compra' => [
+                    'nombre' => 'Compra o licencia', 'ejemplo' => 'Asana Premium', 'persona' => null,
+                    'campos' => [
+                        'uso' => ['etiqueta' => 'Para qué sirve', 'tipo' => 'texto', 'resumen' => true, 'ayuda' => 'Ej.: gestión de proyectos, banco de imágenes.'],
+                        'categoria' => ['etiqueta' => 'Qué es', 'tipo' => 'opcion',
+                            'opciones' => ['Software o licencia', 'Hardware', 'Servicio', 'Otro']],
+                        'importe' => ['etiqueta' => 'Importe por pago', 'tipo' => 'importe', 'resumen' => true,
+                            'ayuda' => 'Lo que cuesta cada renovación. No suma al gasto de casa.'],
+                        'periodicidad' => ['etiqueta' => 'Se paga', 'tipo' => 'opcion',
+                            'opciones' => array_merge(array_keys(periodicidades()), ['Una vez'])],
+                        'renovacion' => ['etiqueta' => 'Próxima renovación', 'tipo' => 'fecha', 'resumen' => true,
+                            'vence' => 'Renovar la licencia', 'aviso' => 30, 'repetir' => 'periodicidad'],
+                        'plazas' => ['etiqueta' => 'Plazas o usuarios', 'tipo' => 'texto', 'ayuda' => 'Ej.: 15 usuarios, 25 sitios.'],
+                        'gestion' => ['etiqueta' => 'Cómo se compra', 'tipo' => 'opcion',
+                            'opciones' => ['Compra del servicio', 'A través de FUSP', 'Otro']],
+                        'ceco' => ['etiqueta' => 'CECO', 'tipo' => 'texto',
+                            'ayuda' => 'Solo si va contra otro centro de coste; vacío = el del servicio (ficha del empleo).'],
+                        'primera_compra' => ['etiqueta' => 'Primera compra', 'tipo' => 'fecha'],
+                        'web' => ['etiqueta' => 'Web o cuenta', 'tipo' => 'texto'],
+                    ],
+                ],
                 'convenio' => [
                     'nombre' => 'Convenio colectivo', 'ejemplo' => 'XIV Convenio de centros de educación universitaria', 'persona' => null,
                     'enlace' => ['etiqueta' => 'Empleo', 'a' => [['trabajo', 'empleo']]],
@@ -642,9 +670,10 @@ function secciones(): array {
             // por curso) NO va aquí: tiene su bloque y su tabla (includes/plan.php). Una
             // «Evaluación» suelta (periodo de prueba…) puede llevar su nota sobre 10 en «Importe o nota».
             'registros' => ['tipos' => ['Nómina', 'Certificado de retenciones', 'Carta de retribución', 'Subida o cambio de sueldo',
-                                        'Contrato o anexo', 'Evaluación', 'Formación', 'Otro'],
+                                        'Contrato o anexo', 'Evaluación', 'Formación', 'Compra o renovación', 'Otro'],
                             'valor' => 'Importe o nota', 'unidad' => '',
-                            'unidades' => ['Nómina' => '€', 'Subida o cambio de sueldo' => '€', 'Evaluación' => 'sobre 10']],
+                            'unidades' => ['Nómina' => '€', 'Subida o cambio de sueldo' => '€', 'Evaluación' => 'sobre 10',
+                                           'Compra o renovación' => '€']],
         ],
     ];
     return $s;
