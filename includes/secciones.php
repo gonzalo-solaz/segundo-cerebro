@@ -698,8 +698,8 @@ function secciones(): array {
                     'nombre' => 'Curso de formación', 'ejemplo' => 'Adobe Premiere. Nivel medio+', 'persona' => null,
                     'campos' => [
                         'contenido' => ['etiqueta' => 'Tipo de contenido', 'tipo' => 'opcion', 'resumen' => true,
-                            'opciones' => ['Oferta de curso', 'Programa', 'Curso online', 'Jornada o congreso', 'Certificación', 'Otro'],
-                            'ayuda' => 'Como lo llama Workday: «Oferta de curso» es la formación de la empresa.'],
+                            'opciones' => ['Oferta de curso', 'Programa', 'Curso digital', 'Jornada o congreso', 'Certificación', 'Otro'],
+                            'ayuda' => 'Como lo llama Workday: «Oferta de curso» es la formación de la empresa; «Curso digital», a tu ritmo.'],
                         'organiza' => ['etiqueta' => 'Quién lo imparte', 'tipo' => 'texto', 'resumen' => true, 'ayuda' => 'Ej.: Formación CEU, LinkedIn Learning.'],
                         'modalidad' => ['etiqueta' => 'Modalidad', 'tipo' => 'opcion', 'opciones' => ['Presencial', 'En línea', 'Mixta']],
                         'horas' => ['etiqueta' => 'Horas', 'tipo' => 'numero'],
