@@ -3,33 +3,37 @@
 // las Compras. «Mi puesto» es la ficha del empleo (elemento.php), con estas mismas
 // pestañas. Gonzalo, 6/10/2026: «no entrar directamente en Mi puesto: un panel
 // principal con avisos, historial, datos en cards», pestañas Mi puesto y Equipo y,
-// después, «una pestaña Compras con el listado de software que pido, con el CECO».
+// después, «una pestaña Compras con el listado de software que pido, con el CECO» y
+// «una pestaña de formación que además vaya a persona/s».
 require_once __DIR__ . '/includes/auth.php';
 
 $sec = seccion('trabajo');
-$p = in_array($_GET['p'] ?? '', ['equipo', 'compras'], true) ? $_GET['p'] : 'panel';
-$antiguos = $p !== 'panel' && !empty($_GET['antiguos']);
+$p = in_array($_GET['p'] ?? '', ['equipo', 'formacion', 'compras'], true) ? $_GET['p'] : 'panel';
+$antiguos = in_array($p, ['equipo', 'compras'], true) && !empty($_GET['antiguos']);
 $hoy = hoy();
 
 $empleo = mi_empleo($pdo, (int)($usuario_actual['persona_id'] ?? 0) ?: null);
 $equipo = equipo_trabajo($pdo);
 $compras = compras_trabajo($pdo);
+$cursos = cursos_trabajo($pdo);
 $avisos = agenda($pdo, 365, 'trabajo');
 $proximo = [];
 foreach ($avisos as $v) if ($v['elemento_id'] && !isset($proximo[$v['elemento_id']])) $proximo[$v['elemento_id']] = $v;
 
-$boton = $p === 'compras'
-    ? '<a class="btn btn-sutil" href="' . e(url('elemento-editar.php?s=trabajo&t=compra')) . '">' . icono('mas') . 'Compra o licencia</a>'
-    : '<a class="btn btn-sutil" href="' . e(url('elemento-editar.php?s=trabajo&t=miembro')) . '">' . icono('mas') . 'Persona del equipo</a>';
+$boton = [
+    'compras' => '<a class="btn btn-sutil" href="' . e(url('elemento-editar.php?s=trabajo&t=compra')) . '">' . icono('mas') . 'Compra o licencia</a>',
+    'formacion' => '<a class="btn btn-sutil" href="' . e(url('elemento-editar.php?s=trabajo&t=curso')) . '">' . icono('mas') . 'Curso</a>',
+][$p] ?? '<a class="btn btn-sutil" href="' . e(url('elemento-editar.php?s=trabajo&t=miembro')) . '">' . icono('mas') . 'Persona del equipo</a>';
 $a_trabajo = '<a href="' . e(url('trabajo.php')) . '">Trabajo</a> · ';
 [$titulo, $migas, $icono_p] = [
     'panel' => [$sec['nombre'], e($sec['descripcion']), $sec['icono']],
     'equipo' => ['Equipo', $a_trabajo . ($antiguos ? 'Los que ya no están' : 'Las personas que diriges'), 'familia'],
+    'formacion' => ['Formación', $a_trabajo . 'Los cursos que has hecho tú y tu equipo', 'birrete'],
     'compras' => ['Compras', $a_trabajo . ($antiguos ? 'Canceladas' : 'Licencias y compras del servicio'), $sec['icono']],
 ][$p];
 cabecera($sec['nombre'], 'seccion:trabajo');
 cabecera_pagina($titulo, $migas, $boton, $icono_p, $sec['color']);
-pestanas_trabajo($p, $empleo, count($equipo), count($compras));
+pestanas_trabajo($p, $empleo, count($equipo), count($compras), count($cursos));
 
 // Una persona del equipo en tarjeta: puesto, cuánto lleva, su horario de hoy y su próximo aviso.
 $tarjeta_miembro = static function (array $m) use ($sec, $hoy, $proximo): void {
@@ -74,6 +78,105 @@ if ($p === 'equipo'):
         <a class="enlace-tenue" href="<?= e(url('trabajo.php?p=equipo&antiguos=1')) ?>"><?= icono('archivar', 'ico ico-mini') ?>Los que ya no están (archivados)</a>
       <?php endif; ?>
     </p>
+<?php pie(); return; endif;
+
+// ---------------------------- Formación ----------------------------
+// Un curso por fila, agrupados por curso académico (septiembre a agosto) de su última
+// finalización, con quién lo ha hecho. Arriba, un filtro por persona: con él, cada fila
+// enseña las fechas de esa persona.
+if ($p === 'formacion'):
+    $fichas = fichas_trabajo($pdo);
+    $filas = formacion_toda($pdo, $fichas);
+    $personas = personas_formacion($pdo);
+    $quien = (int)($_GET['persona'] ?? 0);
+    if ($quien && !isset($fichas[$quien])) $quien = 0;
+    $vistas = $quien ? array_values(array_filter($filas, static fn($f) => $f['elemento_id'] === $quien)) : $filas;
+    $por_curso = [];
+    foreach ($vistas as $f) $por_curso[$f['curso_id']][] = $f;
+    $grupos_f = [];
+    foreach ($cursos as $c) {
+        $fs = $por_curso[$c['id']] ?? [];
+        if ($quien && !$fs) continue;
+        $fecha = $fs ? max(array_map('fecha_formacion', $fs)) : '';
+        $g = $fecha !== '' ? curso_de($fecha) : ($fs ? 'Sin fecha' : 'Sin nadie apuntado');
+        $grupos_f[$g][] = ['curso' => $c, 'filas' => $fs, 'fecha' => $fecha];
+    }
+    uksort($grupos_f, static fn($a, $b) => [!curso_valido($a), $b] <=> [!curso_valido($b), $a]);
+    foreach ($grupos_f as &$g) usort($g, static fn($x, $y) => [$y['fecha'], $x['curso']['nombre']] <=> [$x['fecha'], $y['curso']['nombre']]);
+    unset($g);
+    $este = curso_de($hoy);
+    $este_curso = array_filter($vistas, static fn($f) => $f['estado'] === 'Finalizado' && $f['finalizacion'] && curso_de($f['finalizacion']) === $este);
+    $horas_curso = 0.0;
+    foreach ($este_curso as $f) $horas_curso += horas_curso($fichas[$f['curso_id']]) ?? 0;
+    $en_marcha = array_filter($vistas, static fn($f) => in_array($f['estado'], ['Inscrito', 'En curso'], true) && !$f['finalizacion']);
+    $ultima = $vistas[0] ?? null;
+    $nombre_p = static fn(array $f): string => $f['persona_tipo'] === 'empleo' ? 'Yo' : nombre_corto($f['persona_nombre']);
+    $con_formacion = array_unique(array_column($filas, 'elemento_id'));
+    ?>
+    <section class="kpis">
+      <div class="kpi">
+        <span class="kpi-num"><?= $quien ? count($vistas) : count($cursos) ?></span>
+        <span class="kpi-txt"><?= $quien ? 'cursos de ' . e(nombre_corto($fichas[$quien]['nombre'])) : (count($cursos) === 1 ? 'curso' : 'cursos') ?></span>
+      </div>
+      <div class="kpi">
+        <span class="kpi-num"><?= count($este_curso) ?></span>
+        <span class="kpi-txt">terminados en el curso <?= e($este) ?><?= $horas_curso > 0 ? ' · ' . e(numero_es($horas_curso, 0)) . ' h' : '' ?></span>
+      </div>
+      <div class="kpi">
+        <span class="kpi-num"><?= count($en_marcha) ?></span>
+        <span class="kpi-txt">inscritos o en curso</span>
+      </div>
+      <div class="kpi">
+        <span class="kpi-num kpi-num-texto"><?= $ultima ? e(fecha_es(fecha_formacion($ultima))) : '—' ?></span>
+        <span class="kpi-txt"><?= $ultima ? 'el último · ' . e(recortar($ultima['curso_nombre'], 40)) : 'sin formación apuntada' ?></span>
+      </div>
+    </section>
+
+    <?php if ($filas): ?>
+      <nav class="filtros" aria-label="Por persona">
+        <a class="chip chip-boton<?= $quien ? '' : ' chip-activo' ?>" href="<?= e(url('trabajo.php?p=formacion')) ?>">Todos</a>
+        <?php foreach ($personas as $pe): if (!in_array($pe['id'], $con_formacion, true)) continue; ?>
+          <a class="chip chip-boton<?= $quien === $pe['id'] ? ' chip-activo' : '' ?>" href="<?= e(url('trabajo.php?p=formacion&persona=' . $pe['id'])) ?>"<?= $quien === $pe['id'] ? ' aria-current="page"' : '' ?>><?= e($pe['tipo'] === 'empleo' ? 'Yo' : nombre_corto($pe['nombre'])) ?></a>
+        <?php endforeach; ?>
+      </nav>
+    <?php endif; ?>
+
+    <?php if (!$cursos): ?>
+      <section class="tarjeta">
+        <p class="vacio-mini">Aún no hay cursos. Crea cada uno con el botón de arriba y, en su ficha, marca quién lo ha hecho: pueden ser varias personas.</p>
+      </section>
+    <?php endif; ?>
+    <?php foreach ($grupos_f as $g_nombre => $items): ?>
+      <section class="tarjeta">
+        <div class="tarjeta-cabecera">
+          <h2><?= icono('birrete') ?><?= e(curso_valido((string)$g_nombre) ? 'Curso ' . $g_nombre : (string)$g_nombre) ?></h2>
+          <span class="tenue"><?= count($items) ?></span>
+        </div>
+        <div class="tabla-scroll">
+          <table class="tabla">
+            <thead><tr><th>Curso</th><th><?= $quien ? 'Estado' : 'Quién' ?></th><th>Finalización</th></tr></thead>
+            <tbody>
+              <?php foreach ($items as $it): $c = $it['curso']; $d = $c['datos']; ?>
+                <tr>
+                  <td><a href="<?= e(url('elemento.php?id=' . $c['id'])) ?>"><strong><?= e($c['nombre']) ?></strong></a>
+                    <?php $sub = array_filter([$d['organiza'] ?? '', $d['modalidad'] ?? '', horas_curso($c) !== null ? numero_es(horas_curso($c), 0) . ' h' : '']);
+                    if ($sub): ?><div class="tenue"><?= e(implode(' · ', $sub)) ?></div><?php endif; ?></td>
+                  <td><?php if ($quien): $f = $it['filas'][0]; ?>
+                      <?= e($f['estado'] !== '' ? $f['estado'] : '—') ?><?php if ($f['resultado'] !== ''): ?><div class="tenue"><?= e($f['resultado']) ?></div><?php endif; ?>
+                    <?php elseif (!$it['filas']): ?>
+                      <a class="enlace-tenue" href="<?= e(url('elemento.php?id=' . $c['id'] . '#formacion')) ?>">Marcar quién</a>
+                    <?php else: ?>
+                      <?= implode(', ', array_map(static fn($f) => '<a href="' . e(url('elemento.php?id=' . $f['elemento_id'])) . '">' . e($nombre_p($f)) . '</a>'
+                          . (!in_array($f['estado'], ['Finalizado', ''], true) ? ' <span class="tenue">(' . e(mb_strtolower($f['estado'], 'UTF-8')) . ')</span>' : ''), $it['filas'])) ?>
+                    <?php endif; ?></td>
+                  <td><?= $it['fecha'] !== '' ? e(fecha_es($it['fecha'])) : '—' ?></td>
+                </tr>
+              <?php endforeach; ?>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    <?php endforeach; ?>
 <?php pie(); return; endif;
 
 // ---------------------------- Compras ----------------------------

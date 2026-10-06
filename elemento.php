@@ -36,6 +36,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     borrar_plan($pdo, (int)($_POST['plan_id'] ?? 0), $id, $uid);
                     $ancla = '#plan';
                     break;
+                case 'formacion':
+                    $n = guardar_formacion_formulario($pdo, $el, $_POST, $uid);
+                    flash('ok', $n > 1 ? "Curso apuntado a {$n} personas." : 'Formación guardada.');
+                    $ancla = '#formacion';
+                    break;
+                case 'borrar-formacion':
+                    borrar_formacion($pdo, (int)($_POST['formacion_id'] ?? 0), $id, $uid);
+                    $ancla = '#formacion';
+                    break;
                 case 'documento':
                     guardar_documento_subido($pdo, $id, (string)($_POST['titulo'] ?? ''), $_FILES['archivo'] ?? null, $uid);
                     flash('ok', 'Archivo guardado.');
@@ -113,14 +122,15 @@ $migas = '<a href="' . e(url('seccion.php?s=' . $el['seccion'] . '&lista=1')) . 
 if ($el['seccion'] === 'trabajo') {
     $migas = '<a href="' . e(url('trabajo.php')) . '">' . e($sec['nombre']) . '</a> · '
            . ($el['tipo'] === 'miembro' ? '<a href="' . e(url('trabajo.php?p=equipo')) . '">Equipo</a>'
-              : ($el['tipo'] === 'compra' ? '<a href="' . e(url('trabajo.php?p=compras')) . '">Compras</a>' : e($def['nombre'])));
+              : ($el['tipo'] === 'compra' ? '<a href="' . e(url('trabajo.php?p=compras')) . '">Compras</a>'
+              : ($el['tipo'] === 'curso' ? '<a href="' . e(url('trabajo.php?p=formacion')) . '">Formación</a>' : e($def['nombre']))));
 }
 cabecera($el['nombre'], 'seccion:' . $el['seccion']);
 cabecera_pagina($el['nombre'], $migas, $acciones, $sec['icono'], $sec['color']);
 if ($el['seccion'] === 'trabajo') {
     $mi = mi_empleo($pdo, (int)($usuario_actual['persona_id'] ?? 0) ?: null);
-    $activa = ['miembro' => 'equipo', 'compra' => 'compras'][$el['tipo']] ?? ($mi && $mi['id'] === $id ? 'puesto' : '');
-    pestanas_trabajo($activa, $mi, count(equipo_trabajo($pdo)), count(compras_trabajo($pdo)));
+    $activa = ['miembro' => 'equipo', 'compra' => 'compras', 'curso' => 'formacion'][$el['tipo']] ?? ($mi && $mi['id'] === $id ? 'puesto' : '');
+    pestanas_trabajo($activa, $mi, count(equipo_trabajo($pdo)), count(compras_trabajo($pdo)), count(cursos_trabajo($pdo)));
 }
 ?>
 <?php if (!$el['activo']): ?>
@@ -163,7 +173,9 @@ if ($el['seccion'] === 'trabajo') {
       <?php endif; ?>
     </section>
 
+    <?php if (es_curso($el)) pintar_formacion($pdo, $el); ?>
     <?php if (lleva_plan($el)) pintar_plan($el, plan_de($pdo, $id), hoy()); ?>
+    <?php if (hace_formacion($el)) pintar_formacion($pdo, $el); ?>
 
     <?php // Notas largas: plegadas, para que no tapen los datos (3/10/2026: la ficha del Mini ocupaba dos pantallas de texto). ?>
     <?php if ($notas_largas): ?>

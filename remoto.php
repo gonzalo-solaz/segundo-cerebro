@@ -30,6 +30,9 @@
 //      php remoto.php plan <archivo.json | JSON>    Plan de desarrollo de un curso de una persona del equipo (o del empleo)
 //            {"elemento_id":44,"curso":"2025-26","objetivo":"...","descripcion":"...","niveles":"Nivel 0 = ...\nNivel 1 = ...","autoevaluacion":8.5,"nota":8.5}
 //            (si el curso ya existe, cambia solo lo que viene; notas sobre 10; «php remoto.php ficha <id>» trae su plan_desarrollo)
+//      php remoto.php formacion <archivo.json | JSON>  Quién ha hecho un curso (ficha trabajo/curso, creada con «elemento»)
+//            {"curso_id":80,"elementos_ids":[43,44],"inscripcion":"2026-06-29","finalizacion":"2026-07-16","estado":"Finalizado","resultado":"Completado con cuestionario"}
+//            (o "elemento_id" para una sola persona; si ya estaba, cambia solo lo que viene; «ficha <id>» trae su formacion)
 //      php remoto.php peso <id>                     Control de peso: IMC, ritmo, objetivo, calorías y consejos
 //            Un pesaje: registro {"elemento_id":30,"fecha":"2026-10-03","tipo":"Peso","valor":82.4}  (Cintura en cm, Grasa corporal en %)
 //      php remoto.php documento <archivo.pdf> elemento=<id> [titulo="..."]
@@ -154,6 +157,7 @@ switch ($accion) {
     case 'partidas':
     case 'precio':
     case 'plan':
+    case 'formacion':
         mostrar(llamar($accion, leer_json_arg($pos[0] ?? null)));
     case 'documento':
         if (empty($pos[0]) || empty($kv['elemento'])) { fwrite(STDERR, "Uso: php remoto.php documento <archivo> elemento=<id> [titulo=\"...\"]\n"); exit(1); }

@@ -520,6 +520,28 @@ comprueba('una nómina sigue en euros', (float)$filas[$rn]['valor'] === 2100.5 &
 $e = lanza(static fn() => crear_registro($pdo, ['elemento_id' => $empleo_p, 'tipo' => 'Objetivo', 'titulo' => 'x']));
 comprueba('«Objetivo» ya no es un apunte del historial (tiene su bloque)', $e instanceof ErrorValidacion);
 comprueba('el panel de Trabajo ve los apuntes de la sección', count(registros_de_seccion($pdo, 'trabajo', 10)) >= 2);
+echo "\nTrabajo: formación (un curso, varias personas)\n";
+$curso_f = guardar_elemento($pdo, 'trabajo', 'curso', ['nombre' => 'Figma de prueba', 'datos' => ['horas' => '12']]);
+comprueba('un curso es un curso y no hace formación; las personas sí', es_curso(elemento($pdo, $curso_f)) && !hace_formacion(elemento($pdo, $curso_f)) && hace_formacion(elemento($pdo, $miembro_p)));
+$f1 = guardar_formacion($pdo, $curso_f, $miembro_p, ['inscripcion' => '14/05/2025', 'finalizacion' => '2025-06-18']);
+guardar_formacion($pdo, $curso_f, $empleo_p, ['inscripcion' => '2025-05-14', 'estado' => 'Inscrito']);
+$quien = formacion_de($pdo, $curso_f);
+comprueba('un curso lo hacen varias personas', count($quien) === 2);
+comprueba('con fecha de fin y sin estado, queda «Finalizado»', $quien[0]['elemento_id'] === $miembro_p && $quien[0]['estado'] === 'Finalizado' && $quien[0]['finalizacion'] === '2025-06-18');
+comprueba('la persona ve sus cursos', array_column(formacion_de($pdo, $miembro_p), 'curso_nombre') === ['Figma de prueba']);
+$f2 = guardar_formacion($pdo, $curso_f, $miembro_p, ['resultado' => 'Completado con cuestionario']);
+$fila = formacion_de($pdo, $miembro_p)[0];
+comprueba('repetir actualiza (mismo id) y conserva lo que no viene', $f2 === $f1 && $fila['resultado'] === 'Completado con cuestionario' && $fila['inscripcion'] === '2025-05-14');
+foreach ([['finalizacion' => '2025-01-01'], ['estado' => 'Aprobado'], ['inscripcion' => '31/02/2025']] as $malo) {
+    comprueba('se rechaza ' . json_encode($malo, JSON_UNESCAPED_UNICODE), lanza(static fn() => guardar_formacion($pdo, $curso_f, $miembro_p, $malo)) instanceof ErrorValidacion);
+}
+comprueba('una casa no hace cursos', lanza(static fn() => guardar_formacion($pdo, $curso_f, $casa_p, [])) instanceof ErrorValidacion);
+comprueba('y no se apunta a algo que no es un curso', lanza(static fn() => guardar_formacion($pdo, $casa_p, $miembro_p, [])) instanceof ErrorValidacion);
+borrar_formacion($pdo, $f1, $casa_p);
+comprueba('no se quita desde otra ficha', count(formacion_de($pdo, $curso_f)) === 2);
 borrar_elemento($pdo, $miembro_p);
 comprueba('borrar la ficha borra su plan', plan_de($pdo, $miembro_p) === []);
+comprueba('…y su formación (el curso sigue con los demás)', count(formacion_de($pdo, $curso_f)) === 1);
+borrar_elemento($pdo, $curso_f);
+comprueba('borrar el curso borra quién lo hizo', (int)$pdo->query('SELECT COUNT(*) FROM formacion')->fetchColumn() === 0);
 terminar();

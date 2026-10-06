@@ -73,6 +73,11 @@ comprueba('la API graba el plan de desarrollo de un curso', count($r['plan_desar
 $r = $api('plan', ['elemento_id' => $eq, 'curso' => '2025-26', 'nota' => '9,25']);
 comprueba('y al repetir el curso cambia solo lo que viene', count($r['plan_desarrollo']) === 1 && $r['plan_desarrollo'][0]['nota'] === 9.25 && $r['plan_desarrollo'][0]['objetivo'] === 'Manual');
 comprueba('la ficha de la API trae su plan', $api('ficha', ['id' => $eq])['plan_desarrollo'][0]['curso'] === '2025-26');
+$cu = $api('elemento', ['seccion' => 'trabajo', 'tipo' => 'curso', 'nombre' => 'Premiere (API)', 'datos' => ['contenido' => 'Oferta de curso']])['elemento']['id'];
+$r = $api('formacion', ['curso_id' => $cu, 'elementos_ids' => [$eq], 'inscripcion' => '2025-12-15', 'finalizacion' => '2026-02-05', 'resultado' => 'Completado con cuestionario']);
+comprueba('la API apunta un curso a varias personas', count($r['formacion']) === 1 && $r['formacion'][0]['estado'] === 'Finalizado');
+comprueba('la ficha de la persona trae su formación', $api('ficha', ['id' => $eq])['formacion'][0]['curso_nombre'] === 'Premiere (API)');
+comprueba('un vehículo no hace cursos', lanza(static fn() => $api('formacion', ['curso_id' => $cu, 'elemento_id' => $id['furgo']])) instanceof ErrorValidacion);
 $e = lanza(static fn() => $api('plan', ['elemento_id' => $id['furgo'], 'curso' => '2025-26', 'objetivo' => 'x']));
 comprueba('un vehículo no lleva plan de desarrollo', $e instanceof ErrorValidacion);
 $r = $api('vencimiento', ['titulo' => 'Revisión caldera', 'fecha' => '05/11/2026', 'seccion' => 'vivienda', 'elemento_id' => $id['caldera'], 'repetir_meses' => 12]);

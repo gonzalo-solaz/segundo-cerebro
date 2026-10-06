@@ -44,6 +44,7 @@ function api_ejecutar(PDO $pdo, array $p, ?array $archivo = null): array {
                       'registros' => registros_de($pdo, $el['id'], 50),
                       'documentos' => documentos_de($pdo, $el['id'])];
             if (lleva_plan($el)) $ficha['plan_desarrollo'] = plan_de($pdo, $el['id']);
+            if (es_curso($el) || hace_formacion($el)) $ficha['formacion'] = formacion_de($pdo, $el['id']);
             return $ficha;
 
         case 'elemento':
@@ -96,6 +97,16 @@ function api_ejecutar(PDO $pdo, array $p, ?array $archivo = null): array {
             $eid = (int)($datos['elemento_id'] ?? 0);
             $id = guardar_plan($pdo, $eid, $datos, null);
             return ['plan_id' => $id, 'plan_desarrollo' => plan_de($pdo, $eid)];
+
+        case 'formacion':
+            // Quién ha hecho un curso: curso_id (ficha tipo «curso») y elemento_id (la persona del
+            // equipo o el empleo), o elementos_ids para varias a la vez; inscripcion, finalizacion,
+            // estado, resultado y notas. Si ya estaba, cambia solo lo que viene; blanco = borrar.
+            $cid = (int)($datos['curso_id'] ?? 0);
+            $ids = isset($datos['elementos_ids']) ? array_map('intval', (array)$datos['elementos_ids']) : [(int)($datos['elemento_id'] ?? 0)];
+            $campos = array_intersect_key($datos, array_flip(['inscripcion', 'finalizacion', 'estado', 'resultado', 'notas']));
+            foreach ($ids as $pid) guardar_formacion($pdo, $cid, $pid, $campos, null);
+            return ['formacion' => formacion_de($pdo, $cid)];
 
         case 'precio':
             // Lo que costaba un contrato desde una fecha (para comparar con hace un año):

@@ -281,6 +281,23 @@ comprueba('un curso mal escrito no se guarda', str_contains($r['html'], 'FLASH:e
 pinta_bien('el panel de Trabajo resume el plan del equipo', pedir('trabajo.php'), 'Plan de desarrollo 2026-27');
 pinta_bien('…con la última nota', pedir('trabajo.php'), 'última nota 8,5 (2025-26)');
 pinta_bien('la ficha del empleo también lleva el bloque', pedir('elemento.php', ['id' => (string)$id['empleo']]), 'Plan de desarrollo');
+pinta_bien('sin cursos, la pestaña Formación invita a crearlos', pedir('trabajo.php', ['p' => 'formacion']), 'Aún no hay cursos');
+$id['curso'] = guardar_elemento($pdo, 'trabajo', 'curso', ['nombre' => 'Figma: Marketing y Contenido', 'datos' => ['organiza' => 'Formación CEU', 'horas' => '10']]);
+$r = pedir('elemento.php', ['id' => (string)$id['curso']], ['accion' => 'formacion', 'personas' => [(string)$id['companera'], (string)$id['empleo']],
+    'inscripcion' => '2025-05-14', 'finalizacion' => '2025-06-25', 'estado' => '', 'resultado' => '', 'notas' => '']);
+comprueba('apuntar a dos personas a la vez vuelve al bloque', str_ends_with((string)$r['redireccion'], '#formacion'), (string)$r['redireccion']);
+$r = pedir('elemento.php', ['id' => (string)$id['curso']]);
+pinta_bien('la ficha del curso dice quién lo ha hecho', $r, 'Quién lo ha hecho');
+pinta_bien('…con las dos personas', $r, '2 personas');
+pinta_bien('…y lleva la pestaña Formación activa', $r, 'aria-current="page">Formación');
+pinta_bien('la ficha de la persona lista su formación', pedir('elemento.php', ['id' => (string)$id['companera']]), 'Figma: Marketing y Contenido');
+$r = pedir('trabajo.php', ['p' => 'formacion']);
+pinta_bien('la pestaña agrupa por curso académico', $r, 'Curso 2024-25');
+pinta_bien('…y dice quién lo hizo', $r, '>Ana</a>');
+pinta_bien('…con filtro por persona', $r, 'trabajo.php?p=formacion&amp;persona=' . $id['companera']);
+pinta_bien('filtrada, enseña el estado de esa persona', pedir('trabajo.php', ['p' => 'formacion', 'persona' => (string)$id['companera']]), 'Finalizado');
+$r = pedir('elemento.php', ['id' => (string)$id['curso']], ['accion' => 'formacion', 'personas' => [], 'inscripcion' => '']);
+comprueba('sin marcar a nadie no se guarda', str_contains($r['html'], 'FLASH:error'), substr($r['html'], -300));
 $ficha_casa = pedir('elemento.php', ['id' => (string)$id['casa']]);
 comprueba('una casa no lleva plan de desarrollo', !str_contains($ficha_casa['html'], 'Plan de desarrollo'));
 pinta_bien('…y su horario como lista', pedir('elemento.php', ['id' => (string)$id['companera']]), '<strong>Martes:</strong>');

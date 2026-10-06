@@ -25,6 +25,11 @@ function compras_trabajo(PDO $pdo, bool $activas = true): array {
     return array_values(array_filter(elementos_de($pdo, 'trabajo', $activas), static fn($e) => $e['tipo'] === 'compra'));
 }
 
+// Los cursos de formación, por nombre (quién los ha hecho: includes/formacion.php).
+function cursos_trabajo(PDO $pdo): array {
+    return array_values(array_filter(elementos_de($pdo, 'trabajo'), static fn($e) => $e['tipo'] === 'curso'));
+}
+
 // Los documentos del equipo (manuales, normas, protocolos), por nombre.
 function documentos_trabajo(PDO $pdo): array {
     return array_values(array_filter(elementos_de($pdo, 'trabajo'), static fn($e) => $e['tipo'] === 'documento'));
@@ -77,11 +82,12 @@ function tiempo_desde(?string $desde, string $hoy): string {
     return $d->m > 0 ? $m : 'menos de un mes';
 }
 
-// Las pestañas de Trabajo: Panel · Mi puesto · Equipo · Compras. Salen en trabajo.php y en las fichas de la sección.
-function pestanas_trabajo(string $activa, ?array $empleo, int $n_equipo, int $n_compras = 0): void {
+// Las pestañas de Trabajo: Panel · Mi puesto · Equipo · Formación · Compras. Salen en trabajo.php y en las fichas de la sección.
+function pestanas_trabajo(string $activa, ?array $empleo, int $n_equipo, int $n_compras = 0, int $n_cursos = 0): void {
     $mi_puesto = $empleo ? 'elemento.php?id=' . $empleo['id'] : 'elemento-editar.php?s=trabajo&t=empleo';
     $p = ['panel' => ['trabajo.php', 'Panel'], 'puesto' => [$mi_puesto, 'Mi puesto'],
           'equipo' => ['trabajo.php?p=equipo', 'Equipo' . ($n_equipo ? ' · ' . $n_equipo : '')],
+          'formacion' => ['trabajo.php?p=formacion', 'Formación' . ($n_cursos ? ' · ' . $n_cursos : '')],
           'compras' => ['trabajo.php?p=compras', 'Compras' . ($n_compras ? ' · ' . $n_compras : '')]];
     echo '<nav class="filtros pestanas" aria-label="Trabajo">';
     foreach ($p as $k => [$href, $txt]) {

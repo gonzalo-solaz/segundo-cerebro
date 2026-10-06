@@ -690,6 +690,24 @@ function secciones(): array {
                             'ayuda' => 'Una línea por apartado, para verlo sin abrir el PDF.'],
                     ],
                 ],
+                // Un curso de formación (6/10/2026, Gonzalo: «una pestaña de formación que además vaya a
+                // persona/s»). Quién lo ha hecho, con sus fechas y su estado, NO va aquí: va en la tabla
+                // formacion (includes/formacion.php), porque un mismo curso lo hacen varias personas.
+                // Los diplomas, como archivos de la ficha. Sin enlace al empleo.
+                'curso' => [
+                    'nombre' => 'Curso de formación', 'ejemplo' => 'Adobe Premiere. Nivel medio+', 'persona' => null,
+                    'campos' => [
+                        'contenido' => ['etiqueta' => 'Tipo de contenido', 'tipo' => 'opcion', 'resumen' => true,
+                            'opciones' => ['Oferta de curso', 'Programa', 'Curso online', 'Jornada o congreso', 'Certificación', 'Otro'],
+                            'ayuda' => 'Como lo llama Workday: «Oferta de curso» es la formación de la empresa.'],
+                        'organiza' => ['etiqueta' => 'Quién lo imparte', 'tipo' => 'texto', 'resumen' => true, 'ayuda' => 'Ej.: Formación CEU, LinkedIn Learning.'],
+                        'modalidad' => ['etiqueta' => 'Modalidad', 'tipo' => 'opcion', 'opciones' => ['Presencial', 'En línea', 'Mixta']],
+                        'horas' => ['etiqueta' => 'Horas', 'tipo' => 'numero'],
+                        'tema' => ['etiqueta' => 'Tema', 'tipo' => 'texto', 'ayuda' => 'Ej.: vídeo, diseño, IA, fotografía.'],
+                        'web' => ['etiqueta' => 'Web o enlace', 'tipo' => 'texto'],
+                        'contenidos' => ['etiqueta' => 'Qué se ve', 'tipo' => 'area', 'aparte' => true, 'lista' => true],
+                    ],
+                ],
                 'contacto' => ['enlace' => ['etiqueta' => 'Empleo', 'a' => [['trabajo', 'empleo']]]]
                               + tipo_contacto('Contacto del trabajo', 'RRHH · nóminas', 'Departamento o cargo'),
             ],

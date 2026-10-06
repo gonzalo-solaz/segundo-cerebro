@@ -937,3 +937,9 @@ a.kpi-enlace:hover .kpi-mas { text-decoration: underline; text-underline-offset:
 .var-sube { color: var(--ambar); background: color-mix(in srgb, var(--ambar) 11%, var(--panel)); }
 .comparativa { font-size: 14px; margin: -8px 0 20px; }
 .partida-cabecera .nota-pequena { white-space: nowrap; }
+
+/* Formación: casillas para apuntar a varias personas a un curso (6/10/2026). */
+.casillas { border: 0; padding: 0; margin: 0; display: flex; flex-direction: row; flex-wrap: wrap; gap: .5rem 1.1rem; }
+.casillas legend { font-size: 14px; font-weight: 600; margin-bottom: .5rem; padding: 0; }
+.casilla { display: inline-flex; align-items: center; gap: .4rem; font-size: 15px; cursor: pointer; }
+.casilla input { width: 18px; height: 18px; accent-color: var(--acento); }
