@@ -207,10 +207,12 @@ comprueba('pero sí archivar', elemento($pdo, $id['casa'])['activo'] === 0);
 
 // Trabajo: el empleo con «nóminas en finanzas» lee la copia de DIR_CACHE (sin red).
 $id['empleo'] = guardar_elemento($pdo, 'trabajo', 'empleo', ['nombre' => 'Universidad de prueba', 'persona_id' => $id['yo'],
-    'datos' => ['puesto' => 'Técnico', 'nominas_finanzas' => 'Sí', 'revision_salarial' => '2027-01-01']]);
+    'datos' => ['puesto' => 'Técnico', 'puesto_desde' => '2010-05-01', 'primer_puesto' => 'Diseñador web', 'nominas_finanzas' => 'Sí', 'revision_salarial' => '2027-01-01']]);
 $id['convenio'] = guardar_elemento($pdo, 'trabajo', 'convenio', ['nombre' => 'Convenio de prueba', 'enlace_id' => $id['empleo'],
     'datos' => ['publicacion' => 'BOE-A-2024-10663']]);
 pinta_bien('sin clave de finanzas, la ficha del empleo lo explica', pedir('elemento.php', ['id' => (string)$id['empleo']]), 'Falta la clave de finanzas');
+pinta_bien('la ficha del empleo lleva en sus datos desde cuándo tienes el puesto', pedir('elemento.php', ['id' => (string)$id['empleo']]), 'En este puesto desde');
+pinta_bien('…y el puesto con el que entraste', pedir('elemento.php', ['id' => (string)$id['empleo']]), 'Diseñador web');
 comprueba('la ficha del empleo ya no repite el convenio (está en el panel)', !str_contains(pedir('elemento.php', ['id' => (string)$id['empleo']])['html'], 'Convenio de prueba'));
 // Trabajo: panel propio con pestañas (Panel · Equipo · …; sin «Mi puesto»: tu ficha va delante en el Equipo).
 $r = pedir('seccion.php', ['s' => 'trabajo']);

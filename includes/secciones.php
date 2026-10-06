@@ -567,13 +567,18 @@ function secciones(): array {
                     'persona_etiqueta' => 'Quién trabaja',
                     'campos' => [
                         'puesto' => ['etiqueta' => 'Puesto', 'tipo' => 'texto', 'resumen' => true],
+                        // La trayectoria, en datos y solo lo que cuenta (Gonzalo, 6/10/2026): cuándo
+                        // entraste y con qué puesto, y desde cuándo tienes el actual. Antes era una
+                        // lista plegada que mezclaba eso con la historia de la revisión salarial.
+                        'puesto_desde' => ['etiqueta' => 'En este puesto desde', 'tipo' => 'fecha'],
+                        'fecha_alta' => ['etiqueta' => 'Fecha de alta (antigüedad)', 'tipo' => 'fecha'],
+                        'primer_puesto' => ['etiqueta' => 'Puesto al entrar', 'tipo' => 'texto'],
                         'categoria' => ['etiqueta' => 'Grupo o categoría del convenio', 'tipo' => 'texto',
                             'ayuda' => 'Como sale en la nómina o en el contrato. Ej.: PAS · Titulado.'],
                         'cif' => ['etiqueta' => 'CIF de la empresa', 'tipo' => 'texto'],
                         'centro' => ['etiqueta' => 'Centro de trabajo', 'tipo' => 'texto'],
                         'ceco' => ['etiqueta' => 'CECO del servicio', 'tipo' => 'texto', 'oculto' => true,
                             'ayuda' => 'El centro de coste contra el que van las compras. Sale arriba en la pestaña Compras; no se repite en Datos.'],
-                        'fecha_alta' => ['etiqueta' => 'Fecha de alta (antigüedad)', 'tipo' => 'fecha'],
                         'contrato' => ['etiqueta' => 'Tipo de contrato', 'tipo' => 'opcion', 'resumen' => true,
                             'opciones' => ['Indefinido', 'Temporal', 'Fijo discontinuo', 'Prácticas o formación', 'Funcionario', 'Autónomo', 'Otro']],
                         'jornada' => ['etiqueta' => 'Jornada', 'tipo' => 'texto', 'ayuda' => 'Ej.: completa, 37,5 h a la semana.'],
@@ -588,8 +593,6 @@ function secciones(): array {
                         'beneficios' => ['etiqueta' => 'Beneficios y retribución flexible', 'tipo' => 'area', 'aparte' => true,
                             'ayuda' => 'Seguro médico, ticket restaurante, transporte, colegio, guardería…'],
                         'horario' => $horario,
-                        'trayectoria' => ['etiqueta' => 'Puestos, contratos y categorías', 'tipo' => 'area', 'aparte' => true, 'lista' => true,
-                            'ayuda' => 'Una línea por cambio: «01/05/2010: responsable del servicio».'],
                         'condiciones' => ['etiqueta' => 'Condiciones y acuerdos', 'tipo' => 'area', 'aparte' => true,
                             'ayuda' => 'Teletrabajo, vacaciones, lo pactado con RRHH.'],
                     ],

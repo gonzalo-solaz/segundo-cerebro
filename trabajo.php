@@ -520,7 +520,7 @@ $docs_equipo = documentos_trabajo($pdo);
 $ultimos_hitos = array_slice($hitos, 0, 3);
 $datos_puesto = [];
 if ($empleo) {
-    foreach (['puesto', 'categoria', 'contrato', 'jornada', 'fecha_alta', 'revision_salarial', 'fin_contrato'] as $k) {
+    foreach (['puesto', 'puesto_desde', 'fecha_alta', 'primer_puesto', 'categoria', 'contrato', 'jornada', 'revision_salarial', 'fin_contrato'] as $k) {
         $c = tipo_def('trabajo', 'empleo')['campos'][$k];
         if (($ed[$k] ?? '') !== '') $datos_puesto[] = [$c['etiqueta'], valor_campo($c, $ed[$k])];
     }
