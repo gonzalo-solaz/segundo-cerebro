@@ -115,40 +115,125 @@ function mes_es(string $mes): string {
     return MESES[(int)substr($mes, 5, 2) - 1] . ' ' . substr($mes, 0, 4);
 }
 
+// Lo que es bruto dinerario en un recibo del CEU: lo mismo que suma el panel
+// de finanzas (CEU_C1_KEYS de su panel.js, «Bruto devengado»), más el
+// variable del recibo. La retribución flexible (pcf_*) ya va dentro y la
+// ayuda de estudios exenta es especie regalada: no se suman. Si finanzas
+// cambia esa lista, cambiar esta.
+const NOMINA_BRUTO = ['salario_base', 'mejora_voluntaria_absorbible', 'mejora_voluntaria', 'complemento_funcional',
+                      'complemento_personal', 'seguro_medico_salarial', 'seg_conv_accidente', 'campus_conciliacion',
+                      'colaboracion_extraordinaria', 'variable_pas'];
+// Lo que se repite cada mes (para proyectar el año): sin lo que se cobra una vez.
+const NOMINA_BRUTO_FIJO = ['salario_base', 'mejora_voluntaria_absorbible', 'mejora_voluntaria', 'complemento_funcional',
+                           'complemento_personal', 'seguro_medico_salarial', 'seg_conv_accidente'];
+
+function bruto_recibo(array $campos, array $conceptos = NOMINA_BRUTO): float {
+    $s = 0.0;
+    foreach ($conceptos as $c) $s += (float)($campos[$c] ?? 0);
+    return round($s, 2);
+}
+
 /**
- * Lo que enseña la ficha del empleo, del año más reciente: los recibos con
- * su cuadre, el líquido acumulado, qué nómina falta por grabar y si la
- * diferencia con el banco ha cambiado (lo que importa en finanzas es que NO
- * cambie de un mes a otro). Función pura, para poder probarla sin red.
+ * El bruto de un año: lo de sus recibos más el variable por objetivos que se
+ * cobró en él. Si el año no está completo, 'proyectado' añade los meses que
+ * faltan como el último recibo (sin lo de una vez) y las extras que faltan
+ * como la última extra.
+ */
+function bruto_nominas(array $a): array {
+    $hasta = 0.0; $ult_mensual = null; $ult_extra = null; $n_extra = 0; $ultimo_mes = 0;
+    foreach ($a['meses'] ?? [] as $m) {
+        $hasta += bruto_recibo($m['campos'] ?? []);
+        if (($m['tipo'] ?? 'mensual') === 'extra') { $ult_extra = $m; $n_extra++; }
+        else { $ult_mensual = $m; $ultimo_mes = max($ultimo_mes, (int)substr($m['mes'], 5, 2)); }
+    }
+    foreach ($a['variable'] ?? [] as $v) $hasta += (float)($v['importe'] ?? 0);
+    $pagas = (int)($a['pagas_totales'] ?? 15);
+    $faltan_mensuales = $ult_mensual ? 12 - $ultimo_mes : 0;
+    $faltan_extras = max(0, $pagas - 12 - $n_extra);
+    $proyectado = $hasta
+        + $faltan_mensuales * ($ult_mensual ? bruto_recibo($ult_mensual['campos'] ?? [], NOMINA_BRUTO_FIJO) : 0)
+        + $faltan_extras * ($ult_extra ? bruto_recibo($ult_extra['campos'] ?? [], NOMINA_BRUTO_FIJO) : 0);
+    return ['anio' => (int)$a['anio'], 'hasta' => round($hasta, 2), 'proyectado' => round($proyectado, 2),
+            'completo' => $faltan_mensuales === 0 && $faltan_extras === 0,
+            'hasta_mes' => $ult_mensual['mes'] ?? null];
+}
+
+/**
+ * Lo que enseña la ficha del empleo, del año más reciente: una fila por mes
+ * (la nómina, la paga extra y el variable por objetivos, que llegan juntos al
+ * banco), el líquido y el bruto, qué nómina falta por grabar y si la
+ * diferencia con el banco descuadra. Función pura, para probarla sin red.
+ *
+ * La diferencia (banco − líquido) es lo que la empresa abona aparte del recibo
+ * y debe ser estable. Un mes que se sale y el siguiente vuelve = descuadre
+ * (aviso); un mes que cambia y el siguiente sigue igual = cambio de nivel
+ * (se cuenta, sin aviso: en febrero de 2026 pasó de 82,78 a 106,96 €). Antes
+ * se marcaba cualquier cambio respecto al mes anterior y enero no cuadraba
+ * nunca porque el variable no entraba (6/10/2026).
  */
 function resumen_nominas(array $anios, string $hoy): ?array {
     if (!$anios) return null;
     usort($anios, static fn($a, $b) => (int)$a['anio'] <=> (int)$b['anio']);
     $a = end($anios);
-    $filas = [];
-    $liquido = 0.0;
-    $ultimo_mensual = null;
-    foreach ($a['cuadre'] ?? [] as $f) {
-        $filas[] = $f;
-        $liquido += (float)$f['liquido'];
-        if (($f['tipo'] ?? 'mensual') === 'mensual') $ultimo_mensual = $f['mes'];
+
+    // Las diferencias de todos los años, en orden, para ver qué es nivel y qué descuadre.
+    $difs = [];
+    foreach ($anios as $x) foreach ($x['cuadre'] ?? [] as $f) {
+        if (($f['dif'] ?? null) !== null) $difs[$f['mes']] = (float)$f['dif'];
     }
+    ksort($difs);
+    $claves = array_keys($difs);
+    $estado = []; $descuadres = []; $cambios = []; $ref = null;
+    foreach ($claves as $i => $mes) {
+        $d = $difs[$mes];
+        if ($ref === null || abs($d - $ref) <= 0.02) { $ref = $d; continue; }
+        $sig = isset($claves[$i + 1]) ? $difs[$claves[$i + 1]] : null;
+        if ($sig !== null && abs($sig - $d) <= 0.02) {
+            $estado[$mes] = 'cambio'; $cambios[] = ['mes' => $mes, 'de' => $ref, 'a' => $d]; $ref = $d;
+        } else {
+            $estado[$mes] = 'descuadre'; $descuadres[] = ['mes' => $mes, 'desvio' => round($d - $ref, 2)];
+        }
+    }
+
+    $filas = [];
+    foreach ($a['cuadre'] ?? [] as $f) {
+        $mes = $f['mes'];
+        $filas[$mes] ??= ['mes' => $mes, 'nomina' => null, 'extra' => null, 'variable' => 0.0, 'banco' => null, 'dif' => null, 'estado' => null];
+        $filas[$mes][($f['tipo'] ?? 'mensual') === 'extra' ? 'extra' : 'nomina'] = (float)$f['liquido'];
+        $filas[$mes]['variable'] += (float)($f['variable'] ?? 0);
+        if (($f['banco'] ?? null) !== null) $filas[$mes]['banco'] = (float)$f['banco'];
+        if (($f['dif'] ?? null) !== null) { $filas[$mes]['dif'] = (float)$f['dif']; $filas[$mes]['estado'] = $estado[$mes] ?? 'ok'; }
+    }
+    ksort($filas);
+    $liquido = 0.0; $n_nominas = 0; $n_extras = 0;
+    foreach ($filas as $f) {
+        $liquido += (float)$f['nomina'] + (float)$f['extra'] + $f['variable'];
+        if ($f['nomina'] !== null) $n_nominas++;
+        if ($f['extra'] !== null) $n_extras++;
+    }
+
     // La nómina de un mes llega a final de ese mes: hoy se espera la del mes anterior.
     $esperado = substr(sumar_meses(substr($hoy, 0, 7) . '-01', -1), 0, 7);
-    $falta = null;
     $ultimo_global = null;
     foreach ($anios as $x) foreach ($x['cuadre'] ?? [] as $f) {
         if (($f['tipo'] ?? 'mensual') === 'mensual' && ($ultimo_global === null || $f['mes'] > $ultimo_global)) $ultimo_global = $f['mes'];
     }
-    if ($ultimo_global !== null && $ultimo_global < $esperado) $falta = $esperado;
-    $cambia = array_values(array_filter($filas, static fn($f) => !empty($f['cambia'])));
+    $falta = ($ultimo_global !== null && $ultimo_global < $esperado) ? $esperado : null;
+
     $meses = $a['meses'] ?? [];
     $ult = $meses ? end($meses) : null;
+    $anterior = count($anios) > 1 ? $anios[count($anios) - 2] : null;
+    $pagas = (int)($a['pagas_totales'] ?? 0);
+    $en_el_anio = static fn($l) => array_values(array_filter($l, static fn($x) => str_starts_with($x['mes'], (string)$a['anio'])));
     return [
-        'anio' => (int)$a['anio'], 'filas' => $filas, 'liquido' => round($liquido, 2),
-        'n' => count($filas), 'pagas' => (int)($a['pagas_totales'] ?? 0),
-        'ultimo_mensual' => $ultimo_mensual, 'falta' => $falta,
-        'cambia' => array_column($cambia, 'mes'),
+        'anio' => (int)$a['anio'], 'filas' => array_values($filas), 'liquido' => round($liquido, 2),
+        'n' => $n_nominas + $n_extras, 'n_nominas' => $n_nominas, 'n_extras' => $n_extras,
+        'pagas' => $pagas, 'extras_del_anio' => max(0, $pagas - 12),
+        'falta' => $falta,
+        'descuadres' => $en_el_anio($descuadres), 'cambios' => $en_el_anio($cambios),
+        'habitual' => $ref,
+        'bruto' => bruto_nominas($a),
+        'bruto_anterior' => $anterior ? bruto_nominas($anterior) : null,
         'salario_base' => $ult ? (float)($ult['campos']['salario_base'] ?? 0) : null,
     ];
 }

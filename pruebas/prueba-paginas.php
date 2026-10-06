@@ -211,7 +211,7 @@ $id['empleo'] = guardar_elemento($pdo, 'trabajo', 'empleo', ['nombre' => 'Univer
 $id['convenio'] = guardar_elemento($pdo, 'trabajo', 'convenio', ['nombre' => 'Convenio de prueba', 'enlace_id' => $id['empleo'],
     'datos' => ['publicacion' => 'BOE-A-2024-10663']]);
 pinta_bien('sin clave de finanzas, la ficha del empleo lo explica', pedir('elemento.php', ['id' => (string)$id['empleo']]), 'Falta la clave de finanzas');
-pinta_bien('la ficha del empleo lista su convenio', pedir('elemento.php', ['id' => (string)$id['empleo']]), 'Convenio de prueba');
+comprueba('la ficha del empleo ya no repite el convenio (está en el panel)', !str_contains(pedir('elemento.php', ['id' => (string)$id['empleo']])['html'], 'Convenio de prueba'));
 // Trabajo: panel propio con pestañas (Panel · Equipo · …; sin «Mi puesto»: tu ficha va delante en el Equipo).
 $r = pedir('seccion.php', ['s' => 'trabajo']);
 comprueba('Trabajo abre su panel, no el listado', $r['redireccion'] === '/segundo-cerebro/trabajo.php', (string)$r['redireccion']);
@@ -228,6 +228,7 @@ pinta_bien('el panel lista los documentos del equipo', $r, 'Manual de prueba del
 pinta_bien('el panel enseña el equipo de hoy', $r, 'Ana Prueba Equipo');
 pinta_bien('…su mi puesto', $r, 'Universidad de prueba');
 pinta_bien('…el convenio colgado del empleo', $r, 'Convenio de prueba');
+pinta_bien('…con el botón para añadir otro', $r, 'elemento-editar.php?s=trabajo&amp;t=convenio&amp;enlace=' . $id['empleo']);
 pinta_bien('…y los avisos de la sección (fin del periodo de prueba)', $r, 'Evaluar el periodo de prueba');
 pinta_bien('…con la tarjeta Mi puesto llevando a la ficha del empleo', $r, 'elemento.php?id=' . $id['empleo']);
 comprueba('…y ya sin pestaña «Mi puesto»', !str_contains($r['html'], '>Mi puesto</a>'));
@@ -369,9 +370,12 @@ file_put_contents($cache . '/finanzas-nomina_estado.json', json_encode(['t' => t
 putenv('SC_CACHE=' . $cache);
 putenv('SC_FINANZAS_CLAVE=clave-de-finanzas');
 $r = pedir('elemento.php', ['id' => (string)$id['empleo']]);
-pinta_bien('con clave, enseña el líquido del año leído de finanzas', $r, '5.700,00');
+pinta_bien('con clave, enseña el líquido del año leído de finanzas', $r, '9.968,04');
+pinta_bien('las nóminas nacen plegadas, con el bruto previsto a la vista', $r, '<details class="tarjeta tarjeta-plegable" id="nominas">');
+pinta_bien('…bruto previsto en la línea de resumen', $r, 'Bruto 2026: ≈ 23.135,95 € previsto');
 pinta_bien('y avisa de la nómina que falta', $r, 'Falta grabar la nómina de septiembre 2026');
-pinta_bien('y del mes en que cambia el cuadre con el banco', $r, 'La diferencia con el banco cambia en agosto 2026');
+pinta_bien('y del mes que no cuadra con el banco', $r, 'Agosto 2026 no cuadra: el banco ingresó 3,04 € más de lo habitual');
+pinta_bien('el cambio de nivel se cuenta sin aviso', $r, 'En junio 2026 pasó de 82,78 € a 106,96 €');
 // Finanzas: el panel de finanzas montado dentro. En las pruebas no hay red: se
 // comprueba que, si finanzas no contesta, se monta la última copia y se dice.
 file_put_contents($cache . '/finanzas-panel.json', json_encode(['t' => time(), 'leido_en' => '2026-10-03 08:00:00', 'datos' => [

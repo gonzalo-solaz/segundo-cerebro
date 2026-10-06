@@ -58,17 +58,26 @@ function bd_nueva(): PDO {
 
 /** Una familia y una casa de ejemplo (fechas relativas a SC_HOY = 3/10/2026). */
 // Lo que devuelve la acción nomina_estado de la API de finanzas (recortado):
-// 2026 con julio, su extra y agosto; en agosto cambia la diferencia con el banco.
+// 2026: enero con el variable por objetivos, junio con su extra, julio con el
+// campus (se cobra una vez) y agosto. Lo que la empresa abona aparte pasa de
+// 82,78 a 106,96 € en junio (cambio de nivel) y agosto descuadra (110 €).
 function nominas_de_ejemplo(): array {
-    $fila = static fn($mes, $tipo, $liq, $banco, $dif, $cambia) => ['mes' => $mes, 'tipo' => $tipo, 'salario_base' => 1941.45,
-        'liquido' => $liq, 'banco' => $banco, 'dif' => $dif, 'cambia' => $cambia];
+    $fila = static fn($mes, $tipo, $liq, $banco, $dif, $variable = 0.0) => ['mes' => $mes, 'tipo' => $tipo, 'salario_base' => 1941.45,
+        'liquido' => $liq, 'banco' => $banco, 'dif' => $dif, 'cambia' => false, 'variable' => $variable];
+    $recibo = static fn($mes, $tipo, $liq, $extra = []) => ['mes' => $mes, 'tipo' => $tipo, 'dias' => $tipo === 'extra' ? 360 : 30,
+        'campos' => ['salario_base' => 1941.45, 'mejora_voluntaria' => $tipo === 'extra' ? 0 : 100, 'pcf_restaurante' => 80,
+                     'ayuda_estudios_exento' => 998, 'liquido' => $liq] + $extra];
     return [
-        ['anio' => 2026, 'pagas_totales' => 15, 'n_meses' => 3,
-         'meses' => [['mes' => '2026-08', 'tipo' => 'mensual', 'dias' => 30, 'campos' => ['salario_base' => 1941.45, 'liquido' => 2100]]],
-         'cuadre' => [$fila('2026-07', 'mensual', 2100, null, null, false), $fila('2026-07', 'extra', 1500, 3706.96, 106.96, false),
-                      $fila('2026-08', 'mensual', 2100, 2210, 110, true)]],
-        ['anio' => 2025, 'pagas_totales' => 15, 'n_meses' => 1, 'meses' => [],
-         'cuadre' => [$fila('2025-12', 'mensual', 2000, 2082.78, 82.78, false)]],
+        ['anio' => 2026, 'pagas_totales' => 15, 'n_meses' => 5,
+         'meses' => [$recibo('2026-01', 'mensual', 1800), $recibo('2026-06', 'mensual', 2100), $recibo('2026-06', 'extra', 1500),
+                     $recibo('2026-07', 'mensual', 2100, ['campus_conciliacion' => 500]), $recibo('2026-08', 'mensual', 2100)],
+         'variable' => [['concepto' => 'Variable Sist. PAS (objetivos)', 'importe' => 480, 'liquido' => 368.04, 'fecha_cobro' => '2026-01-26']],
+         'cuadre' => [$fila('2026-01', 'mensual', 1800, 2250.82, 82.78, 368.04),
+                      $fila('2026-06', 'mensual', 2100, null, null), $fila('2026-06', 'extra', 1500, 3706.96, 106.96),
+                      $fila('2026-07', 'mensual', 2100, 2206.96, 106.96), $fila('2026-08', 'mensual', 2100, 2210, 110)]],
+        ['anio' => 2025, 'pagas_totales' => 15, 'n_meses' => 1,
+         'meses' => [$recibo('2025-12', 'mensual', 2000)],
+         'cuadre' => [$fila('2025-12', 'mensual', 2000, 2082.78, 82.78)]],
     ];
 }
 

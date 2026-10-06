@@ -635,6 +635,11 @@ details.tarjeta-plegable > summary::after, .pauta summary::after {
 details.tarjeta-plegable[open] > summary::after, .pauta[open] summary::after { transform: rotate(180deg); }
 details.tarjeta-plegable > summary:hover::after, .pauta summary:hover::after { background-color: var(--neutro-hover); }
 details.tarjeta-plegable[open] > summary { margin-bottom: 16px; }
+/* Plegada con su resumen debajo del título (las nóminas: el bruto a la vista). */
+.titulo-plegable { min-width: 0; }
+.titulo-plegable > .tenue { display: block; margin-top: 4px; font-size: 13.5px; }
+.datos-nominas { margin-top: 0; padding-top: 0; border-top: 0; }
+#nominas p.tenue { font-size: 13.5px; }
 
 /* ---------------- Familia: una tarjeta por persona ---------------- */
 .familia-rejilla { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); margin-bottom: 1.2rem; }

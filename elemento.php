@@ -97,6 +97,8 @@ $titulos_hijos = ['contratos' => ['Contratos y seguros', 'contrato'], 'vivienda'
                   'trabajo' => ['Convenio y contactos', 'maletin']];
 // En una persona del equipo, lo que tiene enlazado son sus equipos (su ordenador…).
 if ($el['seccion'] === 'trabajo' && $el['tipo'] === 'miembro') $titulos_hijos['trabajo'] = ['Equipos y material', 'maletin'];
+// El convenio y los contactos del empleo ya están en el panel de Trabajo (Gonzalo, 6/10/2026): no se repiten en su ficha.
+if ($el['seccion'] === 'trabajo' && $el['tipo'] === 'empleo') unset($titulos_hijos['trabajo']);
 // Las nóminas del empleo se leen de finanzas (no se copian aquí): ver includes/finanzas.php.
 $nominas = null;
 if ($el['seccion'] === 'trabajo' && $el['tipo'] === 'empleo' && ($el['datos']['nominas_finanzas'] ?? '') === 'Sí') {
@@ -205,37 +207,74 @@ if ($el['seccion'] === 'trabajo') {
       </details>
     <?php endforeach; ?>
 
-    <?php if ($nominas !== null): $rn = $nominas['resumen']; ?>
-      <section class="tarjeta" id="nominas">
-        <div class="tarjeta-cabecera">
-          <h2><?= icono('cartera') ?>Nóminas<?= $rn ? ' ' . (int)$rn['anio'] : '' ?></h2>
-          <span class="tenue">De la app de finanzas<?= $nominas['leido_en'] ? ' · ' . e(fecha_corta(substr($nominas['leido_en'], 0, 10)) . ' ' . substr($nominas['leido_en'], 11, 5)) : '' ?></span>
-        </div>
+    <?php // Nóminas: plegadas (Gonzalo, 6/10/2026), con el bruto a la vista en la línea de resumen. ?>
+    <?php if ($nominas !== null):
+        $rn = $nominas['resumen'];
+        $avisos_nom = $rn ? count($rn['descuadres']) + ($rn['falta'] ? 1 : 0) : 0;
+        $bruto = $rn['bruto'] ?? null; $bruto_ant = $rn['bruto_anterior'] ?? null;
+        $linea_nom = [];
+        if ($bruto) $linea_nom[] = 'Bruto ' . $bruto['anio'] . ($bruto['completo'] ? ': ' : ': ≈ ') . eur($bruto['proyectado']) . ($bruto['completo'] ? '' : ' previsto');
+        if ($bruto_ant) $linea_nom[] = $bruto_ant['anio'] . ': ' . eur($bruto_ant['proyectado']);
+        if ($avisos_nom) $linea_nom[] = $avisos_nom . ' aviso' . ($avisos_nom === 1 ? '' : 's');
+        if (!$linea_nom && $nominas['error']) $linea_nom[] = 'Sin datos de finanzas';
+    ?>
+      <details class="tarjeta tarjeta-plegable" id="nominas">
+        <summary>
+          <div class="titulo-plegable">
+            <h2><?= icono('cartera') ?>Nóminas<?= $rn ? ' ' . (int)$rn['anio'] : '' ?></h2>
+            <?php if ($linea_nom): ?><span class="tenue"><?= e(implode(' · ', $linea_nom)) ?></span><?php endif; ?>
+          </div>
+        </summary>
         <?php if ($nominas['error']): ?><div class="flash flash-aviso"><?= e($nominas['error']) ?></div><?php endif; ?>
         <?php if ($rn): ?>
-          <p>Líquido cobrado: <strong><?= e(eur($rn['liquido'])) ?></strong> en <?= (int)$rn['n'] ?> recibo<?= $rn['n'] === 1 ? '' : 's' ?><?= $rn['pagas'] ? ' de ' . (int)$rn['pagas'] . ' pagas' : '' ?><?php if ($rn['salario_base']): ?> · salario base <?= e(eur($rn['salario_base'])) ?><?php endif; ?>.</p>
+          <dl class="datos datos-compactos datos-nominas">
+            <?php if ($bruto): ?>
+              <div><dt>Bruto <?= (int)$bruto['anio'] ?><?= $bruto['completo'] ? '' : ' (previsto)' ?></dt><dd><?= e(eur($bruto['proyectado'])) ?></dd></div>
+              <?php if (!$bruto['completo'] && $bruto['hasta_mes']): ?>
+                <div><dt>Bruto hasta <?= e(mes_es($bruto['hasta_mes'])) ?></dt><dd><?= e(eur($bruto['hasta'])) ?></dd></div>
+              <?php endif; ?>
+            <?php endif; ?>
+            <?php if ($bruto_ant): ?><div><dt>Bruto <?= (int)$bruto_ant['anio'] ?></dt><dd><?= e(eur($bruto_ant['proyectado'])) ?></dd></div><?php endif; ?>
+            <div><dt>Líquido cobrado <?= (int)$rn['anio'] ?></dt><dd><?= e(eur($rn['liquido'])) ?></dd></div>
+            <?php if ($rn['salario_base']): ?><div><dt>Salario base</dt><dd><?= e(eur($rn['salario_base'])) ?></dd></div><?php endif; ?>
+          </dl>
+          <p class="tenue">
+            <?= (int)$rn['n_nominas'] ?> nómina<?= $rn['n_nominas'] === 1 ? '' : 's' ?>
+            y <?= (int)$rn['n_extras'] ?> paga<?= $rn['n_extras'] === 1 ? '' : 's' ?> extra<?= $rn['extras_del_anio'] ? ' de ' . (int)$rn['extras_del_anio'] : '' ?>
+            (<?= (int)$rn['pagas'] ?> pagas al año).
+            <?php if ($bruto && !$bruto['completo']): ?>El previsto suma lo que falta como el último recibo, sin lo que se cobra una vez.<?php endif; ?>
+          </p>
           <?php if ($rn['falta']): ?><div class="flash flash-aviso">Falta grabar la nómina de <?= e(mes_es($rn['falta'])) ?>.</div><?php endif; ?>
-          <?php if ($rn['cambia']): ?><div class="flash flash-aviso">La diferencia con el banco cambia en <?= e(implode(', ', array_map('mes_es', $rn['cambia']))) ?>: mira ese recibo en finanzas.</div><?php endif; ?>
+          <?php foreach ($rn['descuadres'] as $dq): ?>
+            <div class="flash flash-aviso"><?= e(ucfirst(mes_es($dq['mes']))) ?> no cuadra: el banco ingresó <?= e(eur(abs($dq['desvio']))) ?> <?= $dq['desvio'] > 0 ? 'más' : 'menos' ?> de lo habitual. Mira ese recibo en finanzas.</div>
+          <?php endforeach; ?>
           <div class="tabla-scroll"><table class="tabla">
-            <thead><tr><th>Mes</th><th class="num">Líquido</th><th class="num">Banco</th><th class="num">Diferencia</th></tr></thead>
+            <thead><tr><th>Mes</th><th class="num">Nómina</th><th class="num">Paga extra</th><th class="num">Banco</th><th class="num">Diferencia</th></tr></thead>
             <tbody>
               <?php foreach (array_reverse($rn['filas']) as $f): ?>
                 <tr>
-                  <td><?= e(ucfirst(mes_es($f['mes']))) ?><?= ($f['tipo'] ?? '') === 'extra' ? ' <span class="chip">extra</span>' : '' ?></td>
-                  <td class="num"><?= e(eur($f['liquido'])) ?></td>
+                  <td><?= e(ucfirst(mes_es($f['mes']))) ?></td>
+                  <td class="num"><?= $f['nomina'] !== null ? e(eur($f['nomina'])) : '' ?><?php if ($f['variable'] > 0): ?><br><span class="tenue">+ <?= e(eur($f['variable'])) ?> variable</span><?php endif; ?></td>
+                  <td class="num"><?= $f['extra'] !== null ? e(eur($f['extra'])) : '' ?></td>
                   <td class="num"><?= $f['banco'] !== null ? e(eur($f['banco'])) : '' ?></td>
-                  <td class="num"><?= $f['dif'] !== null ? ($f['cambia'] ? '<strong>' . e(eur($f['dif'])) . '</strong>' : e(eur($f['dif']))) : '' ?></td>
+                  <td class="num"><?= $f['dif'] === null ? '' : ($f['estado'] === 'descuadre' ? '<strong class="texto-aviso">' . e(eur($f['dif'])) . '</strong>' : e(eur($f['dif']))) ?></td>
                 </tr>
               <?php endforeach; ?>
             </tbody>
           </table></div>
+          <p class="tenue">
+            Diferencia: lo que el banco ingresa además del recibo (lo que la empresa abona aparte<?= $rn['habitual'] !== null ? ', hoy ' . e(eur($rn['habitual'])) . ' al mes' : '' ?>). Lo normal es que no cambie.
+            <?php foreach ($rn['cambios'] as $cb): ?>En <?= e(mes_es($cb['mes'])) ?> pasó de <?= e(eur($cb['de'])) ?> a <?= e(eur($cb['a'])) ?> y se ha mantenido.<?php endforeach; ?>
+            El variable por objetivos se cobra en enero con la nómina.
+          </p>
         <?php elseif (!$nominas['error']): ?>
           <p class="vacio-mini">Finanzas aún no tiene ninguna nómina grabada.</p>
         <?php endif; ?>
+        <p class="tenue">De la app de finanzas<?= $nominas['leido_en'] ? ' · leído el ' . e(fecha_corta(substr($nominas['leido_en'], 0, 10)) . ' a las ' . substr($nominas['leido_en'], 11, 5)) : '' ?>.</p>
         <?php if (es_admin() && FINANZAS_URL !== ''): ?>
           <a class="btn btn-sutil" href="<?= e(PASE_CLAVE !== '' ? url('finanzas-pantalla.php?p=nomina') : rtrim(FINANZAS_URL, '/') . '/nomina.php') ?>"><?= icono('externo') ?>Abrir en finanzas</a>
         <?php endif; ?>
-      </section>
+      </details>
     <?php endif; ?>
 
     <?php foreach ($grupos_hijos as $gs => $g): ?>

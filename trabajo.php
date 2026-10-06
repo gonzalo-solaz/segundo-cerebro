@@ -639,6 +639,13 @@ if ($empleo) {
             </li>
           <?php endforeach; ?>
         </ul>
+        <?php // Se añaden aquí: la ficha del empleo ya no repite esta tarjeta (6/10/2026). ?>
+        <div class="botones-tarjeta">
+          <?php foreach (tipos_que_enlazan('trabajo', 'empleo') as [$ts, $tt, $tn]): ?>
+            <?php if ($ts !== 'trabajo') continue; ?>
+            <a class="btn btn-sutil" href="<?= e(url('elemento-editar.php?s=' . $ts . '&t=' . $tt . '&enlace=' . $empleo['id'])) ?>"><?= icono('mas') ?><?= e($tn) ?></a>
+          <?php endforeach; ?>
+        </div>
       </section>
     <?php endif; ?>
 
