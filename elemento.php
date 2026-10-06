@@ -134,7 +134,7 @@ if ($el['seccion'] === 'trabajo') {
       <dl class="datos">
         <?php $alguno = false; ?>
         <?php foreach ($def['campos'] as $clave => $c): ?>
-          <?php if (!isset($el['datos'][$clave]) || $el['datos'][$clave] === '' || !empty($c['aparte'])) continue; $alguno = true; ?>
+          <?php if (!isset($el['datos'][$clave]) || $el['datos'][$clave] === '' || !empty($c['aparte']) || !empty($c['oculto'])) continue; $alguno = true; ?>
           <div class="<?= $c['tipo'] === 'area' ? 'dato-ancho' : '' ?>">
             <dt><?= e($c['etiqueta']) ?></dt>
             <dd><?php
