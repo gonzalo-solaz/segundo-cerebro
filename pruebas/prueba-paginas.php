@@ -350,6 +350,13 @@ guardar_elemento($pdo, 'trabajo', 'empleo', ['nombre' => $emp['nombre'], 'person
     'datos' => $emp['datos'] + ['fecha_alta' => '2004-10-01']], $id['empleo']);
 comprueba('…y tu entrada en la empresa (fecha de alta del empleo)', str_contains(pedir('trabajo.php', ['p' => 'hitos'])['html'], ' a Universidad de prueba'));
 pinta_bien('en las Bajas, cuánto estuvo', pedir('trabajo.php', ['p' => 'equipo']), 'Estuvo');
+guardar_plan($pdo, $id['se_fue'], ['curso' => '2023-24', 'objetivo' => 'Objetivo de alguien que se fue', 'nota' => 7]);
+$r = pedir('trabajo.php', ['p' => 'plan']);
+comprueba('las bajas no salen en el plan de desarrollo', !str_contains($r['html'], 'Objetivo de alguien que se fue'));
+pinta_bien('…sino en «Bajas (archivadas)»', $r, 'trabajo.php?p=plan&amp;antiguos=1');
+$r = pedir('trabajo.php', ['p' => 'plan', 'antiguos' => '1']);
+pinta_bien('allí está su plan', $r, 'Objetivo de alguien que se fue');
+comprueba('…sin el plan de los que siguen', !str_contains($r['html'], 'Manual de Dynamics'));
 pinta_bien('el panel enseña los últimos hitos', pedir('trabajo.php'), 'Lanzamiento de Oneweb');
 pinta_bien('la ficha del hito lleva la pestaña Hitos activa', pedir('elemento.php', ['id' => (string)$id['hito']]), 'aria-current="page">Hitos · 6');
 $ficha_casa = pedir('elemento.php', ['id' => (string)$id['casa']]);

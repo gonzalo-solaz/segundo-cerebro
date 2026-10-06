@@ -10,7 +10,7 @@ require_once __DIR__ . '/includes/auth.php';
 
 $sec = seccion('trabajo');
 $p = in_array($_GET['p'] ?? '', ['equipo', 'plan', 'formacion', 'compras', 'hitos'], true) ? $_GET['p'] : 'panel';
-$antiguos = $p === 'compras' && !empty($_GET['antiguos']);
+$antiguos = in_array($p, ['compras', 'plan'], true) && !empty($_GET['antiguos']);
 $hoy = hoy();
 
 $empleo = mi_empleo($pdo, (int)($usuario_actual['persona_id'] ?? 0) ?: null);
@@ -32,7 +32,7 @@ $a_trabajo = '<a href="' . e(url('trabajo.php')) . '">Trabajo</a> · ';
 [$titulo, $migas, $icono_p] = [
     'panel' => [$sec['nombre'], e($sec['descripcion']), $sec['icono']],
     'equipo' => ['Equipo', $a_trabajo . 'Las personas que diriges', 'familia'],
-    'plan' => ['Plan de desarrollo', $a_trabajo . 'Objetivos y notas de cada curso, tuyos y de tu equipo', 'bombilla'],
+    'plan' => ['Plan de desarrollo', $a_trabajo . ($antiguos ? 'Bajas (archivadas)' : 'Objetivos y notas de cada curso, tuyos y de tu equipo'), 'bombilla'],
     'formacion' => ['Formación', $a_trabajo . 'Los cursos que has hecho tú y tu equipo', 'birrete'],
     'compras' => ['Compras', $a_trabajo . ($antiguos ? 'Canceladas' : 'Licencias y compras del servicio'), $sec['icono']],
     'hitos' => ['Hitos', $a_trabajo . 'Lanzamientos, proyectos y logros del servicio', 'bandera'],
@@ -109,22 +109,25 @@ if ($p === 'equipo'):
 // la evolución de las notas de todos. Se edita en el bloque «Plan de desarrollo» de cada ficha.
 if ($p === 'plan'):
     $fichas = fichas_trabajo($pdo);
-    $planes = array_values(array_filter(plan_todo($pdo), static fn($f) => isset($fichas[$f['elemento_id']])));
-    // Tú, tu equipo y, detrás, los que se fueron y tienen algún curso apuntado.
-    $con_plan_ids = array_unique(array_column($planes, 'elemento_id'));
-    $gente = array_merge($empleo ? [$empleo] : [], $equipo);
+    // Tú y tu equipo; las bajas, aparte, en «Bajas (archivadas)» (Gonzalo, 6/10/2026: «las personas que
+    // estén de baja las quitas del plan de desarrollo; puedes ponerlo archivado»).
+    $todos = plan_todo($pdo);
+    $con_plan_ids = array_unique(array_column($todos, 'elemento_id'));
+    $gente = $antiguos
+        ? array_values(array_filter($fichas, static fn($f) => lleva_plan($f) && !$f['activo'] && in_array($f['id'], $con_plan_ids, true)))
+        : array_merge($empleo ? [$empleo] : [], $equipo);
     $ids_gente = array_column($gente, 'id');
-    foreach ($fichas as $f) {
-        if (lleva_plan($f) && !$f['activo'] && in_array($f['id'], $con_plan_ids, true) && !in_array($f['id'], $ids_gente, true)) $gente[] = $f;
-    }
+    $planes = array_values(array_filter($todos, static fn($f) => in_array($f['elemento_id'], $ids_gente, true)));
+    $n_bajas = count(array_filter($fichas, static fn($f) => lleva_plan($f) && !$f['activo'] && in_array($f['id'], $con_plan_ids, true)));
+    $base_plan = 'trabajo.php?p=plan' . ($antiguos ? '&antiguos=1' : '');
     $quien = (int)($_GET['persona'] ?? 0);
-    if ($quien && !in_array($quien, array_column($gente, 'id'), true)) $quien = 0;
+    if ($quien && !in_array($quien, $ids_gente, true)) $quien = 0;
     $nombre_f = static fn(array $f): string => $f['tipo'] === 'empleo' ? 'Yo' : nombre_corto($f['nombre']);
     $este = curso_de($hoy);
     $pasado = curso_de(((int)substr($este, 0, 4) - 1) . '-09-01');
     $por_curso = [];
     foreach ($planes as $f) $por_curso[$f['curso']][$f['elemento_id']] = $f;
-    if ($gente) $por_curso += [$este => []];
+    if ($gente && !$antiguos) $por_curso += [$este => []];
     krsort($por_curso);
     $activos = array_filter($gente, static fn($f) => $f['activo']);
     $con_objetivo = count(array_filter($por_curso[$este] ?? [], static fn($f) => $f['objetivo'] !== ''));
@@ -137,6 +140,7 @@ if ($p === 'plan'):
     $cursos_nota = array_reverse(array_map('strval', array_keys(array_filter($por_curso, $notas_de))));
     $vacio_n = '<span class="tenue">—</span>';
     ?>
+    <?php if (!$antiguos): ?>
     <section class="kpis">
       <div class="kpi">
         <span class="kpi-num"><?= $con_objetivo ?></span>
@@ -155,19 +159,20 @@ if ($p === 'plan'):
         <span class="kpi-txt"><?= count($planes) === 1 ? 'objetivo apuntado' : 'objetivos apuntados' ?> en total</span>
       </div>
     </section>
+    <?php endif; ?>
 
     <?php if (count($gente) > 1): ?>
       <nav class="filtros" aria-label="Por persona">
-        <a class="chip chip-boton<?= $quien ? '' : ' chip-activo' ?>" href="<?= e(url('trabajo.php?p=plan')) ?>">Todos</a>
+        <a class="chip chip-boton<?= $quien ? '' : ' chip-activo' ?>" href="<?= e(url($base_plan)) ?>">Todos</a>
         <?php foreach ($gente as $g): ?>
-          <a class="chip chip-boton<?= $quien === $g['id'] ? ' chip-activo' : '' ?>" href="<?= e(url('trabajo.php?p=plan&persona=' . $g['id'])) ?>"<?= $quien === $g['id'] ? ' aria-current="page"' : '' ?>><?= e($nombre_f($g)) ?></a>
+          <a class="chip chip-boton<?= $quien === $g['id'] ? ' chip-activo' : '' ?>" href="<?= e(url($base_plan . '&persona=' . $g['id'])) ?>"<?= $quien === $g['id'] ? ' aria-current="page"' : '' ?>><?= e($nombre_f($g)) ?></a>
         <?php endforeach; ?>
       </nav>
     <?php endif; ?>
 
     <?php if (!$gente): ?>
       <section class="tarjeta">
-        <p class="vacio-mini">Aparece cuando haya equipo. El objetivo y la nota de cada curso se apuntan en el bloque «Plan de desarrollo» de cada ficha.</p>
+        <p class="vacio-mini"><?= $antiguos ? 'Ninguna baja tiene plan de desarrollo.' : 'Aparece cuando haya equipo. El objetivo y la nota de cada curso se apuntan en el bloque «Plan de desarrollo» de cada ficha.' ?></p>
       </section>
     <?php endif; ?>
 
@@ -180,7 +185,7 @@ if ($p === 'plan'):
             <tbody>
               <?php foreach ($gente as $g): if ($quien && $g['id'] !== $quien) continue; ?>
                 <tr>
-                  <td><a href="<?= e(url('elemento.php?id=' . $g['id'] . '#plan')) ?>"><?= e($nombre_f($g)) ?></a><?= $g['activo'] ? '' : ' <span class="tenue">(baja)</span>' ?></td>
+                  <td><a href="<?= e(url('elemento.php?id=' . $g['id'] . '#plan')) ?>"><?= e($nombre_f($g)) ?></a></td>
                   <?php foreach ($cursos_nota as $c): $n = $por_curso[$c][$g['id']]['nota'] ?? null; ?>
                     <td class="num"><?= $n !== null ? e(nota_es($n)) : $vacio_n ?></td>
                   <?php endforeach; ?>
@@ -236,6 +241,13 @@ if ($p === 'plan'):
         </div>
       </section>
     <?php endforeach; ?>
+    <p class="pie-seccion">
+      <?php if ($antiguos): ?>
+        <a class="enlace-tenue" href="<?= e(url('trabajo.php?p=plan')) ?>"><?= icono('atras', 'ico ico-mini') ?>Volver al plan de desarrollo</a>
+      <?php elseif ($n_bajas): ?>
+        <a class="enlace-tenue" href="<?= e(url('trabajo.php?p=plan&antiguos=1')) ?>"><?= icono('archivar', 'ico ico-mini') ?>Bajas (archivadas) · <?= $n_bajas ?></a>
+      <?php endif; ?>
+    </p>
 <?php pie(); return; endif;
 
 // ---------------------------- Formación ----------------------------
