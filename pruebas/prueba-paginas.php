@@ -318,14 +318,16 @@ comprueba('lo que está en curso va arriba, en su grupo, no en el curso de la in
 comprueba('…con el día en que termina', str_contains($h, 'termina el 24 nov 2026'));
 $r = pedir('elemento.php', ['id' => (string)$id['curso']], ['accion' => 'formacion', 'personas' => [], 'inscripcion' => '']);
 comprueba('sin marcar a nadie no se guarda', str_contains($r['html'], 'FLASH:error'), substr($r['html'], -300));
-pinta_bien('sin hitos, la pestaña Hitos invita a añadirlos', pedir('trabajo.php', ['p' => 'hitos']), 'Aún no hay hitos');
 $id['hito'] = guardar_elemento($pdo, 'trabajo', 'hito', ['nombre' => 'Lanzamiento de Oneweb', 'datos' => ['fecha' => '2026-09-23', 'categoria' => 'Lanzamiento']]);
 guardar_elemento($pdo, 'trabajo', 'hito', ['nombre' => 'Web antigua', 'datos' => ['fecha' => '2019-03-01']]);
 $h = pedir('trabajo.php', ['p' => 'hitos'])['html'];
 comprueba('los hitos van por año, el más reciente arriba', strpos($h, '>2026</h2>') > 0 && strpos($h, 'Lanzamiento de Oneweb') < strpos($h, '>2019</h2>'));
 comprueba('…con su fecha', str_contains($h, '23 sep 2026'));
+$con_inc = array_filter(equipo_trabajo($pdo), static fn($m) => !empty($m['datos']['incorporacion']));
+$m = reset($con_inc);
+comprueba('la incorporación de cada persona del equipo sale sola en Hitos', $m && str_contains($h, 'Incorporación de ' . e($m['nombre'])));
 pinta_bien('el panel enseña los últimos hitos', pedir('trabajo.php'), 'Lanzamiento de Oneweb');
-pinta_bien('la ficha del hito lleva la pestaña Hitos activa', pedir('elemento.php', ['id' => (string)$id['hito']]), 'aria-current="page">Hitos · 2');
+pinta_bien('la ficha del hito lleva la pestaña Hitos activa', pedir('elemento.php', ['id' => (string)$id['hito']]), 'aria-current="page">Hitos · 3');
 $ficha_casa = pedir('elemento.php', ['id' => (string)$id['casa']]);
 comprueba('una casa no lleva plan de desarrollo', !str_contains($ficha_casa['html'], 'Plan de desarrollo'));
 pinta_bien('…y su horario como lista', pedir('elemento.php', ['id' => (string)$id['companera']]), '<strong>Martes:</strong>');

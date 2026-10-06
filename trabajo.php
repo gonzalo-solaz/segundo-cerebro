@@ -189,14 +189,15 @@ if ($p === 'formacion'):
 <?php pie(); return; endif;
 
 // ---------------------------- Hitos ----------------------------
-// Una línea de tiempo por año, del más reciente al más antiguo: fecha, qué fue y de qué tipo.
+// Una línea de tiempo por año, del más reciente al más antiguo: fecha, qué fue y de qué tipo. Las
+// incorporaciones del equipo salen solas de sus fichas (hitos_trabajo()).
 if ($p === 'hitos'):
     $por_anio = [];
     foreach ($hitos as $h) $por_anio[($h['datos']['fecha'] ?? '') !== '' ? substr($h['datos']['fecha'], 0, 4) : 'Sin fecha'][] = $h;
     ?>
     <?php if (!$hitos): ?>
       <section class="tarjeta">
-        <p class="vacio-mini">Aún no hay hitos. Añade cada uno con el botón de arriba: un lanzamiento, un proyecto terminado, un premio…</p>
+        <p class="vacio-mini">Aún no hay hitos. Añade cada uno con el botón de arriba: un lanzamiento, un proyecto terminado, un premio… La incorporación de cada persona del equipo sale sola.</p>
       </section>
     <?php endif; ?>
     <?php foreach ($por_anio as $anio => $items): ?>

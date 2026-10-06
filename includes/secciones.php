@@ -715,7 +715,8 @@ function secciones(): array {
                 // Los hitos del servicio: lanzamientos, proyectos, reconocimientos (6/10/2026, Gonzalo: «una parte
                 // de hitos para ir añadiendo items»; el primero, el lanzamiento de Oneweb, 23/09/2026). La pestaña
                 // Hitos los pinta como línea de tiempo por año. La fecha no crea aviso: casi siempre ya ha pasado
-                // (un aviso vencido no tendría sentido). Sin enlace al empleo: no son contactos.
+                // (un aviso vencido no tendría sentido). Sin enlace al empleo: no son contactos. La incorporación
+                // de cada persona del equipo NO se crea como hito: sale sola de su ficha (hitos_trabajo()).
                 'hito' => [
                     'nombre' => 'Hito', 'ejemplo' => 'Lanzamiento de Oneweb', 'persona' => null,
                     'campos' => [
