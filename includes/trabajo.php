@@ -35,6 +35,14 @@ function documentos_trabajo(PDO $pdo): array {
     return array_values(array_filter(elementos_de($pdo, 'trabajo'), static fn($e) => $e['tipo'] === 'documento'));
 }
 
+// Los hitos, del más reciente al más antiguo (los que no tienen fecha, al final).
+function hitos_trabajo(PDO $pdo): array {
+    $h = array_values(array_filter(elementos_de($pdo, 'trabajo'), static fn($e) => $e['tipo'] === 'hito'));
+    usort($h, static fn($a, $b) => [($a['datos']['fecha'] ?? '') === '', $b['datos']['fecha'] ?? '', $a['nombre']]
+                                  <=> [($b['datos']['fecha'] ?? '') === '', $a['datos']['fecha'] ?? '', $b['nombre']]);
+    return $h;
+}
+
 // Hardware y material van en su propia tabla en Compras (y no se renuevan como una licencia).
 function es_hardware(array $compra): bool {
     return in_array($compra['datos']['categoria'] ?? '', ['Hardware', 'Material'], true);
@@ -82,13 +90,14 @@ function tiempo_desde(?string $desde, string $hoy): string {
     return $d->m > 0 ? $m : 'menos de un mes';
 }
 
-// Las pestañas de Trabajo: Panel · Mi puesto · Equipo · Formación · Compras. Salen en trabajo.php y en las fichas de la sección.
-function pestanas_trabajo(string $activa, ?array $empleo, int $n_equipo, int $n_compras = 0, int $n_cursos = 0): void {
+// Las pestañas de Trabajo: Panel · Mi puesto · Equipo · Formación · Compras · Hitos. Salen en trabajo.php y en las fichas de la sección.
+function pestanas_trabajo(string $activa, ?array $empleo, int $n_equipo, int $n_compras = 0, int $n_cursos = 0, int $n_hitos = 0): void {
     $mi_puesto = $empleo ? 'elemento.php?id=' . $empleo['id'] : 'elemento-editar.php?s=trabajo&t=empleo';
     $p = ['panel' => ['trabajo.php', 'Panel'], 'puesto' => [$mi_puesto, 'Mi puesto'],
           'equipo' => ['trabajo.php?p=equipo', 'Equipo' . ($n_equipo ? ' · ' . $n_equipo : '')],
           'formacion' => ['trabajo.php?p=formacion', 'Formación' . ($n_cursos ? ' · ' . $n_cursos : '')],
-          'compras' => ['trabajo.php?p=compras', 'Compras' . ($n_compras ? ' · ' . $n_compras : '')]];
+          'compras' => ['trabajo.php?p=compras', 'Compras' . ($n_compras ? ' · ' . $n_compras : '')],
+          'hitos' => ['trabajo.php?p=hitos', 'Hitos' . ($n_hitos ? ' · ' . $n_hitos : '')]];
     echo '<nav class="filtros pestanas" aria-label="Trabajo">';
     foreach ($p as $k => [$href, $txt]) {
         echo '<a class="chip chip-boton' . ($k === $activa ? ' chip-activo' : '') . '" href="' . e(url($href)) . '"'

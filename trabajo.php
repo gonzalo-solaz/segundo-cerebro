@@ -4,11 +4,11 @@
 // pestañas. Gonzalo, 6/10/2026: «no entrar directamente en Mi puesto: un panel
 // principal con avisos, historial, datos en cards», pestañas Mi puesto y Equipo y,
 // después, «una pestaña Compras con el listado de software que pido, con el CECO» y
-// «una pestaña de formación que además vaya a persona/s».
+// «una pestaña de formación que además vaya a persona/s» y «una parte de hitos para ir añadiendo items».
 require_once __DIR__ . '/includes/auth.php';
 
 $sec = seccion('trabajo');
-$p = in_array($_GET['p'] ?? '', ['equipo', 'formacion', 'compras'], true) ? $_GET['p'] : 'panel';
+$p = in_array($_GET['p'] ?? '', ['equipo', 'formacion', 'compras', 'hitos'], true) ? $_GET['p'] : 'panel';
 $antiguos = in_array($p, ['equipo', 'compras'], true) && !empty($_GET['antiguos']);
 $hoy = hoy();
 
@@ -16,6 +16,7 @@ $empleo = mi_empleo($pdo, (int)($usuario_actual['persona_id'] ?? 0) ?: null);
 $equipo = equipo_trabajo($pdo);
 $compras = compras_trabajo($pdo);
 $cursos = cursos_trabajo($pdo);
+$hitos = hitos_trabajo($pdo);
 $avisos = agenda($pdo, 365, 'trabajo');
 $proximo = [];
 foreach ($avisos as $v) if ($v['elemento_id'] && !isset($proximo[$v['elemento_id']])) $proximo[$v['elemento_id']] = $v;
@@ -23,6 +24,7 @@ foreach ($avisos as $v) if ($v['elemento_id'] && !isset($proximo[$v['elemento_id
 $boton = [
     'compras' => '<a class="btn btn-sutil" href="' . e(url('elemento-editar.php?s=trabajo&t=compra')) . '">' . icono('mas') . 'Compra o licencia</a>',
     'formacion' => '<a class="btn btn-sutil" href="' . e(url('elemento-editar.php?s=trabajo&t=curso')) . '">' . icono('mas') . 'Curso</a>',
+    'hitos' => '<a class="btn btn-sutil" href="' . e(url('elemento-editar.php?s=trabajo&t=hito')) . '">' . icono('mas') . 'Hito</a>',
 ][$p] ?? '<a class="btn btn-sutil" href="' . e(url('elemento-editar.php?s=trabajo&t=miembro')) . '">' . icono('mas') . 'Persona del equipo</a>';
 $a_trabajo = '<a href="' . e(url('trabajo.php')) . '">Trabajo</a> · ';
 [$titulo, $migas, $icono_p] = [
@@ -30,10 +32,11 @@ $a_trabajo = '<a href="' . e(url('trabajo.php')) . '">Trabajo</a> · ';
     'equipo' => ['Equipo', $a_trabajo . ($antiguos ? 'Los que ya no están' : 'Las personas que diriges'), 'familia'],
     'formacion' => ['Formación', $a_trabajo . 'Los cursos que has hecho tú y tu equipo', 'birrete'],
     'compras' => ['Compras', $a_trabajo . ($antiguos ? 'Canceladas' : 'Licencias y compras del servicio'), $sec['icono']],
+    'hitos' => ['Hitos', $a_trabajo . 'Lanzamientos, proyectos y logros del servicio', 'bandera'],
 ][$p];
 cabecera($sec['nombre'], 'seccion:trabajo');
 cabecera_pagina($titulo, $migas, $boton, $icono_p, $sec['color']);
-pestanas_trabajo($p, $empleo, count($equipo), count($compras), count($cursos));
+pestanas_trabajo($p, $empleo, count($equipo), count($compras), count($cursos), count($hitos));
 
 // Una persona del equipo en tarjeta: puesto, cuánto lleva, su horario de hoy y su próximo aviso.
 $tarjeta_miembro = static function (array $m) use ($sec, $hoy, $proximo): void {
@@ -185,6 +188,40 @@ if ($p === 'formacion'):
     <?php endforeach; ?>
 <?php pie(); return; endif;
 
+// ---------------------------- Hitos ----------------------------
+// Una línea de tiempo por año, del más reciente al más antiguo: fecha, qué fue y de qué tipo.
+if ($p === 'hitos'):
+    $por_anio = [];
+    foreach ($hitos as $h) $por_anio[($h['datos']['fecha'] ?? '') !== '' ? substr($h['datos']['fecha'], 0, 4) : 'Sin fecha'][] = $h;
+    ?>
+    <?php if (!$hitos): ?>
+      <section class="tarjeta">
+        <p class="vacio-mini">Aún no hay hitos. Añade cada uno con el botón de arriba: un lanzamiento, un proyecto terminado, un premio…</p>
+      </section>
+    <?php endif; ?>
+    <?php foreach ($por_anio as $anio => $items): ?>
+      <section class="tarjeta">
+        <div class="tarjeta-cabecera">
+          <h2><?= icono('bandera') ?><?= e((string)$anio) ?></h2>
+          <span class="tenue"><?= count($items) ?></span>
+        </div>
+        <ul class="historial">
+          <?php foreach ($items as $h): $d = $h['datos']; ?>
+            <li>
+              <div class="h-fecha"><?= ($d['fecha'] ?? '') !== '' ? e(fecha_es($d['fecha'])) : '—' ?></div>
+              <div class="h-cuerpo">
+                <a href="<?= e(url('elemento.php?id=' . $h['id'])) ?>"><strong><?= e($h['nombre']) ?></strong></a>
+                <?php if (($d['categoria'] ?? '') !== ''): ?><span class="chip"><?= e($d['categoria']) ?></span><?php endif; ?>
+                <?php if (($d['quien'] ?? '') !== ''): ?><div class="tenue"><?= e($d['quien']) ?></div><?php endif; ?>
+                <?php if ((string)($h['notas'] ?? '') !== ''): ?><div class="tenue"><?= e(recortar((string)$h['notas'], 200)) ?></div><?php endif; ?>
+              </div>
+            </li>
+          <?php endforeach; ?>
+        </ul>
+      </section>
+    <?php endforeach; ?>
+<?php pie(); return; endif;
+
 // ---------------------------- Compras ----------------------------
 // Una tabla (se compara mejor de un vistazo que en tarjetas): qué es, cuánto, cuándo se renueva y
 // por dónde se compra. Arriba, el CECO del servicio (ficha del empleo), que es lo que se pide al comprar.
@@ -312,6 +349,7 @@ $ultima_nota = ultima_nota_por_elemento($pdo);
 $con_plan = array_merge($empleo ? [$empleo] : [], $equipo);
 $colgados = $empleo ? elementos_enlazados($pdo, $empleo['id']) : [];
 $docs_equipo = documentos_trabajo($pdo);
+$ultimos_hitos = array_slice($hitos, 0, 3);
 $datos_puesto = [];
 if ($empleo) {
     foreach (['puesto', 'categoria', 'contrato', 'jornada', 'fecha_alta', 'revision_salarial', 'fin_contrato'] as $k) {
@@ -432,6 +470,23 @@ if ($empleo) {
         </ul>
       </section>
     <?php endif; ?>
+
+    <section class="tarjeta" id="hitos">
+      <div class="tarjeta-cabecera">
+        <h2><?= icono('bandera') ?>Últimos hitos</h2>
+        <a class="enlace-tenue" href="<?= e(url($hitos ? 'trabajo.php?p=hitos' : 'elemento-editar.php?s=trabajo&t=hito')) ?>"><?= $hitos ? 'Ver todos' : 'Añadir' ?></a>
+      </div>
+      <?php if (!$hitos): ?><p class="vacio-mini">Lanzamientos, proyectos y logros del servicio.</p><?php endif; ?>
+      <ul class="lista-docs">
+        <?php foreach ($ultimos_hitos as $h): ?>
+          <li>
+            <a href="<?= e(url('elemento.php?id=' . $h['id'])) ?>"><?= e($h['nombre']) ?></a>
+            <span class="tenue"><?= e(implode(' · ', array_filter([($h['datos']['fecha'] ?? '') !== '' ? fecha_es($h['datos']['fecha']) : '',
+                $h['datos']['categoria'] ?? '']))) ?></span>
+          </li>
+        <?php endforeach; ?>
+      </ul>
+    </section>
 
     <section class="tarjeta" id="documentos-equipo">
       <div class="tarjeta-cabecera">

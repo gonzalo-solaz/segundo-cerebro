@@ -712,6 +712,22 @@ function secciones(): array {
                         'contenidos' => ['etiqueta' => 'Qué se ve', 'tipo' => 'area', 'aparte' => true, 'lista' => true],
                     ],
                 ],
+                // Los hitos del servicio: lanzamientos, proyectos, reconocimientos (6/10/2026, Gonzalo: «una parte
+                // de hitos para ir añadiendo items»; el primero, el lanzamiento de Oneweb, 23/09/2026). La pestaña
+                // Hitos los pinta como línea de tiempo por año. La fecha no crea aviso: casi siempre ya ha pasado
+                // (un aviso vencido no tendría sentido). Sin enlace al empleo: no son contactos.
+                'hito' => [
+                    'nombre' => 'Hito', 'ejemplo' => 'Lanzamiento de Oneweb', 'persona' => null,
+                    'campos' => [
+                        'fecha' => ['etiqueta' => 'Fecha', 'tipo' => 'fecha', 'resumen' => true],
+                        'categoria' => ['etiqueta' => 'Qué es', 'tipo' => 'opcion', 'resumen' => true,
+                            'opciones' => ['Lanzamiento', 'Proyecto', 'Reconocimiento o premio', 'Evento o presentación', 'Equipo', 'Otro']],
+                        'quien' => ['etiqueta' => 'Quién participó', 'tipo' => 'texto', 'ayuda' => 'Ej.: todo el equipo; Teresa y Borja.'],
+                        'web' => ['etiqueta' => 'Enlace', 'tipo' => 'texto'],
+                        'detalle' => ['etiqueta' => 'Qué supuso', 'tipo' => 'area', 'aparte' => true, 'lista' => true,
+                            'ayuda' => 'Una línea por punto: qué se hizo, resultados, cifras.'],
+                    ],
+                ],
                 'contacto' => ['enlace' => ['etiqueta' => 'Empleo', 'a' => [['trabajo', 'empleo']]]]
                               + tipo_contacto('Contacto del trabajo', 'RRHH · nóminas', 'Departamento o cargo'),
             ],

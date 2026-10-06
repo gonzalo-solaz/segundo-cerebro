@@ -39,6 +39,7 @@ function icono(string $nombre, string $clase = 'ico'): string {
         'llave'     => '<circle cx="8" cy="15" r="4"/><path d="M10.8 12.2 20 3M16 7l3 3M14 9l2 2"/>',
         'bascula'   => '<rect x="3" y="3" width="18" height="18" rx="4"/><path d="M8 9.5a5 5 0 0 1 8 0"/><path d="M12 9.5l1.2-1.8"/>',
         'ojo'       => '<path d="M2 12s3.5-6.5 10-6.5S22 12 22 12s-3.5 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.8"/>',
+        'bandera'   => '<path d="M5 21V4"/><path d="M5 15s1.2-1 4-1 4.5 2 7.5 2c1.8 0 3-.6 3.5-1V4c-.5.4-1.7 1-3.5 1-3 0-4.5-2-7.5-2s-4 1-4 1"/>',
         'llama'     =>'<path d="M12 21a6 6 0 0 0 6-6c0-3.5-2.5-5.5-3.5-8.5-.5 2-1.5 3-2.5 3.5C11 7.5 10 5 10.5 3 7.5 5 6 9 6 15a6 6 0 0 0 6 6z"/>',
     ];
     $d = $trazos[$nombre] ?? $trazos['panel'];
