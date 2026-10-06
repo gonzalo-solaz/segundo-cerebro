@@ -320,6 +320,8 @@ pinta_bien('la ficha del curso dice quién lo ha hecho', $r, 'Quién lo ha hecho
 pinta_bien('…con las dos personas', $r, '2 personas');
 pinta_bien('…y lleva la pestaña Formación activa', $r, 'aria-current="page">Formación');
 pinta_bien('la ficha de la persona lista su formación', pedir('elemento.php', ['id' => (string)$id['companera']]), 'Figma: Marketing y Contenido');
+pinta_bien('…y la formación de la persona nace plegada, con su resumen', pedir('elemento.php', ['id' => (string)$id['companera']]), '<details class="tarjeta tarjeta-plegable" id="formacion">');
+comprueba('…pero «Quién lo ha hecho», en la ficha del curso, no se pliega', !str_contains($r['html'], '<details class="tarjeta tarjeta-plegable" id="formacion">'));
 $r = pedir('trabajo.php', ['p' => 'formacion']);
 pinta_bien('la pestaña agrupa por curso académico', $r, 'Curso 2024-25');
 pinta_bien('…y dice quién lo hizo', $r, '>Ana</a>');

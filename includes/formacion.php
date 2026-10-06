@@ -198,13 +198,24 @@ function pintar_formacion(PDO $pdo, array $el): void {
     $horas = 0.0;
     if (!$en_curso) foreach ($filas as $f) if ($f['estado'] === 'Finalizado') $horas += horas_curso($fichas[$f['curso_id']] ?? ['datos' => []]) ?? 0;
     ?>
+    <?php $resumen_f = e(implode(' · ', array_filter([
+        $filas ? count($filas) . ($en_curso ? (count($filas) === 1 ? ' persona' : ' personas') : (count($filas) === 1 ? ' curso' : ' cursos')) : '',
+        $horas > 0 ? numero_es($horas, $horas == floor($horas) ? 0 : 1) . ' h' : '']))); ?>
+    <?php if ($en_curso): ?>
     <section class="tarjeta" id="formacion">
       <div class="tarjeta-cabecera">
-        <h2><?= icono('birrete') ?><?= $en_curso ? 'Quién lo ha hecho' : 'Formación' ?></h2>
-        <span class="tenue"><?= e(implode(' · ', array_filter([
-            $filas ? count($filas) . ($en_curso ? (count($filas) === 1 ? ' persona' : ' personas') : (count($filas) === 1 ? ' curso' : ' cursos')) : '',
-            $horas > 0 ? numero_es($horas, $horas == floor($horas) ? 0 : 1) . ' h' : '']))) ?></span>
+        <h2><?= icono('birrete') ?>Quién lo ha hecho</h2>
+        <span class="tenue"><?= $resumen_f ?></span>
       </div>
+    <?php else: // La formación de una persona nace plegada (Gonzalo, 6/10/2026); «#formacion» la abre al volver de guardar (app.js). ?>
+    <details class="tarjeta tarjeta-plegable" id="formacion">
+      <summary>
+        <div class="titulo-plegable">
+          <h2><?= icono('birrete') ?>Formación</h2>
+          <?php if ($resumen_f !== ''): ?><span class="tenue"><?= $resumen_f ?></span><?php endif; ?>
+        </div>
+      </summary>
+    <?php endif; ?>
       <?php if (!$filas): ?><p class="vacio-mini"><?= $en_curso ? 'Nadie apuntado todavía. Marca quién lo ha hecho: pueden ser varias personas.' : 'Sin cursos todavía.' ?></p><?php endif; ?>
       <?php foreach ($filas as $f): $otro = $en_curso ? $f['elemento_id'] : $f['curso_id']; ?>
         <article class="plan-curso">
@@ -239,7 +250,7 @@ function pintar_formacion(PDO $pdo, array $el): void {
           <a class="btn btn-sutil" href="<?= e(url('elemento-editar.php?s=trabajo&t=curso')) ?>"><?= icono('mas') ?>Curso nuevo</a>
         <?php endif; ?>
       </div>
-    </section>
+    <?= $en_curso ? '</section>' : '</details>' ?>
     <?php
 }
 
