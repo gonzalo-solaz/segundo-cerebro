@@ -235,8 +235,8 @@ $r = pedir('trabajo.php', ['p' => 'equipo']);
 pinta_bien('la pestaña Equipo lista a las personas', $r, 'Diseñadora web');
 pinta_bien('…contigo delante, como responsable', $r, 'Responsable');
 $pos = static fn(string $t) => strpos($r['html'], $t);
-comprueba('…tú primero, luego el equipo y al final las Bajas con los archivados',
-    $pos('Gonzalo Prueba') !== false && $pos('Gonzalo Prueba') < $pos('Diseñadora web')
+comprueba('…tú primero, aparte; luego tu equipo y al final las Bajas con los archivados',
+    $pos('Gonzalo Prueba') !== false && $pos('Gonzalo Prueba') < $pos('>Tu equipo') && $pos('>Tu equipo') < $pos('Diseñadora web')
     && $pos('Diseñadora web') < $pos('>Bajas') && $pos('>Bajas') < $pos('Persona Que Se Fue'));
 // Trabajo: la pestaña Compras (licencias del servicio, con el CECO del empleo).
 pinta_bien('sin compras, la pestaña Compras invita a añadirlas', pedir('trabajo.php', ['p' => 'compras']), 'Aún no hay compras');

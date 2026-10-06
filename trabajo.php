@@ -80,10 +80,17 @@ if ($p === 'equipo'):
         <p>Aún no hay nadie en el equipo. Añade a cada persona con el botón de arriba: puesto, desde cuándo está, su horario…</p>
       </div>
     <?php endif; ?>
-    <div class="rejilla rejilla-elementos">
-      <?php if ($empleo) $tarjeta_miembro($empleo, true); ?>
-      <?php foreach ($equipo as $m) $tarjeta_miembro($m); ?>
-    </div>
+    <?php if ($empleo): // Tú, aparte del resto (Gonzalo, 6/10/2026: «ponme separado del resto del equipo»). ?>
+      <div class="rejilla rejilla-elementos">
+        <?php $tarjeta_miembro($empleo, true); ?>
+      </div>
+    <?php endif; ?>
+    <?php if ($equipo): ?>
+      <?php if ($empleo): ?><h2 class="titulo-bloque">Tu equipo <span class="tenue">(<?= count($equipo) ?>)</span></h2><?php endif; ?>
+      <div class="rejilla rejilla-elementos">
+        <?php foreach ($equipo as $m) $tarjeta_miembro($m); ?>
+      </div>
+    <?php endif; ?>
     <?php if ($bajas): ?>
       <h2 class="titulo-bloque">Bajas <span class="tenue">(<?= count($bajas) ?>)</span></h2>
       <div class="rejilla rejilla-elementos">
