@@ -477,4 +477,15 @@ comprueba('2 años justos', tiempo_desde('2024-10-01', '2026-10-06') === '2 año
 comprueba('5 meses', tiempo_desde('2026-05-01', '2026-10-06') === '5 meses');
 comprueba('recién llegado', tiempo_desde('2026-09-20', '2026-10-06') === 'menos de un mes');
 comprueba('fecha futura o vacía: nada', tiempo_desde('2027-01-01', '2026-10-06') === '' && tiempo_desde(null, '2026-10-06') === '');
+
+echo "\nTrabajo: plan de desarrollo (objetivos y notas en el historial)\n";
+$empleo_p = guardar_elemento($pdo, 'trabajo', 'empleo', ['nombre' => 'Empleo del plan', 'persona_id' => $id['yo'] ?? null]);
+$rid = crear_registro($pdo, ['elemento_id' => $empleo_p, 'fecha' => '2026-07-31', 'tipo' => 'Evaluación', 'titulo' => 'Evaluación final 2025-26', 'valor' => '8,38']);
+$ro = crear_registro($pdo, ['elemento_id' => $empleo_p, 'fecha' => '2025-09-01', 'tipo' => 'Objetivo', 'titulo' => 'Objetivo 2025-26: revisar la web', 'notas' => 'Nivel 4 = todo antes del 31 de julio']);
+$rn = crear_registro($pdo, ['elemento_id' => $empleo_p, 'fecha' => '2026-09-30', 'tipo' => 'Nómina', 'titulo' => 'Nómina septiembre 2026', 'valor' => '2.100,50']);
+$filas = array_column(registros_de($pdo, $empleo_p), null, 'id');
+comprueba('la evaluación guarda la nota sobre 10', (float)$filas[$rid]['valor'] === 8.38 && $filas[$rid]['unidad'] === 'sobre 10');
+comprueba('una nómina sigue en euros', (float)$filas[$rn]['valor'] === 2100.5 && $filas[$rn]['unidad'] === '€');
+comprueba('un objetivo es un tipo válido y no lleva valor', $filas[$ro]['tipo'] === 'Objetivo' && $filas[$ro]['valor'] === null);
+comprueba('el panel de Trabajo ve los apuntes de la sección', count(registros_de_seccion($pdo, 'trabajo', 10)) >= 3);
 terminar();
