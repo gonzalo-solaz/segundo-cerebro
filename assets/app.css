@@ -566,8 +566,8 @@ details.desplegable[open] > summary { margin-bottom: 1.1rem; background: var(--n
 .tabla th a.th-orden:hover, .tabla th a.th-activa { color: var(--texto); }
 /* Compras: el comentario o acuerdo de una petición, debajo del nombre (sin ensanchar la tabla). */
 .compra-comentario { font-size: 13px; color: var(--texto); margin-top: .3rem; max-width: 46ch; overflow-wrap: anywhere; }
-.chip.chip-estado-rechazada { background: color-mix(in srgb, var(--rojo) 13%, transparent); color: var(--rojo); }
-.chip.chip-estado-aprobada, .chip.chip-estado-comprada { background: color-mix(in srgb, var(--verde) 13%, transparent); color: var(--verde); }
+.chip.chip-estado-rechazada, .chip.chip-hito-baja { background: color-mix(in srgb, var(--rojo) 13%, transparent); color: var(--rojo); }
+.chip.chip-estado-aprobada, .chip.chip-estado-comprada, .chip.chip-hito-incorporacion { background: color-mix(in srgb, var(--verde) 13%, transparent); color: var(--verde); }
 .acciones-fila { white-space: nowrap; text-align: right; }
 
 /* ---------------- Mensajes ---------------- */

@@ -214,7 +214,7 @@ if ($p === 'hitos'):
               <div class="h-fecha"><?= ($d['fecha'] ?? '') !== '' ? e(fecha_es($d['fecha'])) : '—' ?></div>
               <div class="h-cuerpo">
                 <a href="<?= e(url('elemento.php?id=' . $h['id'])) ?>"><strong><?= e($h['nombre']) ?></strong></a>
-                <?php if (($d['categoria'] ?? '') !== ''): ?><span class="chip"><?= e($d['categoria']) ?></span><?php endif; ?>
+                <?php if (($d['categoria'] ?? '') !== ''): ?><span class="chip<?= ['Incorporación' => ' chip-hito-incorporacion', 'Baja' => ' chip-hito-baja'][$d['categoria']] ?? '' ?>"><?= e($d['categoria']) ?></span><?php endif; ?>
                 <?php if (($d['quien'] ?? '') !== ''): ?><div class="tenue"><?= e($d['quien']) ?></div><?php endif; ?>
                 <?php if ((string)($h['notas'] ?? '') !== ''): ?><div class="tenue"><?= e(recortar((string)$h['notas'], 200)) ?></div><?php endif; ?>
               </div>

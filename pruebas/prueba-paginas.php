@@ -330,6 +330,7 @@ $id['se_fue'] = guardar_elemento($pdo, 'trabajo', 'miembro', ['nombre' => 'Mayra
     'datos' => ['incorporacion' => '2023-11-27', 'baja' => '2024-07-09']]);
 cambiar_activo_elemento($pdo, $id['se_fue'], false);
 $h = pedir('trabajo.php', ['p' => 'hitos'])['html'];
+comprueba('…con la incorporación en verde y la baja en rojo', str_contains($h, 'chip-hito-incorporacion') && str_contains($h, 'chip-hito-baja'));
 comprueba('…y la baja de los que ya no están', str_contains($h, 'Baja de Mayra de prueba') && str_contains($h, 'Incorporación de Mayra de prueba'));
 $emp = elemento($pdo, $id['empleo']);
 guardar_elemento($pdo, 'trabajo', 'empleo', ['nombre' => $emp['nombre'], 'persona_id' => $emp['persona_id'],
