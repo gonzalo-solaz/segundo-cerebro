@@ -400,9 +400,10 @@ comprueba('el admin de pruebas la tiene; un miembro no está obligado', dos_paso
     && !dos_pasos_obligatoria(usuario($pdo, $id['miembro'])));
 $e = lanza(static fn() => activar_dos_pasos($pdo, $id['miembro'], $rfc, '000000'));
 comprueba('activar con un código malo no activa', $e instanceof ErrorValidacion && !dos_pasos_activa(usuario($pdo, $id['miembro'])));
-$cods = activar_dos_pasos($pdo, $id['miembro'], $rfc, totp_codigo($rfc, intdiv(time(), 30)));
+$codigo_app = totp_codigo($rfc, intdiv(time(), 30)); // uno solo: si se pide dos veces puede cambiar de ventana de 30 s entre medias
+$cods = activar_dos_pasos($pdo, $id['miembro'], $rfc, $codigo_app);
 comprueba('activar da 8 códigos de recuperación', count($cods) === 8 && dos_pasos_activa(usuario($pdo, $id['miembro'])));
-comprueba('el mismo código de la app no vale dos veces', comprobar_segundo_paso($pdo, usuario($pdo, $id['miembro']), totp_codigo($rfc, intdiv(time(), 30))) === null);
+comprueba('el mismo código de la app no vale dos veces', comprobar_segundo_paso($pdo, usuario($pdo, $id['miembro']), $codigo_app) === null);
 comprueba('un código de recuperación entra', comprobar_segundo_paso($pdo, usuario($pdo, $id['miembro']), strtoupper($cods[0])) === 'recuperacion');
 comprueba('y se gasta', comprobar_segundo_paso($pdo, usuario($pdo, $id['miembro']), $cods[0]) === null
     && codigos_recuperacion_restantes(usuario($pdo, $id['miembro'])) === 7);

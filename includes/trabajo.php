@@ -25,6 +25,11 @@ function compras_trabajo(PDO $pdo, bool $activas = true): array {
     return array_values(array_filter(elementos_de($pdo, 'trabajo', $activas), static fn($e) => $e['tipo'] === 'compra'));
 }
 
+// Hardware y material van en su propia tabla en Compras (y no se renuevan como una licencia).
+function es_hardware(array $compra): bool {
+    return in_array($compra['datos']['categoria'] ?? '', ['Hardware', 'Material'], true);
+}
+
 // Lo que cuesta al año una compra que se repite; null si se paga una vez o falta el importe o la periodicidad.
 function importe_anual(array $datos): ?float {
     $meses = periodicidades()[$datos['periodicidad'] ?? ''] ?? 0;

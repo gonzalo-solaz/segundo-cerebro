@@ -242,6 +242,17 @@ comprueba('ordenar por renovación: la más cercana primero y las sin fecha al f
 comprueba('…y la tabla pone siempre el año, también el del año en curso', str_contains($h, '31 dic ' . substr(hoy(), 0, 4)));
 $h = strstr(pedir('trabajo.php', ['p' => 'compras', 'orden' => 'importe'])['html'], '<tbody>');
 comprueba('ordenar por importe: de mayor a menor', strpos($h, 'Asana de prueba') < strpos($h, 'Aaa sin fecha') && strpos($h, 'Aaa sin fecha') < strpos($h, 'Zzz pronto'));
+$id['ordenador'] = guardar_elemento($pdo, 'trabajo', 'compra', ['nombre' => 'Ordenador de Ana', 'enlace_id' => $id['companera'],
+    'datos' => ['categoria' => 'Hardware', 'importe' => '3000', 'periodicidad' => 'Una vez', 'primera_compra' => '2021-09-15']]);
+$h = pedir('trabajo.php', ['p' => 'compras'])['html'];
+comprueba('el hardware va en su propia tabla, después del software',
+    strpos($h, 'Software y servicios') < strpos($h, 'Asana de prueba') && strpos($h, 'Hardware y material') < strpos($h, 'Ordenador de Ana')
+    && strpos($h, 'Asana de prueba') < strpos($h, 'Hardware y material'));
+pinta_bien('…con para quién es', pedir('trabajo.php', ['p' => 'compras']), 'Para <a href="/segundo-cerebro/elemento.php?id=' . $id['companera'] . '">Ana Prueba Equipo</a>');
+$r = pedir('elemento.php', ['id' => (string)$id['companera']]);
+pinta_bien('la ficha de la persona lista su ordenador en «Equipos y material»', $r, 'Equipos y material');
+pinta_bien('…con la fecha de compra', $r, 'comprado el 15 sep 2021');
+comprueba('…y no lo llama «Convenio y contactos»', !str_contains($r['html'], 'Convenio y contactos'));
 $r = pedir('elemento.php', ['id' => (string)$id['licencia']]);
 pinta_bien('la ficha de una licencia lleva la pestaña Compras activa', $r, 'aria-current="page">Compras');
 comprueba('…y no lleva plan de desarrollo', !str_contains($r['html'], 'Plan de desarrollo'));

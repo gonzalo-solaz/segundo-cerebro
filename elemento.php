@@ -86,6 +86,8 @@ if ($el['seccion'] === 'vivienda' && $el['tipo'] === 'inmueble') {
 }
 $titulos_hijos = ['contratos' => ['Contratos y seguros', 'contrato'], 'vivienda' => ['Equipamiento y materiales', 'casa'],
                   'trabajo' => ['Convenio y contactos', 'maletin']];
+// En una persona del equipo, lo que tiene enlazado son sus equipos (su ordenador…).
+if ($el['seccion'] === 'trabajo' && $el['tipo'] === 'miembro') $titulos_hijos['trabajo'] = ['Equipos y material', 'maletin'];
 // Las nóminas del empleo se leen de finanzas (no se copian aquí): ver includes/finanzas.php.
 $nominas = null;
 if ($el['seccion'] === 'trabajo' && $el['tipo'] === 'empleo' && ($el['datos']['nominas_finanzas'] ?? '') === 'Sí') {
@@ -231,6 +233,8 @@ if ($el['seccion'] === 'trabajo') {
               if (!empty($h['datos']['compania'])) $linea[] = $h['datos']['compania'];
               if (!empty($h['datos']['marca'])) $linea[] = $h['datos']['marca'];
               if (!empty($h['datos']['modelo'])) $linea[] = $h['datos']['modelo'];
+              if (is_numeric($h['datos']['importe'] ?? null) && $h['tipo'] === 'compra') $linea[] = eur($h['datos']['importe']);
+              if (!empty($h['datos']['primera_compra']) && $h['tipo'] === 'compra') $linea[] = 'comprado el ' . fecha_es($h['datos']['primera_compra']);
               if (isset($h['datos']['coste'])) $linea[] = eur($h['datos']['coste']) . (!empty($h['datos']['periodicidad']) ? ' (' . $h['datos']['periodicidad'] . ')' : '');
               $prox = agenda($pdo, 36500, null, $h['id'])[0] ?? null;
               if ($prox) $linea[] = fecha_corta($prox['fecha']) . ' (' . relativo($prox['dias']) . ')';

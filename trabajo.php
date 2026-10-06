@@ -130,31 +130,54 @@ if ($p === 'compras'):
     </section>
     <?php endif; ?>
 
-    <section class="tarjeta">
-      <?php if (!$lista): ?>
+    <?php
+    // Software y servicios por un lado; hardware y material por otro (Gonzalo, 6/10/2026). En el
+    // hardware importa para quién es y cuándo se compró (¿toca renovarlo?), no cómo se tramita.
+    $grupos_compras = [
+        'software' => ['Software y servicios', 'bombilla', array_values(array_filter($lista, static fn($c) => !es_hardware($c)))],
+        'hardware' => ['Hardware y material', 'maletin', array_values(array_filter($lista, 'es_hardware'))],
+    ];
+    if (!$lista): ?>
+      <section class="tarjeta">
         <p class="vacio-mini"><?= $antiguos ? 'No hay ninguna cancelada.' : 'Aún no hay compras. Añade cada licencia con el botón de arriba: importe, cuándo se renueva y cómo se compra.' ?></p>
-      <?php else: ?>
+      </section>
+    <?php endif; ?>
+    <?php foreach ($grupos_compras as $gk => [$g_titulo, $g_icono, $filas]): if (!$filas) continue; $hw = $gk === 'hardware'; ?>
+      <section class="tarjeta" id="compras-<?= e($gk) ?>">
+        <div class="tarjeta-cabecera">
+          <h2><?= icono($g_icono) ?><?= e($g_titulo) ?></h2>
+          <span class="tenue"><?= count($filas) ?></span>
+        </div>
         <div class="tabla-scroll">
           <table class="tabla">
-            <thead><tr><?= $th('nombre', 'Compra') ?><?= $th('importe', 'Importe', 'num') ?><?= $th('fecha', $antiguos ? 'Primera compra' : 'Renovación') ?><th>Cómo se compra</th></tr></thead>
+            <thead><tr><?= $th('nombre', 'Compra') ?><?= $th('importe', 'Importe', 'num') ?>
+              <?= $hw ? '<th>Comprado</th>' : '' ?><?= $th('fecha', $antiguos ? 'Primera compra' : 'Renovación') ?>
+              <?= $hw ? '' : '<th>Cómo se compra</th>' ?></tr></thead>
             <tbody>
-              <?php foreach ($lista as $c): $d = $c['datos']; $f = (string)($antiguos ? ($d['primera_compra'] ?? '') : ($d['renovacion'] ?? '')); ?>
+              <?php foreach ($filas as $c): $d = $c['datos']; $f = (string)($antiguos ? ($d['primera_compra'] ?? '') : ($d['renovacion'] ?? '')); $fc = (string)($d['primera_compra'] ?? ''); ?>
                 <tr>
                   <td><a href="<?= e(url('elemento.php?id=' . $c['id'])) ?>"><strong><?= e($c['nombre']) ?></strong></a>
-                    <?php $sub = array_filter([$d['uso'] ?? '', $d['plazas'] ?? '']); if ($sub): ?><div class="tenue"><?= e(implode(' · ', $sub)) ?></div><?php endif; ?></td>
+                    <?php $sub = array_filter([$d['uso'] ?? '', $d['plazas'] ?? '']); if ($sub): ?><div class="tenue"><?= e(implode(' · ', $sub)) ?></div><?php endif; ?>
+                    <?php if ($c['enlace_id']): ?><div class="tenue">Para <a href="<?= e(url('elemento.php?id=' . $c['enlace_id'])) ?>"><?= e($c['enlace_nombre']) ?></a></div><?php endif; ?></td>
                   <td class="num"><?= is_numeric($d['importe'] ?? null) ? e(eur($d['importe'])) : '—' ?>
                     <?php if (!empty($d['periodicidad'])): ?><div class="tenue"><?= e(mb_strtolower($d['periodicidad'], 'UTF-8')) ?></div><?php endif; ?></td>
+                  <?php if ($hw): ?>
+                    <td><?= $fc !== '' ? e(fecha_es($fc)) : '—' ?>
+                      <?php if ($fc !== ''): ?><div class="tenue"><?= e(relativo(dias_entre($hoy, $fc))) ?></div><?php endif; ?></td>
+                  <?php endif; ?>
                   <td><?= $f !== '' ? e(fecha_es($f)) : '—' ?>
                     <?php if (!$antiguos && $f !== ''): ?><div class="tenue"><?= e(relativo(dias_entre($hoy, $f))) ?></div><?php endif; ?></td>
-                  <td><?= e($d['gestion'] ?? '—') ?>
-                    <?php if (($d['ceco'] ?? '') !== ''): ?><div class="tenue">CECO <?= e($d['ceco']) ?></div><?php endif; ?></td>
+                  <?php if (!$hw): ?>
+                    <td><?= e($d['gestion'] ?? '—') ?>
+                      <?php if (($d['ceco'] ?? '') !== ''): ?><div class="tenue">CECO <?= e($d['ceco']) ?></div><?php endif; ?></td>
+                  <?php endif; ?>
                 </tr>
               <?php endforeach; ?>
             </tbody>
           </table>
         </div>
-      <?php endif; ?>
-    </section>
+      </section>
+    <?php endforeach; ?>
     <p class="pie-seccion">
       <?php if ($antiguos): ?>
         <a class="enlace-tenue" href="<?= e(url('trabajo.php?p=compras')) ?>"><?= icono('atras', 'ico ico-mini') ?>Volver a las compras</a>

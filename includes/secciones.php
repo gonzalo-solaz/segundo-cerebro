@@ -626,10 +626,14 @@ function secciones(): array {
                 // se dejan de pagar se archivan (pestaña Compras → «Canceladas»).
                 'compra' => [
                     'nombre' => 'Compra o licencia', 'ejemplo' => 'Asana Premium', 'persona' => null,
+                    // Un equipo de una persona (su ordenador) se enlaza a su ficha del equipo: allí sale en
+                    // «Equipos y material» con la fecha de compra, y cada renovación es un apunte del historial.
+                    'enlace' => ['etiqueta' => 'Para quién', 'a' => [['trabajo', 'miembro']]],
                     'campos' => [
                         'uso' => ['etiqueta' => 'Para qué sirve', 'tipo' => 'texto', 'resumen' => true, 'ayuda' => 'Ej.: gestión de proyectos, banco de imágenes.'],
                         'categoria' => ['etiqueta' => 'Qué es', 'tipo' => 'opcion',
-                            'opciones' => ['Software o licencia', 'Hardware', 'Servicio', 'Otro']],
+                            'opciones' => ['Software o licencia', 'Servicio', 'Hardware', 'Material', 'Otro'],
+                            'ayuda' => 'Hardware y material van en su propia tabla en Compras.'],
                         'importe' => ['etiqueta' => 'Importe por pago', 'tipo' => 'importe', 'resumen' => true,
                             'ayuda' => 'Lo que cuesta cada renovación. No suma al gasto de casa.'],
                         'periodicidad' => ['etiqueta' => 'Se paga', 'tipo' => 'opcion',
@@ -641,7 +645,8 @@ function secciones(): array {
                             'opciones' => ['Compra del servicio', 'A través de FUSP', 'Otro']],
                         'ceco' => ['etiqueta' => 'CECO', 'tipo' => 'texto',
                             'ayuda' => 'Solo si va contra otro centro de coste; vacío = el del servicio (ficha del empleo).'],
-                        'primera_compra' => ['etiqueta' => 'Primera compra', 'tipo' => 'fecha'],
+                        'primera_compra' => ['etiqueta' => 'Fecha de compra', 'tipo' => 'fecha',
+                            'ayuda' => 'La de la última compra o renovación del equipo; de una licencia, cuándo se compró la primera vez.'],
                         'web' => ['etiqueta' => 'Web o cuenta', 'tipo' => 'texto'],
                     ],
                 ],
