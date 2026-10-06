@@ -27,6 +27,9 @@
 //            (con persona=1, por lo que paga Gonzalo: «tuyo»; sin ella, el total de la casa)
 //      php remoto.php precio <archivo.json | JSON>  Lo que costaba un contrato desde una fecha (historial de precios)
 //            {"elemento_id":38,"desde":"2025-04-01","coste":111.08,"nota":"subida con el IPC"}   (periodicidad: la de la ficha si no se dice)
+//      php remoto.php plan <archivo.json | JSON>    Plan de desarrollo de un curso de una persona del equipo (o del empleo)
+//            {"elemento_id":44,"curso":"2025-26","objetivo":"...","descripcion":"...","niveles":"Nivel 0 = ...\nNivel 1 = ...","autoevaluacion":8.5,"nota":8.5}
+//            (si el curso ya existe, cambia solo lo que viene; notas sobre 10; «php remoto.php ficha <id>» trae su plan_desarrollo)
 //      php remoto.php peso <id>                     Control de peso: IMC, ritmo, objetivo, calorías y consejos
 //            Un pesaje: registro {"elemento_id":30,"fecha":"2026-10-03","tipo":"Peso","valor":82.4}  (Cintura en cm, Grasa corporal en %)
 //      php remoto.php documento <archivo.pdf> elemento=<id> [titulo="..."]
@@ -150,6 +153,7 @@ switch ($accion) {
     case 'registro':
     case 'partidas':
     case 'precio':
+    case 'plan':
         mostrar(llamar($accion, leer_json_arg($pos[0] ?? null)));
     case 'documento':
         if (empty($pos[0]) || empty($kv['elemento'])) { fwrite(STDERR, "Uso: php remoto.php documento <archivo> elemento=<id> [titulo=\"...\"]\n"); exit(1); }

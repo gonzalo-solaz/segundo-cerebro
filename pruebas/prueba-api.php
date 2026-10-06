@@ -55,6 +55,14 @@ comprueba('una opción inventada se rechaza con ErrorValidacion', $e instanceof 
 $e = lanza(static fn() => $api('elemento', ['seccion' => 'vehiculos', 'tipo' => 'vehiculo', 'nombre' => 'X', 'datos' => ['caballos' => 150]]));
 comprueba('un campo inventado se rechaza', $e instanceof ErrorValidacion);
 
+$eq = $api('elemento', ['seccion' => 'trabajo', 'tipo' => 'miembro', 'nombre' => 'Persona del equipo (API)', 'datos' => ['puesto' => 'Diseñadora']])['elemento']['id'];
+$r = $api('plan', ['elemento_id' => $eq, 'curso' => '2025-26', 'objetivo' => 'Manual', 'niveles' => "Nivel 0 = nada\nNivel 4 = todo", 'autoevaluacion' => 8.5]);
+comprueba('la API graba el plan de desarrollo de un curso', count($r['plan_desarrollo']) === 1 && $r['plan_desarrollo'][0]['autoevaluacion'] === 8.5);
+$r = $api('plan', ['elemento_id' => $eq, 'curso' => '2025-26', 'nota' => '9,25']);
+comprueba('y al repetir el curso cambia solo lo que viene', count($r['plan_desarrollo']) === 1 && $r['plan_desarrollo'][0]['nota'] === 9.25 && $r['plan_desarrollo'][0]['objetivo'] === 'Manual');
+comprueba('la ficha de la API trae su plan', $api('ficha', ['id' => $eq])['plan_desarrollo'][0]['curso'] === '2025-26');
+$e = lanza(static fn() => $api('plan', ['elemento_id' => $id['furgo'], 'curso' => '2025-26', 'objetivo' => 'x']));
+comprueba('un vehículo no lleva plan de desarrollo', $e instanceof ErrorValidacion);
 $r = $api('vencimiento', ['titulo' => 'Revisión caldera', 'fecha' => '05/11/2026', 'seccion' => 'vivienda', 'elemento_id' => $id['caldera'], 'repetir_meses' => 12]);
 comprueba('vencimiento con fecha española', $r['vencimiento']['fecha'] === '2026-11-05' && $r['vencimiento']['elemento_id'] === $id['caldera']);
 $r2 = $api('vencimiento', ['id' => $r['vencimiento']['id'], 'fecha' => '2026-11-20']);

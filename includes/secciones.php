@@ -638,12 +638,11 @@ function secciones(): array {
             ],
             'sugerencias' => [['Pedir el certificado de retenciones', 12, 15], ['Revisar la nómina de enero (tablas nuevas)', 12, 7]],
             // El líquido de una nómina va en «Importe», NUNCA en «Coste»: el coste
-            // suma como gasto en la ficha y en el panel. El plan de desarrollo del equipo
-            // (6/10/2026): un «Objetivo» por persona y curso (el texto y sus niveles 0-4 en
-            // las notas) y una «Evaluación» con la nota sobre 10 en «Importe o nota»; el
-            // curso va en el título («… 2025-26») y la fecha es la del fin del curso.
+            // suma como gasto en la ficha y en el panel. El plan de desarrollo (objetivo y notas
+            // por curso) NO va aquí: tiene su bloque y su tabla (includes/plan.php). Una
+            // «Evaluación» suelta (periodo de prueba…) puede llevar su nota sobre 10 en «Importe o nota».
             'registros' => ['tipos' => ['Nómina', 'Certificado de retenciones', 'Carta de retribución', 'Subida o cambio de sueldo',
-                                        'Contrato o anexo', 'Objetivo', 'Evaluación', 'Formación', 'Otro'],
+                                        'Contrato o anexo', 'Evaluación', 'Formación', 'Otro'],
                             'valor' => 'Importe o nota', 'unidad' => '',
                             'unidades' => ['Nómina' => '€', 'Subida o cambio de sueldo' => '€', 'Evaluación' => 'sobre 10']],
         ],

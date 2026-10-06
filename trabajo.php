@@ -76,6 +76,10 @@ $ed = $empleo['datos'] ?? [];
 $mi_hoy = horario_de_hoy((string)($ed['horario'] ?? ''), $hoy);
 $en_empresa = tiempo_desde($ed['fecha_alta'] ?? null, $hoy);
 $historial = registros_de_seccion($pdo, 'trabajo', 8);
+$curso = curso_de($hoy);
+$plan_curso = plan_del_curso($pdo, $curso);
+$ultima_nota = ultima_nota_por_elemento($pdo);
+$con_plan = array_merge($empleo ? [$empleo] : [], $equipo);
 $colgados = $empleo ? elementos_enlazados($pdo, $empleo['id']) : [];
 $datos_puesto = [];
 if ($empleo) {
@@ -126,6 +130,21 @@ if ($empleo) {
             <a href="<?= e(url('elemento.php?id=' . $m['id'])) ?>"><?= e($m['nombre']) ?></a>
             <span class="tenue"><?= e(implode(' · ', array_filter([$m['datos']['puesto'] ?? '',
                 !empty($m['datos']['horario']) ? 'hoy ' . ($h ?? 'no trabaja') : '']))) ?></span>
+          </li>
+        <?php endforeach; ?>
+      </ul>
+    </section>
+
+    <section class="tarjeta" id="plan-desarrollo">
+      <div class="tarjeta-cabecera"><h2><?= icono('bombilla') ?>Plan de desarrollo <?= e($curso) ?></h2></div>
+      <?php if (!$con_plan): ?><p class="vacio-mini">Aparece cuando haya equipo.</p><?php endif; ?>
+      <ul class="lista-docs">
+        <?php foreach ($con_plan as $m): $pl = $plan_curso[$m['id']] ?? null; $un = $ultima_nota[$m['id']] ?? null; ?>
+          <li>
+            <a href="<?= e(url('elemento.php?id=' . $m['id'] . '#plan')) ?>"><?= e($m['tipo'] === 'empleo' ? 'Yo' : nombre_corto($m['nombre'])) ?></a>
+            <span class="tenue"><?= e(implode(' · ', array_filter([
+                $pl && $pl['objetivo'] !== '' ? recortar($pl['objetivo'], 90) : 'Sin objetivo para este curso',
+                $un ? 'última nota ' . nota_es($un['nota']) . ' (' . $un['curso'] . ')' : '']))) ?></span>
           </li>
         <?php endforeach; ?>
       </ul>

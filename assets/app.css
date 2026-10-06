@@ -403,6 +403,19 @@ a.chip:hover { text-decoration: none; background: color-mix(in srgb, var(--c) 20
 .tarjeta-elemento .te-cabecera { position: relative; padding-left: 14px; }
 /* El color de la sección, en una marca vertical junto al nombre (no en el borde de la tarjeta redonda). */
 .tarjeta-elemento .te-cabecera::before { content: ""; position: absolute; left: 0; top: 3px; bottom: 3px; width: 4px; border-radius: 4px; background: var(--c-tinta); }
+/* Plan de desarrollo (includes/plan.php): un curso por bloque, el más reciente arriba. */
+.plan-curso { padding: 1rem 0; border-top: 1px solid var(--borde); }
+.plan-curso:first-of-type { border-top: 0; padding-top: 0; }
+.plan-cabecera { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .5rem; }
+.plan-cabecera h3 { font-size: 15px; font-weight: 700; letter-spacing: -.02em; margin: 0 .3rem 0 0; }
+.plan-objetivo { margin: .55rem 0 0; font-weight: 600; letter-spacing: -.01em; overflow-wrap: anywhere; }
+.plan-detalle, .plan-curso details.desplegable { margin: .5rem 0 0; }
+.plan-acciones { margin-top: .6rem; gap: .4rem; align-items: center; }
+.plan-acciones details.desplegable { margin: 0; }
+.plan-acciones form { margin: 0; }
+.plan-acciones details[open] { flex: 1 1 100%; }
+.plan-acciones details[open] ~ form { order: -1; }
+
 /* Persona del equipo (trabajo.php): la inicial en vez de la marca de color. */
 .tarjeta-miembro .te-cabecera { padding-left: 0; align-items: center; flex-wrap: nowrap; gap: .75rem; }
 .tarjeta-miembro .te-cabecera::before { display: none; }

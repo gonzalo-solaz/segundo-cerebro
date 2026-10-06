@@ -27,6 +27,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     borrar_registro($pdo, (int)($_POST['registro_id'] ?? 0), $id, $uid);
                     $ancla = '#historial';
                     break;
+                case 'plan':
+                    guardar_plan($pdo, $id, $_POST, $uid);
+                    flash('ok', 'Plan de desarrollo guardado.');
+                    $ancla = '#plan';
+                    break;
+                case 'borrar-plan':
+                    borrar_plan($pdo, (int)($_POST['plan_id'] ?? 0), $id, $uid);
+                    $ancla = '#plan';
+                    break;
                 case 'documento':
                     guardar_documento_subido($pdo, $id, (string)($_POST['titulo'] ?? ''), $_FILES['archivo'] ?? null, $uid);
                     flash('ok', 'Archivo guardado.');
@@ -150,6 +159,8 @@ if ($el['seccion'] === 'trabajo') {
         <p class="notas"><?= nl2br(e($el['notas'])) ?></p>
       <?php endif; ?>
     </section>
+
+    <?php if (lleva_plan($el)) pintar_plan($el, plan_de($pdo, $id), hoy()); ?>
 
     <?php // Notas largas: plegadas, para que no tapen los datos (3/10/2026: la ficha del Mini ocupaba dos pantallas de texto). ?>
     <?php if ($notas_largas): ?>

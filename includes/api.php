@@ -39,10 +39,12 @@ function api_ejecutar(PDO $pdo, array $p, ?array $archivo = null): array {
         case 'ficha':
             $el = elemento($pdo, (int)($datos['id'] ?? 0));
             if (!$el) throw new RuntimeException('Ese elemento no existe.');
-            return ['elemento' => $el,
-                    'vencimientos' => agenda($pdo, 3650, null, $el['id']),
-                    'registros' => registros_de($pdo, $el['id'], 50),
-                    'documentos' => documentos_de($pdo, $el['id'])];
+            $ficha = ['elemento' => $el,
+                      'vencimientos' => agenda($pdo, 3650, null, $el['id']),
+                      'registros' => registros_de($pdo, $el['id'], 50),
+                      'documentos' => documentos_de($pdo, $el['id'])];
+            if (lleva_plan($el)) $ficha['plan_desarrollo'] = plan_de($pdo, $el['id']);
+            return $ficha;
 
         case 'elemento':
             return api_guardar_elemento($pdo, $datos);
@@ -86,6 +88,14 @@ function api_ejecutar(PDO $pdo, array $p, ?array $archivo = null): array {
             foreach ($an['partidas'] as &$p) $p['items'] = array_map($quitar, $p['items']);
             unset($p);
             return $an;
+
+        case 'plan':
+            // Plan de desarrollo de una persona del equipo (o del empleo): un curso, con su objetivo,
+            // descripcion, niveles (de 0 a 4), autoevaluacion y nota (sobre 10). Si el curso ya existe,
+            // cambia solo lo que viene; blanco = borrar ese campo.
+            $eid = (int)($datos['elemento_id'] ?? 0);
+            $id = guardar_plan($pdo, $eid, $datos, null);
+            return ['plan_id' => $id, 'plan_desarrollo' => plan_de($pdo, $eid)];
 
         case 'precio':
             // Lo que costaba un contrato desde una fecha (para comparar con hace un año):

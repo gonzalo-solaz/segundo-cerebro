@@ -220,7 +220,22 @@ comprueba('…sin las archivadas', !str_contains($r['html'], 'Persona Que Se Fue
 pinta_bien('…que salen en «los que ya no están»', pedir('trabajo.php', ['p' => 'equipo', 'antiguos' => '1']), 'Persona Que Se Fue');
 $r = pedir('elemento.php', ['id' => (string)$id['companera']]);
 pinta_bien('la ficha de una persona del equipo lleva las pestañas de Trabajo', $r, 'trabajo.php?p=equipo');
-pinta_bien('…y su horario como lista', $r, '<strong>Martes:</strong>');
+pinta_bien('…y su bloque de plan de desarrollo', $r, 'Plan de desarrollo');
+$r = pedir('elemento.php', ['id' => (string)$id['companera']], ['accion' => 'plan', 'curso' => '2025-26', 'objetivo' => 'Manual de Dynamics',
+    'niveles' => "Nivel 0 = nada\nNivel 4 = todo", 'autoevaluacion' => '9,25', 'nota' => '8,5', 'descripcion' => '', 'notas' => '']);
+comprueba('guardar un curso del plan vuelve a su bloque', str_ends_with((string)$r['redireccion'], '#plan'), (string)$r['redireccion']);
+$r = pedir('elemento.php', ['id' => (string)$id['companera']]);
+pinta_bien('el curso sale en el bloque con su objetivo', $r, 'Manual de Dynamics');
+pinta_bien('…con la nota final', $r, 'Nota 8,5');
+pinta_bien('…y sus niveles', $r, 'Nivel 4 = todo');
+$r = pedir('elemento.php', ['id' => (string)$id['companera']], ['accion' => 'plan', 'curso' => '2025-27', 'objetivo' => 'x']);
+comprueba('un curso mal escrito no se guarda', str_contains($r['html'], 'FLASH:error'), substr($r['html'], -300));
+pinta_bien('el panel de Trabajo resume el plan del equipo', pedir('trabajo.php'), 'Plan de desarrollo 2026-27');
+pinta_bien('…con la última nota', pedir('trabajo.php'), 'última nota 8,5 (2025-26)');
+pinta_bien('la ficha del empleo también lleva el bloque', pedir('elemento.php', ['id' => (string)$id['empleo']]), 'Plan de desarrollo');
+$ficha_casa = pedir('elemento.php', ['id' => (string)$id['casa']]);
+comprueba('una casa no lleva plan de desarrollo', !str_contains($ficha_casa['html'], 'Plan de desarrollo'));
+pinta_bien('…y su horario como lista', pedir('elemento.php', ['id' => (string)$id['companera']]), '<strong>Martes:</strong>');
 pinta_bien('la ficha del empleo también lleva las pestañas', pedir('elemento.php', ['id' => (string)$id['empleo']]), 'aria-current="page">Mi puesto');
 $cache = sys_get_temp_dir() . '/sc-cache-' . getmypid();
 @mkdir($cache, 0777, true);
