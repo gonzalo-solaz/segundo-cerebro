@@ -40,7 +40,8 @@ function documentos_trabajo(PDO $pdo): array {
 // que ya no están) y tu entrada en la empresa (fecha de alta del empleo). Gonzalo, 6/10/2026: «utilizar la
 // fecha de incorporación del equipo para añadirlo en hitos» e «inclúyeme a mí». No se copian: una persona
 // nueva aparece sin hacer nada y cambiar la fecha en su ficha basta. Llevan el id de la ficha (el enlace
-// va a ella) y 'auto' => true. Sin «En el equipo desde», se usa la fecha de servicio continuo, y se dice.
+// va a ella) y 'auto' => true. Sin «En el equipo desde», se usa la de la empresa (`fecha_alta`, la de servicio
+// continuo de Workday), y se dice.
 function hitos_trabajo(PDO $pdo): array {
     $h = array_values(array_filter(elementos_de($pdo, 'trabajo'), static fn($e) => $e['tipo'] === 'hito'));
     $auto = static fn(array $el, string $nombre, string $fecha, string $categoria, string $notas = ''): array =>
@@ -48,7 +49,7 @@ function hitos_trabajo(PDO $pdo): array {
          'datos' => ['fecha' => $fecha, 'categoria' => $categoria, 'quien' => (string)($el['datos']['puesto'] ?? '')]];
     foreach (array_merge(equipo_trabajo($pdo), equipo_trabajo($pdo, false)) as $m) {
         $f = (string)($m['datos']['incorporacion'] ?? '');
-        $sc = $f === '' ? (string)($m['datos']['servicio_continuo'] ?? '') : '';
+        $sc = $f === '' ? (string)($m['datos']['fecha_alta'] ?? '') : '';
         if ($f !== '' || $sc !== '') {
             $h[] = $auto($m, 'Incorporación de ' . $m['nombre'], $f !== '' ? $f : $sc, 'Incorporación',
                 $sc !== '' ? 'Fecha de servicio continuo de Workday: falta la de incorporación al equipo en su ficha.' : '');

@@ -107,6 +107,57 @@ function secciones(): array {
     $horario = ['etiqueta' => 'Horario', 'tipo' => 'area', 'aparte' => true, 'lista' => true, 'destacado' => true,
                 'ayuda' => 'Una línea por día: «Lunes: 8:00-14:00 y 15:00-17:30». Otra con «Desde: 17/11/2025» si quieres.'];
 
+    // Tu ficha (empleo) y las del equipo (miembro) llevan LOS MISMOS campos (Gonzalo, 6/10/2026:
+    // «tanto la mía como las del equipo deben tener los mismos campos; hay campos como nóminas que
+    // nunca se rellenarán en el equipo»). Un campo vacío no sale en la ficha. Antes eran dos listas
+    // con claves distintas para lo mismo: la «Fecha de servicio continuo» del equipo es ahora
+    // `fecha_alta`, como la tuya. Lo que distingue a los dos tipos no son los campos: el empleo
+    // va a nombre de una persona de la familia y es el que lee las nóminas de finanzas.
+    $ficha_trabajo = [
+        'puesto' => ['etiqueta' => 'Puesto', 'tipo' => 'texto', 'resumen' => true],
+        'puesto_desde' => ['etiqueta' => 'En este puesto desde', 'tipo' => 'fecha'],
+        'primer_puesto' => ['etiqueta' => 'Puesto al entrar', 'tipo' => 'texto'],
+        'categoria' => ['etiqueta' => 'Grupo o categoría del convenio', 'tipo' => 'texto',
+            'ayuda' => 'Como sale en la nómina o en el contrato. Ej.: PAS · Titulado.'],
+        'relacion' => ['etiqueta' => 'Relación', 'tipo' => 'opcion',
+            'opciones' => ['Plantilla', 'Externo (ETT o empresa)', 'Becario', 'Otro']],
+        'contrato' => ['etiqueta' => 'Tipo de contrato', 'tipo' => 'opcion', 'resumen' => true,
+            'opciones' => ['Indefinido', 'Temporal', 'Fijo discontinuo', 'Prácticas o formación', 'Funcionario', 'Autónomo', 'Otro']],
+        'jornada' => ['etiqueta' => 'Jornada', 'tipo' => 'texto', 'ayuda' => 'Ej.: completa, 37,5 h a la semana.'],
+        'fecha_alta' => ['etiqueta' => 'En la empresa desde (antigüedad)', 'tipo' => 'fecha',
+            'ayuda' => 'La fecha de servicio continuo de Workday.'],
+        'incorporacion' => ['etiqueta' => 'En el equipo desde', 'tipo' => 'fecha'],
+        'fin_prueba' => ['etiqueta' => 'Fin del periodo de prueba', 'tipo' => 'fecha',
+            'vence' => 'Evaluar el periodo de prueba', 'aviso' => 30],
+        'fin_contrato' => ['etiqueta' => 'Fin del contrato', 'tipo' => 'fecha',
+            'vence' => 'Fin del contrato', 'aviso' => 60],
+        'revision_salarial' => ['etiqueta' => 'Próxima revisión salarial', 'tipo' => 'fecha',
+            'vence' => 'Revisión salarial', 'aviso' => 30, 'repetir' => 12],
+        // Sin aviso: es pasada. Sale como hito en la pestaña Hitos (hitos_trabajo()); la ficha, además, se archiva.
+        'baja' => ['etiqueta' => 'Dejó el equipo el', 'tipo' => 'fecha',
+            'ayuda' => 'Cuando se va. Sale en Hitos; archiva después la ficha para que pase a «Bajas».'],
+        'email' => ['etiqueta' => 'Email', 'tipo' => 'email'],
+        'telefono' => ['etiqueta' => 'Teléfono', 'tipo' => 'tel'],
+        'cif' => ['etiqueta' => 'CIF de la empresa', 'tipo' => 'texto'],
+        'centro' => ['etiqueta' => 'Centro de trabajo', 'tipo' => 'texto'],
+        'ceco' => ['etiqueta' => 'CECO del servicio', 'tipo' => 'texto', 'oculto' => true,
+            'ayuda' => 'El de tu ficha es el de las compras: sale arriba en la pestaña Compras; no se repite en Datos.'],
+        // Con las nóminas en finanzas, el bruto sale de ellas (dentro de la tarjeta Nóminas) y el
+        // campo no se pide: un dato, un origen (6/10/2026).
+        'bruto_anual' => ['etiqueta' => 'Salario bruto anual', 'tipo' => 'importe', 'sin_finanzas' => true],
+        'pagas' => ['etiqueta' => 'Número de pagas', 'tipo' => 'numero'],
+        'nominas_finanzas' => ['etiqueta' => 'Sus nóminas se llevan en Finanzas', 'tipo' => 'opcion', 'opciones' => ['Sí', 'No'], 'oculto' => true,
+            'ayuda' => 'Solo en tu ficha: con «Sí» enseña tus nóminas, leídas de la app de finanzas.'],
+        'horario' => $horario,
+        'funciones' => ['etiqueta' => 'Funciones', 'tipo' => 'area', 'aparte' => true],
+        'trayectoria' => ['etiqueta' => 'Puestos, contratos y categorías', 'tipo' => 'area', 'aparte' => true, 'lista' => true,
+            'ayuda' => 'Una línea por cambio: «15/11/2012: contrato indefinido». Lo principal va arriba, en sus campos.'],
+        'beneficios' => ['etiqueta' => 'Beneficios y retribución flexible', 'tipo' => 'area', 'aparte' => true, 'lista' => true,
+            'ayuda' => 'Una línea por beneficio: «Colegio de los hijos: en el CEU, especie exenta».'],
+        'condiciones' => ['etiqueta' => 'Condiciones y acuerdos', 'tipo' => 'area', 'aparte' => true,
+            'ayuda' => 'Teletrabajo, vacaciones, lo pactado con RRHH.'],
+    ];
+
     $s = [
         // -------------------------------------------------------------
         'vivienda' => [
@@ -565,69 +616,14 @@ function secciones(): array {
                 'empleo' => [
                     'nombre' => 'Empleo', 'ejemplo' => 'Universidad CEU Cardenal Herrera', 'persona' => 'obligatoria',
                     'persona_etiqueta' => 'Quién trabaja',
-                    'campos' => [
-                        'puesto' => ['etiqueta' => 'Puesto', 'tipo' => 'texto', 'resumen' => true],
-                        // La trayectoria, en datos y solo lo que cuenta (Gonzalo, 6/10/2026): cuándo
-                        // entraste y con qué puesto, y desde cuándo tienes el actual. Antes era una
-                        // lista plegada que mezclaba eso con la historia de la revisión salarial.
-                        'puesto_desde' => ['etiqueta' => 'En este puesto desde', 'tipo' => 'fecha'],
-                        'fecha_alta' => ['etiqueta' => 'Fecha de alta (antigüedad)', 'tipo' => 'fecha'],
-                        'primer_puesto' => ['etiqueta' => 'Puesto al entrar', 'tipo' => 'texto'],
-                        'categoria' => ['etiqueta' => 'Grupo o categoría del convenio', 'tipo' => 'texto',
-                            'ayuda' => 'Como sale en la nómina o en el contrato. Ej.: PAS · Titulado.'],
-                        'cif' => ['etiqueta' => 'CIF de la empresa', 'tipo' => 'texto'],
-                        'centro' => ['etiqueta' => 'Centro de trabajo', 'tipo' => 'texto'],
-                        'ceco' => ['etiqueta' => 'CECO del servicio', 'tipo' => 'texto', 'oculto' => true,
-                            'ayuda' => 'El centro de coste contra el que van las compras. Sale arriba en la pestaña Compras; no se repite en Datos.'],
-                        'contrato' => ['etiqueta' => 'Tipo de contrato', 'tipo' => 'opcion', 'resumen' => true,
-                            'opciones' => ['Indefinido', 'Temporal', 'Fijo discontinuo', 'Prácticas o formación', 'Funcionario', 'Autónomo', 'Otro']],
-                        'jornada' => ['etiqueta' => 'Jornada', 'tipo' => 'texto', 'ayuda' => 'Ej.: completa, 37,5 h a la semana.'],
-                        // Con las nóminas en finanzas, el bruto sale de ellas (Datos enseña el del año
-                        // pasado y el previsto) y el campo no se pide: un dato, un origen (6/10/2026).
-                        'bruto_anual' => ['etiqueta' => 'Salario bruto anual', 'tipo' => 'importe', 'sin_finanzas' => true],
-                        'pagas' => ['etiqueta' => 'Número de pagas', 'tipo' => 'numero'],
-                        'nominas_finanzas' => ['etiqueta' => 'Sus nóminas se llevan en Finanzas', 'tipo' => 'opcion', 'opciones' => ['Sí', 'No'], 'oculto' => true,
-                            'ayuda' => 'Con «Sí», la ficha enseña las nóminas del año y el cuadre con el banco, leídos de la app de finanzas. No se repite en Datos: ya se ve con la propia tarjeta de nóminas.'],
-                        'revision_salarial' => ['etiqueta' => 'Próxima revisión salarial', 'tipo' => 'fecha',
-                            'vence' => 'Revisión salarial', 'aviso' => 30, 'repetir' => 12],
-                        'fin_contrato' => ['etiqueta' => 'Fin del contrato', 'tipo' => 'fecha',
-                            'vence' => 'Fin del contrato', 'aviso' => 60],
-                        'beneficios' => ['etiqueta' => 'Beneficios y retribución flexible', 'tipo' => 'area', 'aparte' => true, 'lista' => true,
-                            'ayuda' => 'Una línea por beneficio: «Colegio de los hijos: en el CEU, especie exenta».'],
-                        'horario' => $horario,
-                        'condiciones' => ['etiqueta' => 'Condiciones y acuerdos', 'tipo' => 'area', 'aparte' => true,
-                            'ayuda' => 'Teletrabajo, vacaciones, lo pactado con RRHH.'],
-                    ],
+                    'campos' => $ficha_trabajo,
                 ],
                 // Las personas del equipo que diriges: fichas de trabajo, no personas de
                 // la familia (no entran en la app ni salen en Personas). Los datos de RRHH
                 // los manda Workday: aquí, lo que conviene tener a mano.
                 'miembro' => [
                     'nombre' => 'Persona del equipo', 'ejemplo' => 'Nombre y apellidos', 'persona' => null,
-                    'campos' => [
-                        'puesto' => ['etiqueta' => 'Puesto', 'tipo' => 'texto', 'resumen' => true],
-                        'categoria' => ['etiqueta' => 'Categoría', 'tipo' => 'texto', 'ayuda' => 'Ej.: Titulado superior.'],
-                        'relacion' => ['etiqueta' => 'Relación', 'tipo' => 'opcion',
-                            'opciones' => ['Plantilla', 'Externo (ETT o empresa)', 'Becario', 'Otro']],
-                        'contrato' => ['etiqueta' => 'Contrato', 'tipo' => 'opcion',
-                            'opciones' => ['Indefinido', 'Temporal', 'Prácticas o formación', 'Otro']],
-                        'incorporacion' => ['etiqueta' => 'En el equipo desde', 'tipo' => 'fecha'],
-                        'servicio_continuo' => ['etiqueta' => 'Fecha de servicio continuo', 'tipo' => 'fecha',
-                            'ayuda' => 'La de Workday (la antigüedad en la empresa).'],
-                        'fin_prueba' => ['etiqueta' => 'Fin del periodo de prueba', 'tipo' => 'fecha',
-                            'vence' => 'Evaluar el periodo de prueba', 'aviso' => 30],
-                        'fin_contrato' => ['etiqueta' => 'Fin del contrato', 'tipo' => 'fecha',
-                            'vence' => 'Fin del contrato', 'aviso' => 60],
-                        // Sin aviso: es pasada. Sale como hito en la pestaña Hitos (hitos_trabajo()); la ficha, además, se archiva.
-                        'baja' => ['etiqueta' => 'Dejó el equipo el', 'tipo' => 'fecha',
-                            'ayuda' => 'Cuando se va. Sale en Hitos; archiva después la ficha para que pase a «Los que ya no están».'],
-                        'email' => ['etiqueta' => 'Email', 'tipo' => 'email'],
-                        'telefono' => ['etiqueta' => 'Teléfono', 'tipo' => 'tel'],
-                        'horario' => $horario,
-                        'trayectoria' => ['etiqueta' => 'Contratos y categorías', 'tipo' => 'area', 'aparte' => true, 'lista' => true,
-                            'ayuda' => 'Una línea por cambio: «15/11/2012: contrato indefinido».'],
-                        'funciones' => ['etiqueta' => 'Funciones', 'tipo' => 'area', 'aparte' => true],
-                    ],
+                    'campos' => $ficha_trabajo,
                 ],
                 // Lo que compra el servicio, sobre todo licencias de software que se renuevan
                 // (Gonzalo, 6/10/2026; venía de Notion, «Compras del servicio de Com. Digital»).
@@ -638,7 +634,7 @@ function secciones(): array {
                     'nombre' => 'Compra o licencia', 'ejemplo' => 'Asana Premium', 'persona' => null,
                     // Un equipo de una persona (su ordenador) se enlaza a su ficha del equipo: allí sale en
                     // «Equipos y material» con la fecha de compra, y cada renovación es un apunte del historial.
-                    'enlace' => ['etiqueta' => 'Para quién', 'a' => [['trabajo', 'miembro']]],
+                    'enlace' => ['etiqueta' => 'Para quién', 'a' => [['trabajo', 'miembro'], ['trabajo', 'empleo']]],
                     'campos' => [
                         'uso' => ['etiqueta' => 'Para qué sirve', 'tipo' => 'texto', 'resumen' => true, 'ayuda' => 'Ej.: gestión de proyectos, banco de imágenes.'],
                         'categoria' => ['etiqueta' => 'Qué es', 'tipo' => 'opcion',

@@ -49,7 +49,7 @@ $tarjeta_miembro = static function (array $m, bool $tu = false) use ($sec, $hoy,
     $hoy_h = horario_de_hoy((string)($d['horario'] ?? ''), $hoy);
     $baja = (string)($d['baja'] ?? '');
     $en_equipo = $tu ? tiempo_desde($d['fecha_alta'] ?? null, $hoy)
-        : tiempo_desde($d['incorporacion'] ?? ($d['servicio_continuo'] ?? null), $baja !== '' && $baja < $hoy ? $baja : $hoy);
+        : tiempo_desde($d['incorporacion'] ?? ($d['fecha_alta'] ?? null), $baja !== '' && $baja < $hoy ? $baja : $hoy);
     $prox = $proximo[$m['id']] ?? null;
     ?>
     <a class="tarjeta tarjeta-elemento tarjeta-miembro<?= $tu ? ' tarjeta-responsable' : '' ?>" href="<?= e(url('elemento.php?id=' . $m['id'])) ?>" style="--c:<?= e($sec['color']) ?>">
@@ -515,7 +515,8 @@ $curso = curso_de($hoy);
 $plan_curso = plan_del_curso($pdo, $curso);
 $ultima_nota = ultima_nota_por_elemento($pdo);
 $con_plan = array_merge($empleo ? [$empleo] : [], $equipo);
-$colgados = $empleo ? elementos_enlazados($pdo, $empleo['id']) : [];
+// Lo que cuelga del empleo menos tus equipos y material (esos van en tu ficha, como en las del equipo).
+$colgados = $empleo ? array_values(array_filter(elementos_enlazados($pdo, $empleo['id']), static fn($h) => $h['tipo'] !== 'compra')) : [];
 $docs_equipo = documentos_trabajo($pdo);
 $ultimos_hitos = array_slice($hitos, 0, 3);
 $datos_puesto = [];

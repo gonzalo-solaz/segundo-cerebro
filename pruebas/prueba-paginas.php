@@ -213,6 +213,15 @@ $id['convenio'] = guardar_elemento($pdo, 'trabajo', 'convenio', ['nombre' => 'Co
 pinta_bien('sin clave de finanzas, la ficha del empleo lo explica', pedir('elemento.php', ['id' => (string)$id['empleo']]), 'Falta la clave de finanzas');
 pinta_bien('la ficha del empleo lleva en sus datos desde cuándo tienes el puesto', pedir('elemento.php', ['id' => (string)$id['empleo']]), 'En este puesto desde');
 pinta_bien('…y el puesto con el que entraste', pedir('elemento.php', ['id' => (string)$id['empleo']]), 'Diseñador web');
+comprueba('tu ficha y las del equipo tienen los mismos campos', array_keys(tipo_def('trabajo', 'empleo')['campos']) === array_keys(tipo_def('trabajo', 'miembro')['campos']));
+$id['mi_portatil'] = guardar_elemento($pdo, 'trabajo', 'compra', ['nombre' => 'Portátil de Gonzalo', 'enlace_id' => $id['empleo'],
+    'datos' => ['categoria' => 'Hardware', 'primera_compra' => '2024-03-01']]);
+$r_emp = pedir('elemento.php', ['id' => (string)$id['empleo']]);
+pinta_bien('tu ficha también lleva «Equipos y material»', $r_emp, 'Equipos y material');
+pinta_bien('…con tu ordenador', $r_emp, 'Portátil de Gonzalo');
+comprueba('…y el botón para añadir solo compras, no convenios', str_contains($r_emp['html'], 't=compra&amp;enlace=' . $id['empleo']) && !str_contains($r_emp['html'], 't=convenio&amp;enlace=' . $id['empleo']));
+comprueba('tu ordenador no sale en «Convenio y contactos» del panel', !str_contains(pedir('trabajo.php')['html'], 'Portátil de Gonzalo'));
+borrar_elemento($pdo, $id['mi_portatil']); // más abajo se prueba la pestaña Compras vacía
 comprueba('la ficha del empleo ya no repite el convenio (está en el panel)', !str_contains(pedir('elemento.php', ['id' => (string)$id['empleo']])['html'], 'Convenio de prueba'));
 // Trabajo: panel propio con pestañas (Panel · Equipo · …; sin «Mi puesto»: tu ficha va delante en el Equipo).
 $r = pedir('seccion.php', ['s' => 'trabajo']);

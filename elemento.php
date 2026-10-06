@@ -96,9 +96,11 @@ if ($el['seccion'] === 'vivienda' && $el['tipo'] === 'inmueble') {
 $titulos_hijos = ['contratos' => ['Contratos y seguros', 'contrato'], 'vivienda' => ['Equipamiento y materiales', 'casa'],
                   'trabajo' => ['Convenio y contactos', 'maletin']];
 // En una persona del equipo, lo que tiene enlazado son sus equipos (su ordenador…).
-if ($el['seccion'] === 'trabajo' && $el['tipo'] === 'miembro') $titulos_hijos['trabajo'] = ['Equipos y material', 'maletin'];
-// El convenio y los contactos del empleo ya están en el panel de Trabajo (Gonzalo, 6/10/2026): no se repiten en su ficha.
-if ($el['seccion'] === 'trabajo' && $el['tipo'] === 'empleo') unset($titulos_hijos['trabajo']);
+// Tu ficha y las del equipo son iguales (Gonzalo, 6/10/2026): las dos llevan «Equipos y material» (las
+// compras enlazadas a la persona: su ordenador…). El convenio y los contactos que cuelgan de tu empleo
+// no salen aquí: están en el panel de Trabajo.
+$solo_equipos = lleva_plan($el);
+if ($solo_equipos) $titulos_hijos['trabajo'] = ['Equipos y material', 'maletin'];
 // Las nóminas del empleo se leen de finanzas (no se copian aquí): ver includes/finanzas.php.
 $nominas = null;
 if ($el['seccion'] === 'trabajo' && $el['tipo'] === 'empleo' && ($el['datos']['nominas_finanzas'] ?? '') === 'Sí') {
@@ -107,8 +109,8 @@ if ($el['seccion'] === 'trabajo' && $el['tipo'] === 'empleo' && ($el['datos']['n
 }
 $grupos_hijos = [];
 foreach ($titulos_hijos as $gs => [$titulo, $icono_g]) {
-    $gh = array_values(array_filter($hijos, static fn($h) => $h['seccion'] === $gs));
-    $gt = array_values(array_filter($tipos_hijos, static fn($t) => $t[0] === $gs));
+    $gh = array_values(array_filter($hijos, static fn($h) => $h['seccion'] === $gs && (!$solo_equipos || $gs !== 'trabajo' || $h['tipo'] === 'compra')));
+    $gt = array_values(array_filter($tipos_hijos, static fn($t) => $t[0] === $gs && (!$solo_equipos || $gs !== 'trabajo' || $t[1] === 'compra')));
     if ($gh || $gt) $grupos_hijos[$gs] = ['titulo' => $titulo, 'icono' => $icono_g, 'hijos' => $gh, 'tipos' => $gt];
 }
 // La ficha médica reúne lo de su persona: tratamientos, graduación de gafas y control de peso.
