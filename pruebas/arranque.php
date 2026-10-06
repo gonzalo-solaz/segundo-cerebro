@@ -59,8 +59,7 @@ function bd_nueva(): PDO {
 /** Una familia y una casa de ejemplo (fechas relativas a SC_HOY = 3/10/2026). */
 // Lo que devuelve la acción nomina_estado de la API de finanzas (recortado):
 // 2026: enero con el variable por objetivos, junio con su extra, julio con el
-// campus (se cobra una vez) y agosto. Lo que la empresa abona aparte pasa de
-// 82,78 a 106,96 € en junio (cambio de nivel) y agosto descuadra (110 €).
+// campus (se cobra una vez) y agosto.
 function nominas_de_ejemplo(): array {
     $fila = static fn($mes, $tipo, $liq, $banco, $dif, $variable = 0.0) => ['mes' => $mes, 'tipo' => $tipo, 'salario_base' => 1941.45,
         'liquido' => $liq, 'banco' => $banco, 'dif' => $dif, 'cambia' => false, 'variable' => $variable];

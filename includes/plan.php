@@ -165,13 +165,18 @@ function pintar_plan(array $el, array $plan, string $hoy): void {
     $nuevo = ['curso' => curso_de($hoy)] + $vacio;
     foreach ($plan as $p) if ($p['curso'] === $nuevo['curso']) { $nuevo['curso'] = ''; break; }
     ?>
-    <section class="tarjeta" id="plan">
-      <div class="tarjeta-cabecera">
-        <h2><?= icono('bombilla') ?>Plan de desarrollo</h2>
-        <?php if (count($evol) > 1): ?>
-          <span class="tenue" title="Nota final de cada curso"><?= e(implode(' → ', array_map(static fn($x) => nota_es($x['nota']), $evol))) ?></span>
-        <?php endif; ?>
-      </div>
+    <?php // Plegado (Gonzalo, 6/10/2026); al volver de guardar, «#plan» lo abre (app.js). ?>
+    <details class="tarjeta tarjeta-plegable" id="plan">
+      <summary>
+        <div class="titulo-plegable">
+          <h2><?= icono('bombilla') ?>Plan de desarrollo</h2>
+          <?php if (count($evol) > 1): ?>
+            <span class="tenue" title="Nota final de cada curso">Notas: <?= e(implode(' → ', array_map(static fn($x) => nota_es($x['nota']), $evol))) ?></span>
+          <?php elseif ($plan): ?>
+            <span class="tenue"><?= count($plan) ?> curso<?= count($plan) === 1 ? '' : 's' ?></span>
+          <?php endif; ?>
+        </div>
+      </summary>
       <?php if (!$plan): ?><p class="vacio-mini">Sin objetivos ni notas todavía. Se apunta un curso (septiembre a agosto) con su objetivo, sus niveles de 0 a 4 y la nota.</p><?php endif; ?>
       <?php foreach ($plan as $p): ?>
         <article class="plan-curso">
@@ -206,6 +211,6 @@ function pintar_plan(array $el, array $plan, string $hoy): void {
         <summary class="btn btn-sutil"><?= icono('mas') ?>Añadir un curso</summary>
         <?php formulario_plan($el['id'], $nuevo, true); ?>
       </details>
-    </section>
+    </details>
     <?php
 }

@@ -381,9 +381,7 @@ comprueba('cuenta nóminas y pagas extra (de 3)', $rn['n_nominas'] === 4 && $rn[
 comprueba('suma el líquido del año, extra y variable incluidos', abs($rn['liquido'] - 9968.04) < 0.01, (string)$rn['liquido']);
 comprueba('a 3 de octubre falta la de septiembre', $rn['falta'] === '2026-09', (string)$rn['falta']);
 comprueba('a mediados de septiembre no falta ninguna', resumen_nominas($anios_fin, '2026-09-15')['falta'] === null);
-comprueba('enero con el variable cuadra (no es un descuadre)', $rn['filas'][0]['estado'] === 'ok' && $rn['filas'][0]['variable'] === 368.04);
-comprueba('un cambio que se mantiene es un cambio de nivel, sin aviso', $rn['cambios'] === [['mes' => '2026-06', 'de' => 82.78, 'a' => 106.96]]);
-comprueba('el mes que se sale es un descuadre', $rn['descuadres'] === [['mes' => '2026-08', 'desvio' => 3.04]], json_encode($rn['descuadres']));
+comprueba('el variable por objetivos va en su mes de cobro (enero)', $rn['filas'][0]['variable'] === 368.04 && $rn['filas'][1]['variable'] === 0.0);
 comprueba('bruto hasta hoy: recibos sin especie ni flexible, más el variable', abs($rn['bruto']['hasta'] - 11087.25) < 0.01, (string)$rn['bruto']['hasta']);
 comprueba('bruto previsto: lo que falta como el último recibo, sin lo de una vez', abs($rn['bruto']['proyectado'] - 23135.95) < 0.01 && !$rn['bruto']['completo'], (string)$rn['bruto']['proyectado']);
 comprueba('y el del año anterior', $rn['bruto_anterior']['anio'] === 2025);

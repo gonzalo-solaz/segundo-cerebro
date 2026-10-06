@@ -161,48 +161,30 @@ function bruto_nominas(array $a): array {
 /**
  * Lo que enseña la ficha del empleo, del año más reciente: una fila por mes
  * (la nómina, la paga extra y el variable por objetivos, que llegan juntos al
- * banco), el líquido y el bruto, qué nómina falta por grabar y si la
- * diferencia con el banco descuadra. Función pura, para probarla sin red.
+ * banco), el líquido y el bruto, y qué nómina falta por grabar. Función
+ * pura, para probarla sin red.
  *
- * La diferencia (banco − líquido) es lo que la empresa abona aparte del recibo
- * y debe ser estable. Un mes que se sale y el siguiente vuelve = descuadre
- * (aviso); un mes que cambia y el siguiente sigue igual = cambio de nivel
- * (se cuenta, sin aviso: en febrero de 2026 pasó de 82,78 a 106,96 €). Antes
- * se marcaba cualquier cambio respecto al mes anterior y enero no cuadraba
- * nunca porque el variable no entraba (6/10/2026).
+ * Sin la diferencia con el banco ni avisos de descuadre (Gonzalo, 6/10/2026):
+ * la diferencia es el seguro médico que la empresa abona aparte (106,96 €/mes
+ * desde febrero de 2026) y el cuadre fino ya lo vigila finanzas. El variable
+ * por objetivos va en la columna de la paga extra de enero. Si finanzas aún
+ * no manda `variable` en el cuadre, se saca de la lista `variable` del año.
  */
 function resumen_nominas(array $anios, string $hoy): ?array {
     if (!$anios) return null;
     usort($anios, static fn($a, $b) => (int)$a['anio'] <=> (int)$b['anio']);
     $a = end($anios);
 
-    // Las diferencias de todos los años, en orden, para ver qué es nivel y qué descuadre.
-    $difs = [];
-    foreach ($anios as $x) foreach ($x['cuadre'] ?? [] as $f) {
-        if (($f['dif'] ?? null) !== null) $difs[$f['mes']] = (float)$f['dif'];
-    }
-    ksort($difs);
-    $claves = array_keys($difs);
-    $estado = []; $descuadres = []; $cambios = []; $ref = null;
-    foreach ($claves as $i => $mes) {
-        $d = $difs[$mes];
-        if ($ref === null || abs($d - $ref) <= 0.02) { $ref = $d; continue; }
-        $sig = isset($claves[$i + 1]) ? $difs[$claves[$i + 1]] : null;
-        if ($sig !== null && abs($sig - $d) <= 0.02) {
-            $estado[$mes] = 'cambio'; $cambios[] = ['mes' => $mes, 'de' => $ref, 'a' => $d]; $ref = $d;
-        } else {
-            $estado[$mes] = 'descuadre'; $descuadres[] = ['mes' => $mes, 'desvio' => round($d - $ref, 2)];
-        }
-    }
-
     $filas = [];
     foreach ($a['cuadre'] ?? [] as $f) {
         $mes = $f['mes'];
-        $filas[$mes] ??= ['mes' => $mes, 'nomina' => null, 'extra' => null, 'variable' => 0.0, 'banco' => null, 'dif' => null, 'estado' => null];
+        $filas[$mes] ??= ['mes' => $mes, 'nomina' => null, 'extra' => null, 'variable' => 0.0, 'banco' => null];
         $filas[$mes][($f['tipo'] ?? 'mensual') === 'extra' ? 'extra' : 'nomina'] = (float)$f['liquido'];
-        $filas[$mes]['variable'] += (float)($f['variable'] ?? 0);
         if (($f['banco'] ?? null) !== null) $filas[$mes]['banco'] = (float)$f['banco'];
-        if (($f['dif'] ?? null) !== null) { $filas[$mes]['dif'] = (float)$f['dif']; $filas[$mes]['estado'] = $estado[$mes] ?? 'ok'; }
+    }
+    foreach ($a['variable'] ?? [] as $v) {
+        $mes = substr((string)($v['fecha_cobro'] ?? ''), 0, 7);
+        if (isset($filas[$mes])) $filas[$mes]['variable'] = round($filas[$mes]['variable'] + (float)($v['liquido'] ?? $v['importe'] ?? 0), 2);
     }
     ksort($filas);
     $liquido = 0.0; $n_nominas = 0; $n_extras = 0;
@@ -224,14 +206,11 @@ function resumen_nominas(array $anios, string $hoy): ?array {
     $ult = $meses ? end($meses) : null;
     $anterior = count($anios) > 1 ? $anios[count($anios) - 2] : null;
     $pagas = (int)($a['pagas_totales'] ?? 0);
-    $en_el_anio = static fn($l) => array_values(array_filter($l, static fn($x) => str_starts_with($x['mes'], (string)$a['anio'])));
     return [
         'anio' => (int)$a['anio'], 'filas' => array_values($filas), 'liquido' => round($liquido, 2),
         'n' => $n_nominas + $n_extras, 'n_nominas' => $n_nominas, 'n_extras' => $n_extras,
         'pagas' => $pagas, 'extras_del_anio' => max(0, $pagas - 12),
         'falta' => $falta,
-        'descuadres' => $en_el_anio($descuadres), 'cambios' => $en_el_anio($cambios),
-        'habitual' => $ref,
         'bruto' => bruto_nominas($a),
         'bruto_anterior' => $anterior ? bruto_nominas($anterior) : null,
         'salario_base' => $ult ? (float)($ult['campos']['salario_base'] ?? 0) : null,

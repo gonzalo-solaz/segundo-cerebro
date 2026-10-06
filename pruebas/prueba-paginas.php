@@ -374,8 +374,9 @@ pinta_bien('con clave, enseña el líquido del año leído de finanzas', $r, '9.
 pinta_bien('las nóminas nacen plegadas, con el bruto previsto a la vista', $r, '<details class="tarjeta tarjeta-plegable" id="nominas">');
 pinta_bien('…bruto previsto en la línea de resumen', $r, 'Bruto 2026: ≈ 23.135,95 € previsto');
 pinta_bien('y avisa de la nómina que falta', $r, 'Falta grabar la nómina de septiembre 2026');
-pinta_bien('y del mes que no cuadra con el banco', $r, 'Agosto 2026 no cuadra: el banco ingresó 3,04 € más de lo habitual');
-pinta_bien('el cambio de nivel se cuenta sin aviso', $r, 'En junio 2026 pasó de 82,78 € a 106,96 €');
+pinta_bien('el variable de enero, en la columna de la paga extra', $r, '368,04 €<br><span class="tenue">variable</span>');
+comprueba('sin columna de diferencia ni avisos de descuadre', !str_contains($r['html'], '>Diferencia</th>') && !str_contains($r['html'], 'no cuadra'));
+pinta_bien('el plan de desarrollo también nace plegado', pedir('elemento.php', ['id' => (string)$id['empleo']]), '<details class="tarjeta tarjeta-plegable" id="plan">');
 // Finanzas: el panel de finanzas montado dentro. En las pruebas no hay red: se
 // comprueba que, si finanzas no contesta, se monta la última copia y se dice.
 file_put_contents($cache . '/finanzas-panel.json', json_encode(['t' => time(), 'leido_en' => '2026-10-03 08:00:00', 'datos' => [

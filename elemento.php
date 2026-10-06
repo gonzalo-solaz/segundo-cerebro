@@ -210,7 +210,7 @@ if ($el['seccion'] === 'trabajo') {
     <?php // Nóminas: plegadas (Gonzalo, 6/10/2026), con el bruto a la vista en la línea de resumen. ?>
     <?php if ($nominas !== null):
         $rn = $nominas['resumen'];
-        $avisos_nom = $rn ? count($rn['descuadres']) + ($rn['falta'] ? 1 : 0) : 0;
+        $avisos_nom = ($rn['falta'] ?? null) ? 1 : 0;
         $bruto = $rn['bruto'] ?? null; $bruto_ant = $rn['bruto_anterior'] ?? null;
         $linea_nom = [];
         if ($bruto) $linea_nom[] = 'Bruto ' . $bruto['anio'] . ($bruto['completo'] ? ': ' : ': ≈ ') . eur($bruto['proyectado']) . ($bruto['completo'] ? '' : ' previsto');
@@ -245,32 +245,23 @@ if ($el['seccion'] === 'trabajo') {
             <?php if ($bruto && !$bruto['completo']): ?>El previsto suma lo que falta como el último recibo, sin lo que se cobra una vez.<?php endif; ?>
           </p>
           <?php if ($rn['falta']): ?><div class="flash flash-aviso">Falta grabar la nómina de <?= e(mes_es($rn['falta'])) ?>.</div><?php endif; ?>
-          <?php foreach ($rn['descuadres'] as $dq): ?>
-            <div class="flash flash-aviso"><?= e(ucfirst(mes_es($dq['mes']))) ?> no cuadra: el banco ingresó <?= e(eur(abs($dq['desvio']))) ?> <?= $dq['desvio'] > 0 ? 'más' : 'menos' ?> de lo habitual. Mira ese recibo en finanzas.</div>
-          <?php endforeach; ?>
           <div class="tabla-scroll"><table class="tabla">
-            <thead><tr><th>Mes</th><th class="num">Nómina</th><th class="num">Paga extra</th><th class="num">Banco</th><th class="num">Diferencia</th></tr></thead>
+            <thead><tr><th>Mes</th><th class="num">Nómina</th><th class="num">Paga extra</th><th class="num">Banco</th></tr></thead>
             <tbody>
               <?php foreach (array_reverse($rn['filas']) as $f): ?>
                 <tr>
                   <td><?= e(ucfirst(mes_es($f['mes']))) ?></td>
-                  <td class="num"><?= $f['nomina'] !== null ? e(eur($f['nomina'])) : '' ?><?php if ($f['variable'] > 0): ?><br><span class="tenue">+ <?= e(eur($f['variable'])) ?> variable</span><?php endif; ?></td>
-                  <td class="num"><?= $f['extra'] !== null ? e(eur($f['extra'])) : '' ?></td>
+                  <td class="num"><?= $f['nomina'] !== null ? e(eur($f['nomina'])) : '' ?></td>
+                  <?php // El variable por objetivos (enero) va con las extras: llega aparte del recibo mensual. ?>
+                  <td class="num"><?= $f['extra'] !== null ? e(eur($f['extra'])) : '' ?><?php if ($f['variable'] > 0): ?><?= $f['extra'] !== null ? '<br>' : '' ?><?= e(eur($f['variable'])) ?><br><span class="tenue">variable</span><?php endif; ?></td>
                   <td class="num"><?= $f['banco'] !== null ? e(eur($f['banco'])) : '' ?></td>
-                  <td class="num"><?= $f['dif'] === null ? '' : ($f['estado'] === 'descuadre' ? '<strong class="texto-aviso">' . e(eur($f['dif'])) . '</strong>' : e(eur($f['dif']))) ?></td>
                 </tr>
               <?php endforeach; ?>
             </tbody>
           </table></div>
-          <p class="tenue">
-            Diferencia: lo que el banco ingresa además del recibo (lo que la empresa abona aparte<?= $rn['habitual'] !== null ? ', hoy ' . e(eur($rn['habitual'])) . ' al mes' : '' ?>). Lo normal es que no cambie.
-            <?php foreach ($rn['cambios'] as $cb): ?>En <?= e(mes_es($cb['mes'])) ?> pasó de <?= e(eur($cb['de'])) ?> a <?= e(eur($cb['a'])) ?> y se ha mantenido.<?php endforeach; ?>
-            El variable por objetivos se cobra en enero con la nómina.
-          </p>
         <?php elseif (!$nominas['error']): ?>
           <p class="vacio-mini">Finanzas aún no tiene ninguna nómina grabada.</p>
         <?php endif; ?>
-        <p class="tenue">De la app de finanzas<?= $nominas['leido_en'] ? ' · leído el ' . e(fecha_corta(substr($nominas['leido_en'], 0, 10)) . ' a las ' . substr($nominas['leido_en'], 11, 5)) : '' ?>.</p>
         <?php if (es_admin() && FINANZAS_URL !== ''): ?>
           <a class="btn btn-sutil" href="<?= e(PASE_CLAVE !== '' ? url('finanzas-pantalla.php?p=nomina') : rtrim(FINANZAS_URL, '/') . '/nomina.php') ?>"><?= icono('externo') ?>Abrir en finanzas</a>
         <?php endif; ?>
