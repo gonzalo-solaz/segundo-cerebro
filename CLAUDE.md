@@ -350,9 +350,9 @@ trae kilómetros en 2025-12 ni 2026-09, y `km` queda en 219.263 (mayo 2025). Es 
 Hanway (id 13) tiene `proxima_itv` = 21/01/2025 y el T3 (id 17) = 22/12/2016, así que salen como
 **vencidas** en la agenda. Es deliberado: la «fecha de alerta» de la DGT es cuándo tocaba pasarla,
 y sirve para saber que está caducada. El apunte 53 de la Hanway (21/01/2023, 33,07 €) SÍ fue su
-ITV (la pasó ese día; queda como «Otro»: el historial de vehículos NO tiene tipo «ITV», comprobado el
-8/10/2026). Cuando pase la ITV de verdad: apuntar el `registro` (tipo «Otro», título «ITV») y poner la
-nueva `proxima_itv` (marcar «hecho» el aviso).
+ITV (la pasó ese día). El historial de vehículos tiene tipo «ITV» desde el 8/10/2026 (antes no, y se
+apuntaban como «Otro»); el 53 se pasó a ITV ese día. Cuando pase la ITV de verdad: apuntar el `registro`
+tipo ITV y poner la nueva `proxima_itv` (marcar «hecho» el aviso).
 El T3 sigue de baja temporal: el aviso vencido no significa que deba circular.
 
 **Mini Cooper S JCW (2005) traído de Notion (3/10/2026, petición de Gonzalo):** vehículos, id 24, a nombre de Gonzalo (persona 1), 23 apuntes de historial (compra 1.800 € el 29/12/2025, transporte 1.100 € y las compras de piezas hasta el 27/05/2026). **Importado de Alemania y SIN matricular en España**: la ficha no tiene matrícula ni fecha de matriculación a propósito (el campo `matricula` no es obligatorio); cuando se matricule, rellenarlos y añadir la ITV. Notion dice que todo funciona excepto el motor. No repetir. Script en `private/importar-notion/mini-notion.py`. Sin traer: Allroad C5 0913CMM, Polo y los 'coches de interés'.

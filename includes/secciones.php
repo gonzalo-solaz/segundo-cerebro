@@ -249,7 +249,7 @@ function secciones(): array {
                 ['Seguro del vehículo', 12, 45],
                 ['Cambio de aceite y filtros', 12, 21], ['Cambio de neumáticos', 0, 15],
             ],
-            'registros' => ['tipos' => ['Mantenimiento', 'Reparación', 'Lectura de kilómetros', 'Repostaje', 'Multa', 'Otro'],
+            'registros' => ['tipos' => ['Mantenimiento', 'Reparación', 'ITV', 'Lectura de kilómetros', 'Repostaje', 'Multa', 'Otro'],
                             'valor' => 'Kilómetros', 'unidad' => 'km', 'actualiza' => 'km'],
         ],
 
