@@ -502,6 +502,7 @@ details.tarjeta-plegable > .subtitulo:first-of-type { margin-top: 0; }
 .historial .h-editar[open] > summary { margin-bottom: 0; }
 .lista-hechos li { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
 .lista-hechos form { margin: 0; }
+.lista-hechos .btn-icono .ico { color: inherit; margin: 0; }
 .actividad li { padding: .6rem 0; border-top: 1px solid var(--borde); font-size: 14px; color: var(--texto-2); }
 .actividad li:first-child { border-top: 0; padding-top: 0; }
 .actividad strong { color: var(--texto); }
