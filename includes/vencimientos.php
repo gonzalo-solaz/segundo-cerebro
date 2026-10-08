@@ -172,6 +172,18 @@ function marcar_hecho(PDO $pdo, int $id, ?int $usuario_id = null): ?string {
                 cambiar_dato_elemento($pdo, $v['elemento_id'], substr($v['origen'], 6), $siguiente);
             }
         }
+        // Un aviso suelto (una cita, una llamada…) que se da por hecho pasa al historial de su ficha;
+        // los automáticos no: vienen de un campo y el apunte real lo hace quien paga o pasa la revisión.
+        if (!$v['automatico'] && $v['elemento_id']) {
+            $conf = (seccion($v['seccion'])['registros'] ?? null);
+            if ($conf && in_array('Otro', $conf['tipos'], true)) {
+                crear_registro($pdo, [
+                    'elemento_id' => $v['elemento_id'], 'tipo' => 'Otro', 'fecha' => hoy(),
+                    'titulo' => recortar(titulo_sin_elemento($v['titulo'], (string)($v['elemento_nombre'] ?? '')), 150),
+                    'notas' => (string)($v['notas'] ?? ''),
+                ], $usuario_id);
+            }
+        }
         anotar($pdo, $usuario_id, "marcó como hecho «{$v['titulo']}»" . ($siguiente ? ' (el siguiente, el ' . fecha_es($siguiente) . ')' : ''));
         $pdo->commit();
     } catch (Throwable $e) {
