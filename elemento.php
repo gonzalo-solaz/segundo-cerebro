@@ -322,6 +322,7 @@ if ($el['seccion'] === 'trabajo') {
               <li>
                 <a href="<?= e(url('elemento.php?id=' . $h['id'])) ?>"><?= e($h['nombre']) ?></a>
                 <span class="tenue"><?= e(implode(' · ', $linea)) ?></span>
+                <a class="btn btn-sutil" href="<?= e(url('elemento-editar.php?id=' . $h['id'])) ?>"><?= icono('editar') ?>Editar</a>
               </li>
             <?php endforeach; ?>
           </ul>

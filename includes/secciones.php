@@ -342,7 +342,7 @@ function secciones(): array {
                 ['Analítica', 12, 21], ['Vacuna de la gripe', 12, 21],
             ],
             'registros' => ['tipos' => ['Consulta', 'Analítica', 'Prueba', 'Medición', 'Peso', 'Cintura', 'Grasa corporal',
-                                        'Vacuna', 'Urgencia', 'Otro'],
+                                        'Vacuna', 'Cambio de pauta', 'Urgencia', 'Otro'],
                             'valor' => 'Medida', 'unidad' => '',
                             'unidades' => ['Peso' => 'kg', 'Cintura' => 'cm', 'Grasa corporal' => '%']],
         ],

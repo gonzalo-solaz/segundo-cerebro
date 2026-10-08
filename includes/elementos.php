@@ -251,6 +251,17 @@ function guardar_elemento(PDO $pdo, string $seccion, string $tipo, array $entrad
         }
         sincronizar_vencimientos_campos($pdo, $id, $seccion, $tipo, $f['nombre'], $f['datos']);
         registrar_cambio_precio($pdo, $id, $actual ?? null, $f['datos']);
+        // Tratamientos: cada cambio de pauta (dosis) queda en el historial, para ver cuándo sube o baja.
+        if ($seccion === 'salud' && $tipo === 'tratamiento') {
+            $antes = trim((string)($actual['datos']['pauta'] ?? ''));
+            $ahora_p = trim((string)($f['datos']['pauta'] ?? ''));
+            if ($ahora_p !== '' && $ahora_p !== $antes) {
+                crear_registro($pdo, [
+                    'elemento_id' => $id, 'tipo' => 'Cambio de pauta', 'fecha' => hoy(),
+                    'titulo' => $antes === '' ? "Pauta: {$ahora_p}" : "Pauta: {$antes} → {$ahora_p}",
+                ], $usuario_id);
+            }
+        }
         anotar($pdo, $usuario_id, "{$verbo} «{$f['nombre']}» en " . seccion($seccion)['nombre']);
         $pdo->commit();
     } catch (Throwable $e) {
