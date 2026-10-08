@@ -351,7 +351,9 @@ Hanway (id 13) tiene `proxima_itv` = 21/01/2025 y el T3 (id 17) = 22/12/2016, as
 **vencidas** en la agenda. Es deliberado: la «fecha de alerta» de la DGT es cuándo tocaba pasarla,
 y sirve para saber que está caducada. El apunte 53 de la Hanway (21/01/2023, 33,07 €) SÍ fue su
 ITV (la pasó ese día). El historial de vehículos tiene tipo «ITV» desde el 8/10/2026 (antes no, y se
-apuntaban como «Otro»); el 53 se pasó a ITV ese día. Cuando pase la ITV de verdad: apuntar el `registro`
+apuntaban como «Otro»); ese día se pasaron a tipo ITV las 14 que había (Hanway 53; Audi 34, 42, 46, 51; T4 67,
+74, 81, 86; T3 89; Vitara 123, 127, 132, 135), sin tocar nada más. No repetir. El Astra no tiene ninguna ITV
+apuntada (Notion no las trae). Cuando pase la ITV de verdad: apuntar el `registro`
 tipo ITV y poner la nueva `proxima_itv` (marcar «hecho» el aviso).
 El T3 sigue de baja temporal: el aviso vencido no significa que deba circular.
 
