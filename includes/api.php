@@ -67,6 +67,21 @@ function api_ejecutar(PDO $pdo, array $p, ?array $archivo = null): array {
             return ['siguiente' => marcar_hecho($pdo, $id, null)];
 
         case 'registro':
+            // Con «id», corrige ese apunte: cambia solo lo que viene (en blanco = vaciar ese campo).
+            // Los kilómetros de la ficha no se tocan, como al corregirlo en la web.
+            if (!empty($datos['id'])) {
+                $r = registro($pdo, (int)$datos['id']);
+                if (!$r) throw new RuntimeException('Ese apunte no existe.');
+                // La unidad que puso su tipo (kg del Peso) no se arrastra: si cambia el tipo, se pone la del nuevo.
+                $conf = seccion(elemento($pdo, (int)$r['elemento_id'])['seccion'])['registros'];
+                $unidad = $r['unidad'] === (string)($conf['unidades'][$r['tipo']] ?? $conf['unidad'] ?? '') ? '' : $r['unidad'];
+                actualizar_registro($pdo, (int)$r['id'], (int)$r['elemento_id'], $datos + [
+                    'fecha' => $r['fecha'], 'tipo' => $r['tipo'], 'titulo' => $r['titulo'], 'unidad' => $unidad, 'notas' => $r['notas'],
+                    // Con coma: «82.400» como texto se leería como miles.
+                    'valor' => numero_input($r['valor'] !== null ? (float)$r['valor'] : null),
+                    'coste' => numero_input($r['coste'] !== null ? (float)$r['coste'] : null, true)], null);
+                return ['registro' => registro($pdo, (int)$r['id'])];
+            }
             $id = crear_registro($pdo, $datos, null);
             return ['registro_id' => $id, 'elemento' => elemento($pdo, (int)$datos['elemento_id'])];
 

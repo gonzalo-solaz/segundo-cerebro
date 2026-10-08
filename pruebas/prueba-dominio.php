@@ -569,6 +569,12 @@ $av = crear_vencimiento($pdo, ['elemento_id' => $trat, 'titulo' => 'Cita con el 
 $antes = count(registros_de($pdo, $trat));
 marcar_hecho($pdo, $av, $id['admin']);
 comprueba('un aviso suelto hecho pasa al historial y sale de «Hechos»', count(registros_de($pdo, $trat)) === $antes + 1 && vencimiento($pdo, $av) === null);
+$av = crear_vencimiento($pdo, ['elemento_id' => $trat, 'titulo' => 'Cita atrasada', 'fecha' => sumar_dias(hoy(), -5)], $id['admin']);
+marcar_hecho($pdo, $av, $id['admin']);
+$av2 = crear_vencimiento($pdo, ['elemento_id' => $trat, 'titulo' => 'Llamada adelantada', 'fecha' => sumar_dias(hoy(), 10)], $id['admin']);
+marcar_hecho($pdo, $av2, $id['admin']);
+$por_titulo = array_column(registros_de($pdo, $trat), 'fecha', 'titulo');
+comprueba('el apunte lleva la fecha del aviso si ya pasó, y hoy si se adelanta', $por_titulo['Cita atrasada'] === sumar_dias(hoy(), -5) && $por_titulo['Llamada adelantada'] === hoy());
 $larga1 = str_repeat('1 comprimido con el desayuno y otro con la cena; ', 2);
 $larga2 = str_repeat('2 comprimidos con el desayuno y uno con la cena; ', 2);
 guardar_elemento($pdo, 'salud', 'tratamiento', ['nombre' => 'Prueba med', 'persona_id' => $id['ana'], 'datos' => ['pauta' => $larga1]], $trat);

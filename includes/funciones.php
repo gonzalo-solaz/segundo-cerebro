@@ -208,6 +208,8 @@ function numero_es($n, int $decimales = 2): string {
 // toma como separador de miles: quien escribe los km del coche pone
 // «154.300», no 154,3. Devuelve null si no es un número.
 function leer_numero($v): ?float {
+    // Un número de verdad (de un JSON de la API) no se interpreta: 1.234 como texto serían «mil doscientos».
+    if (is_int($v) || is_float($v)) return (float)$v;
     $v = str_replace([' ', "\xC2\xA0", '€'], '', trim((string)$v));
     if ($v === '') return null;
     if (str_contains($v, ',')) {

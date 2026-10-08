@@ -174,12 +174,13 @@ function marcar_hecho(PDO $pdo, int $id, ?int $usuario_id = null): ?string {
         }
         // Un aviso suelto (una cita, una llamada…) que se da por hecho pasa al historial de su ficha;
         // los automáticos no: vienen de un campo y el apunte real lo hace quien paga o pasa la revisión.
+        // Fecha: la del aviso si ya pasó (la cita del día 3 marcada el 8 fue el 3); si se adelanta, hoy.
         $al_historial = false;
         if (!$v['automatico'] && $v['elemento_id']) {
             $conf = (seccion($v['seccion'])['registros'] ?? null);
             if ($conf && in_array('Otro', $conf['tipos'], true)) {
                 crear_registro($pdo, [
-                    'elemento_id' => $v['elemento_id'], 'tipo' => 'Otro', 'fecha' => hoy(),
+                    'elemento_id' => $v['elemento_id'], 'tipo' => 'Otro', 'fecha' => min($v['fecha'], hoy()),
                     'titulo' => recortar(titulo_sin_elemento($v['titulo'], (string)($v['elemento_nombre'] ?? '')), 150),
                     'notas' => (string)($v['notas'] ?? ''),
                 ], $usuario_id);

@@ -89,6 +89,14 @@ comprueba('hecho devuelve el siguiente', $r['siguiente'] === '2027-11-20');
 
 $r = $api('registro', ['elemento_id' => $id['furgo'], 'fecha' => '2026-10-02', 'tipo' => 'Mantenimiento', 'titulo' => 'Pastillas de freno', 'valor' => 161000, 'coste' => 120.5]);
 comprueba('registro actualiza km', $r['elemento']['datos']['km'] === 161000.0);
+$pastillas = $r['registro_id'];
+$r = $api('registro', ['id' => $pastillas, 'tipo' => 'Reparación', 'notas' => 'Era una reparación']);
+comprueba('corregir un apunte cambia solo lo que viene', $r['registro']['tipo'] === 'Reparación' && $r['registro']['notas'] === 'Era una reparación'
+    && $r['registro']['titulo'] === 'Pastillas de freno' && (float)$r['registro']['valor'] === 161000.0 && (float)$r['registro']['coste'] === 120.5 && $r['registro']['fecha'] === '2026-10-02');
+$r = $api('registro', ['id' => $pastillas, 'coste' => '']);
+comprueba('…y en blanco vacía ese campo', $r['registro']['coste'] === null);
+comprueba('no se corrige un apunte que no existe', lanza(static fn() => $api('registro', ['id' => 999999, 'titulo' => 'x'])) instanceof RuntimeException);
+comprueba('un número JSON con tres decimales no se lee como miles', leer_numero(1.234) === 1.234 && leer_numero(12) === 12.0);
 
 $r = $api('documento', ['elemento_id' => $nuevo, 'titulo' => 'Póliza'], ['nombre' => 'poliza.pdf', 'contenido' => "%PDF-1.7\nx"]);
 comprueba('documento por la API', $r['documento']['titulo'] === 'Póliza' && $r['documento']['mime'] === 'application/pdf');
@@ -111,6 +119,9 @@ $e = lanza(static fn() => $api('comunidad', ['id' => $id['luz']]));
 comprueba('el análisis solo es de comunidades', $e instanceof RuntimeException);
 $r = $api('registro', ['elemento_id' => $id['peso'], 'fecha' => '2026-10-03', 'tipo' => 'Peso', 'valor' => 85.1]);
 comprueba('un pesaje por la API entra como apunte con kg', $r['registro_id'] > 0);
+$r2 = $api('registro', ['id' => $r['registro_id'], 'tipo' => 'Cintura', 'valor' => 94]);
+comprueba('pasarlo a Cintura le pone cm (no arrastra los kg)', $r2['registro']['unidad'] === 'cm');
+$r2 = $api('registro', ['id' => $r['registro_id'], 'tipo' => 'Peso', 'valor' => 85.1]);
 $r = $api('peso', ['id' => $id['peso']]);
 comprueba('la API da el control de peso con el último pesaje', $r['analisis']['actual'] === 85.1 && $r['analisis']['imc'] === 26.3, json_encode([$r['analisis']['actual'], $r['analisis']['imc']]));
 comprueba('…y sus consejos', count($r['analisis']['consejos']) > 0);

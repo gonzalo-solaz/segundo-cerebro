@@ -82,6 +82,12 @@ function registros_de_seccion(PDO $pdo, string $seccion, int $n = 10): array {
     return $st->fetchAll();
 }
 
+function registro(PDO $pdo, int $id): ?array {
+    $st = $pdo->prepare('SELECT * FROM registros WHERE id = ?');
+    $st->execute([$id]);
+    return $st->fetch() ?: null;
+}
+
 /** Corrige un apunte del historial (tipo, fecha, texto, medida, coste, notas). No toca los kilómetros de la ficha. */
 function actualizar_registro(PDO $pdo, int $id, int $elemento_id, array $r, ?int $usuario_id = null): void {
     $st = $pdo->prepare('SELECT tipo FROM registros WHERE id = ? AND elemento_id = ?');

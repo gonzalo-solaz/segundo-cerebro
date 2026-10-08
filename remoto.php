@@ -18,6 +18,7 @@
 //      php remoto.php hecho <id>
 //      php remoto.php registro <archivo.json | JSON>
 //            {"elemento_id":12,"fecha":"2026-09-30","tipo":"Mantenimiento","titulo":"Aceite y filtros","valor":154300,"coste":189.9}
+//            {"id":53,"tipo":"ITV"}      ← corregir un apunte: solo lo que cambia ("" vacía el campo)
 //      php remoto.php partidas <archivo.json | JSON>      Desglose de un recibo de la comunidad (sustituye el anterior)
 //            {"registro_id":40,"partidas":[{"concepto":"Mantenimiento piscina","categoria":"Piscina","zona":"escalera","total":290.40},
 //                                          {"concepto":"Obra fuga","categoria":"Piscina","zona":"comun","total":2735.10,"extraordinaria":true}]}
