@@ -419,7 +419,13 @@ if ($el['seccion'] === 'trabajo') {
         <h3 class="subtitulo">Hechos</h3>
         <ul class="lista-hechos">
           <?php foreach ($hechos as $h): ?>
-            <li><?= icono('check', 'ico ico-mini') ?><?= e($h['titulo']) ?> <span class="tenue">· <?= e(fecha_es($h['hecho_en'])) ?></span></li>
+            <li>
+              <span><?= icono('check', 'ico ico-mini') ?><?= e($h['titulo']) ?> <span class="tenue">· <?= e(fecha_es($h['hecho_en'])) ?></span></span>
+              <form method="post" action="<?= e(url('vencimientos.php')) ?>" data-confirmar="¿Quitar este aviso de «Hechos»?">
+                <?= csrf_input() ?><input type="hidden" name="accion" value="borrar"><input type="hidden" name="vencimiento_id" value="<?= (int)$h['id'] ?>"><input type="hidden" name="volver" value="<?= e($aqui . '#avisos') ?>">
+                <button class="btn-icono" title="Quitar de Hechos"><?= icono('papelera') ?></button>
+              </form>
+            </li>
           <?php endforeach; ?>
         </ul>
       <?php endif; ?>
@@ -466,7 +472,7 @@ if ($el['seccion'] === 'trabajo') {
                 <?php if (trim((string)$r['notas']) !== ''): ?><p class="notas"><?= nl2br(e($r['notas'])) ?></p><?php endif; ?>
               <?php $ed = 'ed' . (int)$r['id']; ?>
                             <details class="desplegable h-editar">
-                <summary class="btn btn-sutil"><?= icono('editar') ?>Editar</summary>
+                <summary class="btn-icono" title="Editar" aria-label="Editar el apunte"><?= icono('editar') ?></summary>
                 <form method="post" class="form-rejilla">
                   <?= csrf_input() ?><input type="hidden" name="accion" value="editar-registro"><input type="hidden" name="registro_id" value="<?= (int)$r['id'] ?>">
                   <div class="campo"><label for="<?= $ed ?>t">Tipo</label><select id="<?= $ed ?>t" name="tipo"><?= opciones_html(array_combine($conf_reg['tipos'], $conf_reg['tipos']), $r['tipo']) ?></select></div>
