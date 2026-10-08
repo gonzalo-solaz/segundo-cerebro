@@ -23,6 +23,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     flash('ok', 'Apuntado en el historial.');
                     $ancla = '#historial';
                     break;
+                case 'editar-registro':
+                    actualizar_registro($pdo, (int)($_POST['registro_id'] ?? 0), $id, $_POST, $uid);
+                    flash('ok', 'Apunte corregido.');
+                    $ancla = '#historial';
+                    break;
                 case 'borrar-registro':
                     borrar_registro($pdo, (int)($_POST['registro_id'] ?? 0), $id, $uid);
                     $ancla = '#historial';
@@ -130,6 +135,15 @@ if ($el['seccion'] === 'contratos' && $el['tipo'] === 'comunidad') {
 }
 // Trabajo vive en trabajo.php: las migas y las pestañas llevan allí (la persona del equipo, al Equipo).
 $migas = '<a href="' . e(url('seccion.php?s=' . $el['seccion'] . '&lista=1')) . '">' . e($sec['nombre']) . '</a> · ' . e($def['nombre']);
+// Gafas, peso y tratamientos cuelgan de la ficha médica de su persona: un paso más en la miga.
+if ($el['seccion'] === 'salud' && $el['persona_id'] && isset(tipos_de_la_ficha_medica()[$el['tipo']])) {
+    foreach (elementos_de($pdo, 'salud') as $x) {
+        if ($x['tipo'] === 'ficha' && $x['persona_id'] === $el['persona_id']) {
+            $migas = '<a href="' . e(url('seccion.php?s=salud&lista=1')) . '">' . e($sec['nombre']) . '</a> · <a href="' . e(url('elemento.php?id=' . $x['id'])) . '">Ficha de ' . e($el['persona_nombre']) . '</a> · ' . e($def['nombre']);
+            break;
+        }
+    }
+}
 if ($el['seccion'] === 'trabajo') {
     $migas = '<a href="' . e(url('trabajo.php')) . '">' . e($sec['nombre']) . '</a> · '
            . (in_array($el['tipo'], ['miembro', 'empleo'], true) ? '<a href="' . e(url('trabajo.php?p=equipo')) . '">Equipo</a>'
@@ -450,6 +464,24 @@ if ($el['seccion'] === 'trabajo') {
                 ], fn($x) => $x !== null); ?>
                 <?php if ($meta): ?><div class="tenue"><?= e(implode(' · ', $meta)) ?></div><?php endif; ?>
                 <?php if (trim((string)$r['notas']) !== ''): ?><p class="notas"><?= nl2br(e($r['notas'])) ?></p><?php endif; ?>
+              <?php $ed = 'ed' . (int)$r['id']; ?>
+                            <details class="desplegable h-editar">
+                <summary class="btn btn-sutil"><?= icono('editar') ?>Editar</summary>
+                <form method="post" class="form-rejilla">
+                  <?= csrf_input() ?><input type="hidden" name="accion" value="editar-registro"><input type="hidden" name="registro_id" value="<?= (int)$r['id'] ?>">
+                  <div class="campo"><label for="<?= $ed ?>t">Tipo</label><select id="<?= $ed ?>t" name="tipo"><?= opciones_html(array_combine($conf_reg['tipos'], $conf_reg['tipos']), $r['tipo']) ?></select></div>
+                  <div class="campo"><label for="<?= $ed ?>f">Fecha</label><input type="date" id="<?= $ed ?>f" name="fecha" value="<?= e($r['fecha']) ?>" required></div>
+                  <div class="campo campo-ancho"><label for="<?= $ed ?>h">Qué se hizo</label><input type="text" id="<?= $ed ?>h" name="titulo" maxlength="150" value="<?= e($r['titulo']) ?>"></div>
+                  <?php if ($conf_reg['valor']): ?>
+                    <div class="campo"><label><?= e($conf_reg['valor']) ?> <span class="tenue">(opcional)</span></label>
+                      <div class="con-sufijo"><input type="text" inputmode="decimal" name="valor" value="<?= e(numero_input($r['valor'] !== null ? (float)$r['valor'] : null)) ?>"><?php if ($conf_reg['unidad'] !== ''): ?><span><?= e($conf_reg['unidad']) ?></span><?php else: ?><input type="text" name="unidad" value="<?= e($r['unidad']) ?>" class="input-unidad"><?php endif; ?></div>
+                    </div>
+                  <?php endif; ?>
+                  <div class="campo"><label>Coste <span class="tenue">(opcional)</span></label><div class="con-sufijo"><input type="text" inputmode="decimal" name="coste" value="<?= e(numero_input($r['coste'] !== null ? (float)$r['coste'] : null, true)) ?>" placeholder="0,00"><span>€</span></div></div>
+                  <div class="campo campo-ancho"><label for="<?= $ed ?>n">Notas <span class="tenue">(lo que pasó, lo que te han dicho)</span></label><textarea id="<?= $ed ?>n" name="notas" rows="4"><?= e($r['notas']) ?></textarea></div>
+                  <div class="campo-ancho"><button class="btn btn-primario"><?= icono('check') ?>Guardar</button></div>
+                </form>
+              </details>
               </div>
               <form method="post" data-confirmar="¿Borrar este apunte?">
                 <?= csrf_input() ?><input type="hidden" name="accion" value="borrar-registro"><input type="hidden" name="registro_id" value="<?= (int)$r['id'] ?>">

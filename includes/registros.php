@@ -81,6 +81,18 @@ function registros_de_seccion(PDO $pdo, string $seccion, int $n = 10): array {
     return $st->fetchAll();
 }
 
+/** Corrige un apunte del historial (tipo, fecha, texto, medida, coste, notas). No toca los kilómetros de la ficha. */
+function actualizar_registro(PDO $pdo, int $id, int $elemento_id, array $r, ?int $usuario_id = null): void {
+    $st = $pdo->prepare('SELECT id FROM registros WHERE id = ? AND elemento_id = ?');
+    $st->execute([$id, $elemento_id]);
+    if (!$st->fetchColumn()) throw new RuntimeException('Ese apunte no existe.');
+    [$f, $errores] = validar_registro($pdo, ['elemento_id' => $elemento_id] + $r);
+    if ($errores) throw new ErrorValidacion($errores);
+    $pdo->prepare('UPDATE registros SET fecha = ?, tipo = ?, titulo = ?, valor = ?, unidad = ?, coste = ?, notas = ? WHERE id = ?')
+        ->execute([$f['fecha'], $f['tipo'], $f['titulo'], $f['valor'], $f['unidad'], $f['coste'], $f['notas'], $id]);
+    anotar($pdo, $usuario_id, "corrigió el apunte «{$f['titulo']}» de «{$f['elemento']['nombre']}»");
+}
+
 function borrar_registro(PDO $pdo, int $id, int $elemento_id, ?int $usuario_id = null): void {
     $st = $pdo->prepare('SELECT titulo FROM registros WHERE id = ? AND elemento_id = ?');
     $st->execute([$id, $elemento_id]);

@@ -550,4 +550,23 @@ comprueba('borrar la ficha borra su plan', plan_de($pdo, $miembro_p) === []);
 comprueba('…y su formación (el curso sigue con los demás)', count(formacion_de($pdo, $curso_f)) === 1);
 borrar_elemento($pdo, $curso_f);
 comprueba('borrar el curso borra quién lo hizo', (int)$pdo->query('SELECT COUNT(*) FROM formacion')->fetchColumn() === 0);
+
+echo "
+Tratamientos, edición del historial y avisos hechos
+";
+$trat = guardar_elemento($pdo, 'salud', 'tratamiento', ['nombre' => 'Prueba med', 'persona_id' => $id['ana'], 'datos' => ['pauta' => '1 al día']]);
+guardar_elemento($pdo, 'salud', 'tratamiento', ['nombre' => 'Prueba med', 'persona_id' => $id['ana'], 'datos' => ['pauta' => '1 al día']], $trat);
+comprueba('la pauta inicial queda en el historial (y repetirla igual no duplica)', count(registros_de($pdo, $trat)) === 1);
+guardar_elemento($pdo, 'salud', 'tratamiento', ['nombre' => 'Prueba med', 'persona_id' => $id['ana'], 'datos' => ['pauta' => '1 cada 12 h']], $trat);
+$reg = registros_de($pdo, $trat);
+comprueba('cambiar la pauta apunta «antes → ahora»', count($reg) === 2 && $reg[0]['tipo'] === 'Cambio de pauta' && str_contains($reg[0]['titulo'], '1 al día → 1 cada 12 h'));
+actualizar_registro($pdo, (int)$reg[0]['id'], $trat, ['tipo' => 'Consulta', 'fecha' => '2026-10-08', 'titulo' => 'Llamada', 'notas' => 'Me han dicho X'], $id['admin']);
+$reg = registros_de($pdo, $trat);
+comprueba('editar un apunte cambia su texto y notas', $reg[0]['titulo'] === 'Llamada' && $reg[0]['notas'] === 'Me han dicho X' && $reg[0]['tipo'] === 'Consulta');
+comprueba('editar con título vacío y sin tipo se rechaza', lanza(static fn() => actualizar_registro($pdo, (int)$reg[0]['id'], $trat, ['tipo' => '', 'titulo' => '', 'fecha' => '2026-10-08'])) instanceof ErrorValidacion);
+comprueba('no se edita un apunte de otra ficha', lanza(static fn() => actualizar_registro($pdo, (int)$reg[0]['id'], $id['furgo'], ['titulo' => 'x'])) instanceof RuntimeException);
+$av = crear_vencimiento($pdo, ['elemento_id' => $trat, 'titulo' => 'Cita con el médico', 'fecha' => hoy()], $id['admin']);
+$antes = count(registros_de($pdo, $trat));
+marcar_hecho($pdo, $av, $id['admin']);
+comprueba('un aviso suelto hecho pasa al historial y sale de «Hechos»', count(registros_de($pdo, $trat)) === $antes + 1 && vencimiento($pdo, $av) === null);
 terminar();
