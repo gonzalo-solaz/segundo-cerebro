@@ -67,6 +67,10 @@ if ($clave === 'contratos') {
     if (elementos_comunidad($pdo)) {
         $botones .= '<a class="btn btn-sutil btn-ir" href="' . e(url('gasto-comunidad.php')) . '">' . icono('historial') . 'Gasto en comunidad</a>';
     }
+    // La cuenta común de la casa: movimientos del banco, solo admin (como Finanzas).
+    if (es_admin() && finanzas_configurada()) {
+        $botones .= '<a class="btn btn-sutil btn-ir" href="' . e(url('cuenta-casa.php')) . '">' . icono('casa') . 'Cuenta de la casa</a>';
+    }
 }
 
 cabecera($sec['nombre'], 'seccion:' . $clave);

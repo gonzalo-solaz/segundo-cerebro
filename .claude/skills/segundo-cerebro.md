@@ -103,6 +103,10 @@ Tipo `trabajo/compra`, una ficha por producto. El importe va en **`importe`, nun
 
 Desde el 3/10/2026, la ficha de aquí manda en la identidad (nombre, dirección, catastro, compra, titular y su %, términos de la hipoteca, marca, modelo, año, curso del colegio, acogida) y finanzas la lee; el dinero (valor de mercado, capital pendiente, cuotas pagadas) vive en finanzas. Si te pasan el recibo de una revisión de la hipoteca, cambia `coste` de su ficha aquí. Un vehículo o una casa nuevos que cuenten como patrimonio: la ficha aquí y, en finanzas, `patrimonio_nuevo` con su valor y `elemento_id`. Si cambia el curso de un hijo, solo su ficha de colegio.
 
+### La cuenta común de la casa (extracto de Mediolanum de la común)
+
+Si Gonzalo pasa el extracto de la cuenta común (la que comparte con Pilar), NO se graba aquí: se importa en finanzas (`php remoto.php importar <csv>` en finanzas-personales; el número de cuenta de la cabecera decide que va a la común, y la categorizan sus propias reglas). Si llega en `.xls`, conviértelo antes al CSV de Mediolanum (ver el CLAUDE.md de finanzas). Luego: `php remoto.php pendientes ambito=casa` en finanzas y propón categorías antes de aplicarlas; y revisa en `cuenta-casa.php` los «cargos sin apuntar en su ficha» (cada factura o recibo que falte, con `registro` aquí) y la última cuota de la hipoteca frente a su ficha (si cambia, `precio` de la ficha 33 con la fecha del día 7).
+
 Sobre el contexto de la casa:
 - Personas: usa las que devuelve `personas`. Si el papel es de alguien que no está, pregunta antes de crearlo.
 - Si dudas de a qué vehículo o persona se refiere un papel, pregunta: no lo deduzcas por el nombre.

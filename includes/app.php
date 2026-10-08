@@ -17,6 +17,7 @@ require_once __DIR__ . '/precios.php';
 require_once __DIR__ . '/ipc.php';
 require_once __DIR__ . '/gastos.php';
 require_once __DIR__ . '/finanzas.php';
+require_once __DIR__ . '/cuenta-casa.php';
 require_once __DIR__ . '/peso.php';
 require_once __DIR__ . '/trabajo.php';
 require_once __DIR__ . '/plan.php';

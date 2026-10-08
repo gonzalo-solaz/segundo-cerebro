@@ -437,6 +437,21 @@ function contar_elementos(PDO $pdo): array {
 }
 
 /**
+ * Las facturas y recibos con importe apuntados en el historial de cualquier
+ * ficha, de $desde a $hasta: [['id', 'fecha', 'coste', 'elemento_id', 'nombre']].
+ * Con ellos, la cuenta de la casa (cuenta-casa.php) mira qué cargos del banco
+ * no tienen su apunte.
+ */
+function cargos_apuntados(PDO $pdo, string $desde, string $hasta): array {
+    $st = $pdo->prepare("SELECT r.id, r.fecha, r.coste, r.elemento_id, e.nombre
+                         FROM registros r JOIN elementos e ON e.id = r.elemento_id
+                         WHERE r.coste IS NOT NULL AND r.tipo IN ('Factura', 'Recibo') AND r.fecha >= ? AND r.fecha <= ?
+                         ORDER BY r.fecha, r.id");
+    $st->execute([$desde, $hasta]);
+    return $st->fetchAll();
+}
+
+/**
  * Facturas de los suministros (luz, gas, internet…) agrupadas por año natural
  * de la fecha de la factura (no del consumo: la del gas de julio llega en
  * agosto). Devuelve [año => ['total', 'n', 'meses' => [mes => importe],

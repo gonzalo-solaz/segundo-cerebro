@@ -428,6 +428,35 @@ $r = pedir('gastos-fijos.php');
 pinta_bien('frente a hace un año: el seguro sube un 20 %, más que el IPC', $r, 'var-sube" title="Frente a hace un año: sube más que el IPC">▲ 20,0 %');
 pinta_bien('…con el IPC del INE y su mes', $r, 'IPC: +2,9 % (diciembre de 2025, INE)');
 pinta_bien('…y lo que falta para comparar el resto', $r, 'Para compararlo con hace un año falta');
+// La cuenta común de la casa (acción «casa» de finanzas, de la copia). La hipoteca es de
+// Gonzalo al 60 %: de 600 € de cuota le tocan 360 y a Ana 240; el resto (súper 200 +
+// comunidad 300 − renta 100 = 400), a medias. Gonzalo pone 860 (le tocan 560) y Ana 540
+// (le tocan 440): Gonzalo lleva 100 € más que Ana.
+$id['hipoteca'] = guardar_elemento($pdo, 'contratos', 'hipoteca', ['nombre' => 'Hipoteca de prueba', 'persona_id' => $id['yo'],
+    'datos' => ['coste' => '600', 'periodicidad' => 'Mensual', 'porcentaje_pago' => '60']], null, $id['admin']);
+$mov = static fn(string $f, string $c, float $i, string $cat) => ['fecha' => $f, 'concepto' => $c, 'importe' => $i, 'categoria' => $cat, 'tipo' => $i < 0 ? 'gasto' : 'ingreso'];
+file_put_contents($cache . '/finanzas-casa.json', json_encode(['t' => time(), 'f' => FINANZAS_CACHE_FORMATO, 'leido_en' => '2026-10-03 08:00:00', 'datos' => [
+    'cuentas' => [['cuenta' => 'Cuenta de la casa', 'saldo' => 420.0, 'banco' => 420.0, 'cuadra' => true]], 'ultimo_movimiento' => '2026-01-20',
+    'movimientos' => [$mov('2026-01-02', 'Hipoteca Gonza', 360, 'Aportación Gonzalo'), $mov('2026-01-03', 'Hipoteca Ana', 240, 'Aportación Ana'),
+        $mov('2026-01-05', 'gastos Gonza', 500, 'Aportación Gonzalo'), $mov('2026-01-05', 'gastos Ana', 300, 'Aportación Ana'),
+        $mov('2026-01-07', 'Recibo préstamo', -600, 'Hipoteca'), $mov('2026-01-10', 'MERCADONA', -200, 'Supermercado'),
+        $mov('2026-01-15', 'CP COMUNIDAD', -300, 'Comunidad'), $mov('2026-01-20', 'AEAT', 100, 'Ingresos extra')]]]));
+$r = pedir('cuenta-casa.php');
+pinta_bien('cuenta de la casa: quién lleva puesto de más con lo acordado', $r, '100,00 €</strong> más que Ana');
+pinta_bien('…la hipoteca por el porcentaje de su ficha', $r, 'hipoteca al 60 %');
+pinta_bien('…a dónde va, con la hipoteca entera', $r, '<td>Hipoteca</td>');
+pinta_bien('…el cargo de la comunidad que no tiene recibo en su ficha', $r, 'CP COMUNIDAD · <strong>300,00 €');
+pinta_bien('…y la cuota del banco igual que la de la ficha', $r, 'Igual que en');
+comprueba('…un miembro no la ve', !str_contains(pedir('cuenta-casa.php', [], null, $id['miembro'])['html'], 'Quién pone qué'));
+pinta_bien('Contratos enlaza a la cuenta de la casa', pedir('seccion.php', ['s' => 'contratos']), 'cuenta-casa.php');
+$casa = analisis_cuenta_casa(json_decode((string)file_get_contents($cache . '/finanzas-casa.json'), true)['datos']['movimientos'], 2026, '2026-10-03',
+    reparto_hipoteca(elemento($pdo, $id['hipoteca']), 'Gonzalo Prueba', ['Ana', 'Gonzalo']));
+comprueba('cuenta de la casa: le toca su parte de la cuota y la mitad del resto', abs($casa['personas']['Gonzalo']['toca'] - 560) < 0.005
+    && abs($casa['personas']['Ana']['toca'] - 440) < 0.005 && abs($casa['resto'] - 400) < 0.005, json_encode($casa['personas']));
+$dos = cargos_sin_apuntar([$mov('2026-07-17', 'CP X', -355.78, 'Comunidad'), $mov('2026-08-05', 'CP X', -355.78, 'Comunidad')],
+    [['id' => 1, 'fecha' => '2026-06-30', 'coste' => 711.56, 'elemento_id' => 9, 'nombre' => 'Comunidad']], 2026);
+comprueba('un recibo cobrado en dos cargos casa con su apunte', !$dos['sin_ficha'] && $dos['casados'] === 2, json_encode($dos));
+@unlink($cache . '/finanzas-casa.json');
 @unlink($cache . '/ipc.json');
 @unlink($cache . '/finanzas-resumen.json');
 @unlink($cache . '/finanzas-panel.json');

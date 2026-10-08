@@ -28,7 +28,8 @@ $est = finanzas_ruta_estaticos();
 $v = rawurlencode((string)($d['version'] ?? '1'));
 
 cabecera('Finanzas', 'finanzas');
-cabecera_pagina('Finanzas', 'Cuentas, inversiones, patrimonio y nóminas.', '', 'cartera', '#405189');
+cabecera_pagina('Finanzas', 'Cuentas, inversiones, patrimonio y nóminas.',
+    '<a class="btn btn-sutil" href="' . e(url('cuenta-casa.php')) . '">' . icono('casa') . 'Cuenta de la casa</a>', 'cartera', '#405189');
 ?>
 <?php if ($r['error']): ?>
   <div class="flash flash-aviso"><?= e($r['error']) ?><?= $d ? ' Enseño la última copia (' . e(fecha_corta(substr((string)$r['leido_en'], 0, 10)) . ' ' . substr((string)$r['leido_en'], 11, 5)) . ').' : '' ?></div>

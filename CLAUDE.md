@@ -544,8 +544,8 @@ las obras inflaban la subida. Ahora `interanual_item()` compara lo NORMAL con lo
 (2T25 fue el más barato, así que probablemente no llevaban obras). **Hipoteca (ficha 33):** cuotas
 de 2025 en `precios` (cuota entera, la del cuadro del banco: 605,71 € desde 7/1/2025, 597,78 desde 7/3, 579,98 desde 7/6,
 577,07 desde 7/9, 581,93 desde 7/12; el tipo, en la nota de cada precio), así que sale 577,07 → 611,65 € (+6,0 %).
-**Hueco:** no hay cuotas de enero a agosto de 2026 (la ficha dice 611,65 € «desde septiembre de 2026») ni de antes de
-2025. No repetir.
+**Hueco:** no hay cuotas de antes de 2025. Las de 2026 se cargaron el 8/10/2026 desde la cuenta de la casa (ver abajo).
+No repetir.
 
 **Suministros de 2025 para comparar con 2026 (4/10/2026, Gonzalo pasó el extracto del banco y las capturas de
 Pepeenergy, Aguas de Valencia y Naturgy).** Grabados en producción 37 apuntes `Factura` SIN PDF (registros 223-259):
@@ -693,3 +693,25 @@ del disco DESPUÉS de confirmar (antes, primero los archivos: un fallo a medias 
 «Se renueva» usa la renovación de la ficha, no el próximo cargo. (4) Ajustes anota el cambio de rol y de vínculo con
 una persona. **Mejoras habladas, sin hacer:** copia de seguridad (sigue sin haber), silenciar en el correo los avisos
 vencidos a propósito (ITV de la Hanway y del T3), ITV del Astra sin apuntar.
+
+**La cuenta común de la casa (8/10/2026, Gonzalo pasó el extracto de 2026 de Mediolanum, `facturas/bmed-cta-casa-2026.xls`).**
+Gonzalo y Pilar tienen cada uno su cuenta y una común para la casa. Cada uno manda su parte de la hipoteca («Hipoteca
+Gonza» 360 €/mes; «Hipoteca Pilar» 295,54 €) y lo que pone para gastos («gastos Gonza», «gastos Pilar»); de ahí salen la
+hipoteca, la comunidad, los suministros, los seguros de Tuio y del T4, el IBI (la Diputación), el colegio, el voleibol, el
+súper y la gasolina (la de la furgo en los viajes, el Audi y el Astra). **Lo acordado (Gonzalo): la hipoteca, cada uno su
+parte (la de su ficha, 60/40); todo lo demás, al 50 %.** **Los movimientos viven en finanzas** (cuenta de ámbito «casa»,
+fuera de las cifras de Gonzalo: ver el CLAUDE.md de finanzas) y aquí se leen con su acción `casa` (copia de una hora).
+`cuenta-casa.php` (solo admin, como Finanzas; botones en Contratos y en Finanzas; lógica en `includes/cuenta-casa.php`)
+enseña quién pone qué frente a lo acordado, a dónde va el dinero (gasto neto por categoría: las devoluciones restan), mes a
+mes, la última cuota frente a la ficha de la hipoteca y los cargos de comunidad, suministros, seguros e impuestos que no
+tienen su factura o recibo en ninguna ficha (`cargos_sin_apuntar()`: mismo importe a ≤45 días, o dos cargos del mismo
+concepto que suman un apunte, como el recibo 2T26 de la comunidad, cobrado en dos veces). Con el extracto de 2026 (1/1 a
+8/10): Gonzalo puso 13.725,87 € (3.647 para la hipoteca) y Pilar 11.937,26 € (2.947,08); cuotas pagadas 5.961,34 €. Sus
+cuotas de 2026 se cargaron en `precios` de la ficha 33 (581,98 desde 7/2, 584,56 desde 7/3, 584,51 desde 7/4, 606,85 desde
+7/6, 611,65 desde 7/9). **Moncada TNA** era el baloncesto de Gonza (ya no va); **«Gonzalo Solaz - primer trimestre»**, los
+scouts de Gonza (recién apuntado, 141 € al trimestre). **Pendiente:** si Pilar debe verla (hoy solo admin); por qué Pilar
+pone 295,54 € para la hipoteca (con el 40 % serían unos 245 €); qué son los dos cargos de la Diputación (227,71 € el 3/8 y
+227,70 € el 1/10: Gonzalo cree que uno es el IBI y el otro una tasa nueva de residuos; con importes casi iguales, pueden
+ser los dos plazos del IBI); y los 98 movimientos sin categorizar de la común (`php remoto.php pendientes ambito=casa` en
+finanzas). **Cada mes:** el extracto de la común se importa en finanzas como cualquier otro de Mediolanum (mejor en CSV;
+el `.xls` hay que convertirlo, ver el CLAUDE.md de finanzas): el número de cuenta decide que va a la común.
