@@ -5,7 +5,8 @@
 //  (y, el día que finanzas viva dentro, cruzarlo con los movimientos).
 // =====================================================================
 
-function validar_registro(PDO $pdo, array $r): array {
+// $tipo_actual: al corregir un apunte, su tipo vale aunque ya no esté en la lista de la sección.
+function validar_registro(PDO $pdo, array $r, string $tipo_actual = ''): array {
     $errores = [];
     $el = elemento($pdo, (int)($r['elemento_id'] ?? 0));
     if (!$el) return [null, ['Ese elemento no existe.']];
@@ -16,7 +17,7 @@ function validar_registro(PDO $pdo, array $r): array {
     if (!$fecha) $errores[] = 'Pon una fecha válida.';
 
     $tipo = trim((string)($r['tipo'] ?? ''));
-    if ($tipo !== '' && !in_array($tipo, $conf['tipos'], true)) {
+    if ($tipo !== '' && $tipo !== $tipo_actual && !in_array($tipo, $conf['tipos'], true)) {
         $errores[] = 'El tipo tiene que ser uno de estos: ' . implode(', ', $conf['tipos']) . '.';
     }
     $titulo = trim((string)($r['titulo'] ?? ''));
@@ -83,10 +84,11 @@ function registros_de_seccion(PDO $pdo, string $seccion, int $n = 10): array {
 
 /** Corrige un apunte del historial (tipo, fecha, texto, medida, coste, notas). No toca los kilómetros de la ficha. */
 function actualizar_registro(PDO $pdo, int $id, int $elemento_id, array $r, ?int $usuario_id = null): void {
-    $st = $pdo->prepare('SELECT id FROM registros WHERE id = ? AND elemento_id = ?');
+    $st = $pdo->prepare('SELECT tipo FROM registros WHERE id = ? AND elemento_id = ?');
     $st->execute([$id, $elemento_id]);
-    if (!$st->fetchColumn()) throw new RuntimeException('Ese apunte no existe.');
-    [$f, $errores] = validar_registro($pdo, ['elemento_id' => $elemento_id] + $r);
+    $tipo_actual = $st->fetchColumn();
+    if ($tipo_actual === false) throw new RuntimeException('Ese apunte no existe.');
+    [$f, $errores] = validar_registro($pdo, ['elemento_id' => $elemento_id] + $r, (string)$tipo_actual);
     if ($errores) throw new ErrorValidacion($errores);
     $pdo->prepare('UPDATE registros SET fecha = ?, tipo = ?, titulo = ?, valor = ?, unidad = ?, coste = ?, notas = ? WHERE id = ?')
         ->execute([$f['fecha'], $f['tipo'], $f['titulo'], $f['valor'], $f['unidad'], $f['coste'], $f['notas'], $id]);

@@ -470,17 +470,24 @@ if ($el['seccion'] === 'trabajo') {
                 ], fn($x) => $x !== null); ?>
                 <?php if ($meta): ?><div class="tenue"><?= e(implode(' · ', $meta)) ?></div><?php endif; ?>
                 <?php if (trim((string)$r['notas']) !== ''): ?><p class="notas"><?= nl2br(e($r['notas'])) ?></p><?php endif; ?>
-              <?php $ed = 'ed' . (int)$r['id']; ?>
-                            <details class="desplegable h-editar">
+              <?php
+                $ed = 'ed' . (int)$r['id'];
+                // Un tipo antiguo que ya no está en la lista se ofrece igual: si no, guardar lo vaciaba.
+                $tipos_ed = $conf_reg['tipos'];
+                if ($r['tipo'] !== '' && !in_array($r['tipo'], $tipos_ed, true)) $tipos_ed[] = $r['tipo'];
+                // La unidad que pone el tipo (kg del Peso) no se rellena: al cambiar de tipo, se pone la del nuevo.
+                $unidad_ed = $r['unidad'] === (string)($conf_reg['unidades'][$r['tipo']] ?? '') ? '' : $r['unidad'];
+              ?>
+              <details class="desplegable h-editar">
                 <summary class="btn-icono" title="Editar" aria-label="Editar el apunte"><?= icono('editar') ?></summary>
                 <form method="post" class="form-rejilla">
                   <?= csrf_input() ?><input type="hidden" name="accion" value="editar-registro"><input type="hidden" name="registro_id" value="<?= (int)$r['id'] ?>">
-                  <div class="campo"><label for="<?= $ed ?>t">Tipo</label><select id="<?= $ed ?>t" name="tipo"><?= opciones_html(array_combine($conf_reg['tipos'], $conf_reg['tipos']), $r['tipo']) ?></select></div>
+                  <div class="campo"><label for="<?= $ed ?>t">Tipo</label><select id="<?= $ed ?>t" name="tipo"><?= opciones_html(array_combine($tipos_ed, $tipos_ed), $r['tipo']) ?></select></div>
                   <div class="campo"><label for="<?= $ed ?>f">Fecha</label><input type="date" id="<?= $ed ?>f" name="fecha" value="<?= e($r['fecha']) ?>" required></div>
                   <div class="campo campo-ancho"><label for="<?= $ed ?>h">Qué se hizo</label><input type="text" id="<?= $ed ?>h" name="titulo" maxlength="150" value="<?= e($r['titulo']) ?>"></div>
                   <?php if ($conf_reg['valor']): ?>
                     <div class="campo"><label><?= e($conf_reg['valor']) ?> <span class="tenue">(opcional)</span></label>
-                      <div class="con-sufijo"><input type="text" inputmode="decimal" name="valor" value="<?= e(numero_input($r['valor'] !== null ? (float)$r['valor'] : null)) ?>"><?php if ($conf_reg['unidad'] !== ''): ?><span><?= e($conf_reg['unidad']) ?></span><?php else: ?><input type="text" name="unidad" value="<?= e($r['unidad']) ?>" class="input-unidad"><?php endif; ?></div>
+                      <div class="con-sufijo"><input type="text" inputmode="decimal" name="valor" value="<?= e(numero_input($r['valor'] !== null ? (float)$r['valor'] : null)) ?>"><?php if ($conf_reg['unidad'] !== ''): ?><span><?= e($conf_reg['unidad']) ?></span><?php else: ?><input type="text" name="unidad" value="<?= e($unidad_ed) ?>" placeholder="unidad" class="input-unidad"><?php endif; ?></div>
                     </div>
                   <?php endif; ?>
                   <div class="campo"><label>Coste <span class="tenue">(opcional)</span></label><div class="con-sufijo"><input type="text" inputmode="decimal" name="coste" value="<?= e(numero_input($r['coste'] !== null ? (float)$r['coste'] : null, true)) ?>" placeholder="0,00"><span>€</span></div></div>

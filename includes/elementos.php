@@ -256,9 +256,14 @@ function guardar_elemento(PDO $pdo, string $seccion, string $tipo, array $entrad
             $antes = trim((string)($actual['datos']['pauta'] ?? ''));
             $ahora_p = trim((string)($f['datos']['pauta'] ?? ''));
             if ($ahora_p !== '' && $ahora_p !== $antes) {
+                // La pauta admite 255 caracteres y el título del apunte, 150: si no cabe, el título
+                // se recorta y el texto entero va a las notas (si no, no se podía guardar la ficha).
+                $titulo_p = $antes === '' ? "Pauta: {$ahora_p}" : "Pauta: {$antes} → {$ahora_p}";
+                $largo = longitud($titulo_p) > 150;
                 crear_registro($pdo, [
                     'elemento_id' => $id, 'tipo' => 'Cambio de pauta', 'fecha' => hoy(),
-                    'titulo' => $antes === '' ? "Pauta: {$ahora_p}" : "Pauta: {$antes} → {$ahora_p}",
+                    'titulo' => recortar($titulo_p, 150),
+                    'notas' => !$largo ? '' : ($antes === '' ? $titulo_p : "Antes: {$antes}\nAhora: {$ahora_p}"),
                 ], $usuario_id);
             }
         }

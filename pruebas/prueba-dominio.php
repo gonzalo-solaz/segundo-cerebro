@@ -569,4 +569,15 @@ $av = crear_vencimiento($pdo, ['elemento_id' => $trat, 'titulo' => 'Cita con el 
 $antes = count(registros_de($pdo, $trat));
 marcar_hecho($pdo, $av, $id['admin']);
 comprueba('un aviso suelto hecho pasa al historial y sale de «Hechos»', count(registros_de($pdo, $trat)) === $antes + 1 && vencimiento($pdo, $av) === null);
+$larga1 = str_repeat('1 comprimido con el desayuno y otro con la cena; ', 2);
+$larga2 = str_repeat('2 comprimidos con el desayuno y uno con la cena; ', 2);
+guardar_elemento($pdo, 'salud', 'tratamiento', ['nombre' => 'Prueba med', 'persona_id' => $id['ana'], 'datos' => ['pauta' => $larga1]], $trat);
+$ok_larga = lanza(static fn() => guardar_elemento($pdo, 'salud', 'tratamiento', ['nombre' => 'Prueba med', 'persona_id' => $id['ana'], 'datos' => ['pauta' => $larga2]], $trat)) === null;
+$reg = registros_de($pdo, $trat);
+$pauta = array_values(array_filter($reg, static fn($x) => $x['tipo'] === 'Cambio de pauta'))[0];
+comprueba('una pauta larga se guarda (título recortado, el texto entero en las notas)', $ok_larga && longitud($pauta['titulo']) <= 150 && str_contains($pauta['notas'], trim($larga2)));
+$pdo->prepare('UPDATE registros SET tipo = ? WHERE id = ?')->execute(['Tipo antiguo', (int)$reg[0]['id']]);
+actualizar_registro($pdo, (int)$reg[0]['id'], $trat, ['tipo' => 'Tipo antiguo', 'fecha' => '2026-10-08', 'titulo' => 'Corregido']);
+comprueba('corregir un apunte de un tipo que ya no está en la lista lo conserva', registros_de($pdo, $trat)[0]['tipo'] === 'Tipo antiguo');
+comprueba('…pero no deja poner otro que no está', lanza(static fn() => actualizar_registro($pdo, (int)$reg[0]['id'], $trat, ['tipo' => 'Inventado', 'titulo' => 'x'])) instanceof ErrorValidacion);
 terminar();
