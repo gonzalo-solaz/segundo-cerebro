@@ -682,3 +682,14 @@ ya no está en la lista se conserva al corregir; la unidad que pone el tipo (kg 
 aviso suelto marcado «hecho» pasa al historial (tipo «Otro») con la fecha del aviso si ya pasó y hoy si se adelanta. Un
 cambio de pauta largo recorta el título del apunte a 150 y deja el texto entero en las notas. `leer_numero()` toma tal
 cual los números de JSON (1.234 como texto serían miles).
+
+**Revisión general (8/10/2026, Gonzalo: «revisa en general bugs y mejoras»).** Seguridad, sesión, API, archivos,
+migraciones, cron, gastos, peso y trabajo, leídos a fondo. Corregido: (1) **cambiar la contraseña cierra las demás
+sesiones**: la sesión guarda `huella_password()` (del hash, `usuarios.php`) y `auth.php` la compara; antes, otro
+aparato seguía dentro hasta 14 días aunque cambiaras la contraseña o un admin te pusiera una temporal. Las sesiones de
+antes reciben la huella al entrar, sin echar a nadie. (2) `borrar_elemento()` va en transacción y borra los archivos
+del disco DESPUÉS de confirmar (antes, primero los archivos: un fallo a medias dejaba la ficha sin sus PDF). (3)
+`fechas_de_cargo()`: una renovación futura ya no quita los cargos anteriores de lo trimestral/semestral; el aviso
+«Se renueva» usa la renovación de la ficha, no el próximo cargo. (4) Ajustes anota el cambio de rol y de vínculo con
+una persona. **Mejoras habladas, sin hacer:** copia de seguridad (sigue sin haber), silenciar en el correo los avisos
+vencidos a propósito (ITV de la Hanway y del T3), ITV del Astra sin apuntar.

@@ -154,6 +154,13 @@ comprueba('sin renovación: el último recibo + su periodicidad (aproximado)', $
 $c = fechas_de_cargo([], 3, '2026-01-31', '2026-01-01', '2026-12-31');
 comprueba('sin arrastrar el fin de mes', $c['fechas'] === ['2026-04-30', '2026-07-31', '2026-10-31'], implode(',', $c['fechas']));
 comprueba('sin ancla no se inventa la fecha', fechas_de_cargo([], 12, null, '2026-10-01', '2027-09-30') === null);
+$c = fechas_de_cargo(['renovacion' => '2027-06-01'], 3, null, '2026-10-01', '2027-09-30');
+comprueba('una renovación más adelante no quita los cargos de antes (trimestral)', $c['fechas'] === ['2026-12-01', '2027-03-01', '2027-06-01', '2027-09-01'], implode(',', $c['fechas']));
+$trim = ['id' => 91, 'seccion' => 'contratos', 'tipo' => 'seguro', 'nombre' => 'Seguro trimestral', 'enlace_id' => null, 'persona_id' => null,
+         'datos' => ['coste' => 50, 'periodicidad' => 'Trimestral', 'renovacion' => '2026-12-20']];
+$an_t = analisis_gastos_fijos([$trim], [], '2026-10-04');
+comprueba('…y el aviso de renovación usa la de la ficha, no el próximo cargo', (bool)array_filter($an_t['revisar'],
+    static fn($r) => str_contains($r['titulo'], 'Seguro trimestral') && str_contains($r['texto'], '20 dic 2026')));
 $hip = ['id' => 90, 'seccion' => 'contratos', 'tipo' => 'hipoteca', 'nombre' => 'Hipoteca', 'enlace_id' => 2, 'enlace_nombre' => 'Casa', 'persona_id' => 1, 'persona_nombre' => 'Gonzalo',
         'datos' => ['coste' => 600, 'periodicidad' => 'Mensual', 'porcentaje_pago' => 60, 'fecha_fin' => '2042-11-07', 'revision_interes' => 'Trimestral']];
 $an = analisis_gastos_fijos([$hip], [], '2026-10-04', 1);
@@ -550,6 +557,15 @@ comprueba('borrar la ficha borra su plan', plan_de($pdo, $miembro_p) === []);
 comprueba('…y su formación (el curso sigue con los demás)', count(formacion_de($pdo, $curso_f)) === 1);
 borrar_elemento($pdo, $curso_f);
 comprueba('borrar el curso borra quién lo hizo', (int)$pdo->query('SELECT COUNT(*) FROM formacion')->fetchColumn() === 0);
+$con_pdf = guardar_elemento($pdo, 'documentos', 'otro', ['nombre' => 'Con PDF', 'persona_id' => $id['ana']]);
+$doc_b = documento($pdo, guardar_documento_bytes($pdo, $con_pdf, 'Papel', 'papel.pdf', "%PDF-1.7\nx"));
+$pdo->exec('CREATE TRIGGER no_borrar BEFORE DELETE ON elementos BEGIN SELECT RAISE(ABORT, \'fallo a medias\'); END');
+$e = lanza(static fn() => borrar_elemento($pdo, $con_pdf));
+$pdo->exec('DROP TRIGGER no_borrar');
+comprueba('si borrar falla a medias, la ficha y su PDF siguen enteros', $e !== null && elemento($pdo, $con_pdf) !== null
+    && count(documentos_de($pdo, $con_pdf)) === 1 && ruta_documento($doc_b) !== null);
+borrar_elemento($pdo, $con_pdf);
+comprueba('…y si va bien, se borra el archivo del disco', elemento($pdo, $con_pdf) === null && ruta_documento($doc_b) === null);
 
 echo "
 Tratamientos, edición del historial y avisos hechos

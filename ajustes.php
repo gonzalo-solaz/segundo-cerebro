@@ -39,7 +39,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if ($obj === $uid) throw new RuntimeException('No puedes cambiar tu propio rol.');
                 $rol = (string)($_POST['rol'] ?? '');
                 if (!isset(roles()[$rol])) throw new RuntimeException('Rol no válido.');
+                $u = usuario($pdo, $obj);
+                if (!$u) throw new RuntimeException('Ese acceso no existe.');
                 $pdo->prepare('UPDATE usuarios SET rol = ? WHERE id = ?')->execute([$rol, $obj]);
+                anotar($pdo, $uid, "cambió el rol de {$u['nombre']} a " . minusculas(roles()[$rol]));
                 flash('ok', 'Rol cambiado.');
                 redirigir('ajustes.php');
             case 'quitar-2p':
@@ -51,8 +54,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 redirigir('ajustes.php');
             case 'persona':
                 $pid = (int)($_POST['persona_id'] ?? 0) ?: null;
-                if ($pid && !persona($pdo, $pid)) throw new RuntimeException('Esa persona no existe.');
+                $p = $pid ? persona($pdo, $pid) : null;
+                if ($pid && !$p) throw new RuntimeException('Esa persona no existe.');
+                $u = usuario($pdo, $obj);
+                if (!$u) throw new RuntimeException('Ese acceso no existe.');
                 $pdo->prepare('UPDATE usuarios SET persona_id = ? WHERE id = ?')->execute([$pid, $obj]);
+                anotar($pdo, $uid, $p ? "vinculó el acceso de {$u['nombre']} a la ficha de {$p['nombre']}" : "desvinculó el acceso de {$u['nombre']} de su ficha");
                 flash('ok', 'Vinculado.');
                 redirigir('ajustes.php');
         }

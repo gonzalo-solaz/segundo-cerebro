@@ -30,8 +30,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         else {
             try {
                 cambiar_password($pdo, $uid, $nueva);
-                // Sesión nueva tras cambiar la contraseña.
+                // Sesión nueva tras cambiar la contraseña; esta sigue abierta y las de otros aparatos se cierran.
                 if (session_status() === PHP_SESSION_ACTIVE) session_regenerate_id(true);
+                $_SESSION['huella'] = huella_password(usuario($pdo, $uid));
                 anotar($pdo, $uid, 'cambió su contraseña');
                 flash('ok', 'Contraseña cambiada.');
                 redirigir(dos_pasos_obligatoria($usuario_actual) && !dos_pasos_activa($usuario_actual) ? 'cuenta.php#dos-pasos' : 'index.php');

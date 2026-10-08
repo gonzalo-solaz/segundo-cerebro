@@ -74,9 +74,18 @@ function abrir_sesion(PDO $pdo, array $u): void {
     if (session_status() === PHP_SESSION_ACTIVE) session_regenerate_id(true);
     unset($_SESSION['pendiente_2p'], $_SESSION['pendiente_2p_desde']);
     $_SESSION['usuario_id'] = (int)$u['id'];
+    $_SESSION['huella'] = huella_password($u);
     $_SESSION['inicio_sesion'] = time();
     $_SESSION['ultima_actividad'] = time();
     $pdo->prepare('UPDATE usuarios SET ultimo_acceso = ? WHERE id = ?')->execute([ahora(), $u['id']]);
+}
+
+// La sesión guarda una huella de la contraseña con la que se abrió y el guardián (auth.php) la
+// compara en cada página: si la contraseña cambia (desde otro aparato, o un admin pone una
+// temporal), las sesiones abiertas con la anterior dejan de valer. Antes duraban hasta 14 días
+// (8/10/2026). Del hash, nunca de la contraseña: en la sesión no queda nada que la revele.
+function huella_password(array $u): string {
+    return hash('sha256', 'sesion|' . (int)$u['id'] . '|' . (string)$u['password']);
 }
 
 function cambiar_password(PDO $pdo, int $id, string $nueva, bool $temporal = false): void {

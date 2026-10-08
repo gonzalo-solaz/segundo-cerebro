@@ -345,17 +345,27 @@ function cambiar_activo_elemento(PDO $pdo, int $id, bool $activo, ?int $usuario_
 function borrar_elemento(PDO $pdo, int $id, ?int $usuario_id = null): ?string {
     $el = elemento($pdo, $id);
     if (!$el) return null;
-    foreach (documentos_de($pdo, $id) as $d) borrar_archivo_documento($d);
-    // Se borran los hijos a mano además del ON DELETE CASCADE: si un día las
-    // claves foráneas no están activas, no quedan huérfanos.
-    $pdo->prepare('DELETE FROM partidas WHERE registro_id IN (SELECT id FROM registros WHERE elemento_id = ?)')->execute([$id]);
-    $pdo->prepare('DELETE FROM formacion WHERE curso_id = ? OR elemento_id = ?')->execute([$id, $id]);
-    foreach (['vencimientos', 'registros', 'documentos', 'precios', 'plan_desarrollo'] as $tabla) {
-        $pdo->prepare("DELETE FROM {$tabla} WHERE elemento_id = ?")->execute([$id]);
+    $docs = documentos_de($pdo, $id);
+    // Todo o nada, y los archivos del disco solo cuando la base ya lo ha confirmado: antes se
+    // borraban primero, y un fallo a medias dejaba la ficha viva con sus PDF perdidos (8/10/2026).
+    $pdo->beginTransaction();
+    try {
+        // Se borran los hijos a mano además del ON DELETE CASCADE: si un día las
+        // claves foráneas no están activas, no quedan huérfanos.
+        $pdo->prepare('DELETE FROM partidas WHERE registro_id IN (SELECT id FROM registros WHERE elemento_id = ?)')->execute([$id]);
+        $pdo->prepare('DELETE FROM formacion WHERE curso_id = ? OR elemento_id = ?')->execute([$id, $id]);
+        foreach (['vencimientos', 'registros', 'documentos', 'precios', 'plan_desarrollo'] as $tabla) {
+            $pdo->prepare("DELETE FROM {$tabla} WHERE elemento_id = ?")->execute([$id]);
+        }
+        $pdo->prepare('UPDATE elementos SET enlace_id = NULL WHERE enlace_id = ?')->execute([$id]);
+        $pdo->prepare('DELETE FROM elementos WHERE id = ?')->execute([$id]);
+        anotar($pdo, $usuario_id, "borró «{$el['nombre']}» de " . seccion($el['seccion'])['nombre']);
+        $pdo->commit();
+    } catch (Throwable $e) {
+        $pdo->rollBack();
+        throw $e;
     }
-    $pdo->prepare('UPDATE elementos SET enlace_id = NULL WHERE enlace_id = ?')->execute([$id]);
-    $pdo->prepare('DELETE FROM elementos WHERE id = ?')->execute([$id]);
-    anotar($pdo, $usuario_id, "borró «{$el['nombre']}» de " . seccion($el['seccion'])['nombre']);
+    foreach ($docs as $d) borrar_archivo_documento($d);
     return $el['seccion'];
 }
 

@@ -102,6 +102,9 @@ function fechas_de_cargo(array $datos, int $meses, ?string $ultimo, string $desd
     // Siempre desde el ancla (k × periodo): sumar de uno en uno arrastraría
     // el recorte de fin de mes (31 ene → 30 abr → 30 jul…).
     while (sumar_meses($ancla, $k * $meses) < $desde) $k++;
+    // Una renovación que cae más adelante no quita los cargos de antes: un seguro trimestral que
+    // renueva en junio también cobra en diciembre y en marzo (antes se perdían, 8/10/2026).
+    if (!$aprox) while (sumar_meses($ancla, ($k - 1) * $meses) >= $desde) $k--;
     $fechas = [];
     for (; ($f = sumar_meses($ancla, $k * $meses)) <= $hasta; $k++) $fechas[] = $f;
     return ['fechas' => $fechas, 'aprox' => $aprox];
@@ -412,16 +415,20 @@ function revisar_gastos_fijos(array $an, string $hoy): array {
         $d = $i['datos'];
         // Seguros que renuevan en los próximos 90 días: el plazo para no renovar
         // es de un mes antes del vencimiento (art. 22 de la Ley de Contrato de Seguro).
-        if ($i['tipo'] === 'seguro' && $i['proximo'] && !$i['aprox'] && dias_entre($hoy, $i['proximo']) <= 90) {
-            $plazo = sumar_meses($i['proximo'], -1);
+        // La renovación es la de la ficha si aún no ha pasado (en uno que se paga por
+        // trimestres, el próximo cargo no es la renovación); si está atrasada, el próximo cargo.
+        $ren = (string)($d['renovacion'] ?? '');
+        $renueva = fecha_valida($ren) && $ren >= $hoy ? $ren : $i['proximo'];
+        if ($i['tipo'] === 'seguro' && $renueva && !$i['aprox'] && dias_entre($hoy, $renueva) <= 90) {
+            $plazo = sumar_meses($renueva, -1);
             $quedan = dias_entre($hoy, $plazo);
             $out[] = $quedan >= 0
                 ? ['nivel' => $quedan <= 30 ? 'aviso' : 'idea', 'titulo' => 'Se renueva «' . $i['nombre'] . '»',
-                   'texto' => 'El ' . fecha_es($i['proximo']) . ', por ' . eur($i['coste']) . '. Si quieres cambiar, pide precio a otras dos o tres compañías: '
+                   'texto' => 'El ' . fecha_es($renueva) . ', por ' . eur($i['coste']) . '. Si quieres cambiar, pide precio a otras dos o tres compañías: '
                        . 'para no renovar hay que avisar por escrito antes del ' . fecha_es($plazo) . ' (un mes antes, art. 22 de la Ley de Contrato de Seguro).',
                    'enlaces' => [$ficha($i)]]
                 : ['nivel' => 'idea', 'titulo' => 'Se renueva «' . $i['nombre'] . '»',
-                   'texto' => 'El ' . fecha_es($i['proximo']) . ', por ' . eur($i['coste']) . '. Ya no da tiempo a avisar para no renovar (hacía falta un mes antes): '
+                   'texto' => 'El ' . fecha_es($renueva) . ', por ' . eur($i['coste']) . '. Ya no da tiempo a avisar para no renovar (hacía falta un mes antes): '
                        . 'cuando llegue el recibo, si sube, apunta el precio nuevo y compáralo con calma antes de la próxima renovación.',
                    'enlaces' => [$ficha($i)]];
         }

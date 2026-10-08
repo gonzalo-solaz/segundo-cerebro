@@ -44,6 +44,16 @@ if (!$usuario_actual || $usuario_actual['estado'] !== 'activo') {
     redirigir('login.php?motivo=desactivada');
 }
 
+// Si la contraseña ha cambiado desde que se abrió esta sesión, se cierra (usuarios.php,
+// huella_password). Una sesión de antes de existir la huella la recibe ahora, sin echar a nadie.
+$huella = huella_password($usuario_actual);
+if (!isset($_SESSION['huella'])) {
+    $_SESSION['huella'] = $huella;
+} elseif (!hash_equals((string)$_SESSION['huella'], $huella)) {
+    cerrar_sesion();
+    al_login('expirada');
+}
+
 if ((int)$usuario_actual['debe_cambiar'] === 1
     && !in_array(basename((string)($_SERVER['SCRIPT_NAME'] ?? '')), ['cuenta.php', 'logout.php'], true)) {
     redirigir('cuenta.php');

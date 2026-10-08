@@ -465,6 +465,16 @@ comprueba('un admin sin dos pasos va a activarlos', str_ends_with((string)$r['re
 pinta_bien('«Mi cuenta» le da la clave para la app', pedir('cuenta.php', [], null, $id['admin2']), 'clave-totp');
 pinta_bien('un miembro sin dos pasos entra normal', pedir('index.php', [], null, $id['miembro']), 'Lo que viene');
 pinta_bien('Ajustes deja quitar los dos pasos a otro admin', pedir('ajustes.php'), '2 pasos');
+pedir('ajustes.php', [], ['accion' => 'rol', 'usuario_id' => (string)$id['miembro'], 'rol' => 'miembro']);
+comprueba('cambiar un rol deja rastro en la actividad', str_contains((string)$pdo->query('SELECT texto FROM actividad ORDER BY id DESC LIMIT 1')->fetchColumn(), 'cambió el rol'));
+// Una sesión abierta con la contraseña de antes deja de valer al cambiarla (desde otro aparato o por una temporal).
+$u_m = usuario($pdo, $id['miembro']);
+$ses = ['usuario_id' => $id['miembro'], 'inicio_sesion' => time(), 'ultima_actividad' => time(), 'huella' => huella_password($u_m)];
+pinta_bien('una sesión con la contraseña de siempre sigue dentro', pedir_con_sesion('index.php', [], null, $ses), 'Lo que viene');
+$pdo->prepare('UPDATE usuarios SET password = ? WHERE id = ?')->execute([password_hash('otra-contraseña-larga', PASSWORD_DEFAULT), $id['miembro']]);
+$r = pedir_con_sesion('index.php', [], null, $ses);
+comprueba('…y si la contraseña cambia, al login', str_contains((string)$r['redireccion'], 'login.php?motivo=expirada'), (string)$r['redireccion']);
+$pdo->prepare('UPDATE usuarios SET password = ? WHERE id = ?')->execute([$u_m['password'], $id['miembro']]);
 $r = pedir('finanzas-entrar.php', ['a' => 'nomina.php']);
 preg_match('#/finanzas-personales/entrar\.php\?pase=([^&\s]+)#', (string)$r['redireccion'], $m);
 $datos = isset($m[1]) ? pase_leer(PASE_CLAVE, rawurldecode($m[1]), 'entrar') : null;
