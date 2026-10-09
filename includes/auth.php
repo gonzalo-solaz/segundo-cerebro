@@ -65,3 +65,6 @@ if (dos_pasos_obligatoria($usuario_actual) && !dos_pasos_activa($usuario_actual)
     && !in_array(basename((string)($_SERVER['SCRIPT_NAME'] ?? '')), ['cuenta.php', 'logout.php'], true)) {
     redirigir('cuenta.php#dos-pasos');
 }
+
+// Euríbor e hipotecas al día sin que nadie espere: si hace más de una hora, después de mandar la página.
+mantenimiento_en_segundo_plano($pdo);

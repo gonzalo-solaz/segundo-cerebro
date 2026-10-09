@@ -14,6 +14,9 @@ private/*
 # en la app (van por la API, no por el repositorio ni por FTP).
 facturas/
 
+# Informes en HTML para mandar a mano (WhatsApp, correo): llevan datos personales.
+informes/
+
 # Copias y temporales
 *.log
 *.bak

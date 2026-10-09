@@ -25,6 +25,8 @@ function completar_vencimiento(array $v): array {
     $v['dias'] = dias_entre(hoy(), $v['fecha']);
     $v['situacion'] = situacion_vencimiento($v);
     $v['automatico'] = str_starts_with((string)$v['origen'], 'campo:');
+    // «auto:…» = lo pone y lo quita la app sola (la próxima subida de la hipoteca): solo informa.
+    $v['informativo'] = str_starts_with((string)$v['origen'], 'auto:');
     return $v;
 }
 
@@ -176,7 +178,7 @@ function marcar_hecho(PDO $pdo, int $id, ?int $usuario_id = null): ?string {
         // los automáticos no: vienen de un campo y el apunte real lo hace quien paga o pasa la revisión.
         // Fecha: la del aviso si ya pasó (la cita del día 3 marcada el 8 fue el 3); si se adelanta, hoy.
         $al_historial = false;
-        if (!$v['automatico'] && $v['elemento_id']) {
+        if (!$v['automatico'] && !$v['informativo'] && $v['elemento_id']) {
             $conf = (seccion($v['seccion'])['registros'] ?? null);
             if ($conf && in_array('Otro', $conf['tipos'], true)) {
                 crear_registro($pdo, [
@@ -201,6 +203,9 @@ function marcar_hecho(PDO $pdo, int $id, ?int $usuario_id = null): ?string {
 function borrar_vencimiento(PDO $pdo, int $id, ?int $usuario_id = null): void {
     $v = vencimiento($pdo, $id);
     if (!$v) return;
+    if ($v['informativo'] && $v['estado'] === 'pendiente') {
+        throw new RuntimeException('Este aviso lo pone la app sola y se quita cuando llega la fecha. Si no quieres verlo, márcalo como hecho.');
+    }
     if ($v['automatico'] && $v['estado'] === 'pendiente') {
         // Si se borrara, volvería a salir al guardar la ficha. Lo honrado es
         // decir dónde se cambia.

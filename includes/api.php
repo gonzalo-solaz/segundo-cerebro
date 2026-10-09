@@ -45,6 +45,7 @@ function api_ejecutar(PDO $pdo, array $p, ?array $archivo = null): array {
                       'documentos' => documentos_de($pdo, $el['id'])];
             if (lleva_plan($el)) $ficha['plan_desarrollo'] = plan_de($pdo, $el['id']);
             if (es_curso($el) || hace_formacion($el)) $ficha['formacion'] = formacion_de($pdo, $el['id']);
+            if ($el['tipo'] === 'hipoteca' && ($c = cuadro_de($pdo, $el))) $ficha['amortizacion'] = amortizacion_para_finanzas($c);
             return $ficha;
 
         case 'elemento':
@@ -127,7 +128,7 @@ function api_ejecutar(PDO $pdo, array $p, ?array $archivo = null): array {
             // Lo que costaba un contrato desde una fecha (para comparar con hace un año):
             // las primas de años anteriores, la renta del garaje que sale en finanzas…
             $id = guardar_precio($pdo, (int)($datos['elemento_id'] ?? 0), (string)($datos['desde'] ?? ''), $datos['coste'] ?? null,
-                isset($datos['periodicidad']) ? (string)$datos['periodicidad'] : null, (string)($datos['nota'] ?? ''), null);
+                isset($datos['periodicidad']) ? (string)$datos['periodicidad'] : null, (string)($datos['nota'] ?? ''), null, $datos['tipo'] ?? null);
             return ['precio_id' => $id, 'precios' => precios_por_elemento($pdo)[(int)($datos['elemento_id'] ?? 0)] ?? []];
 
         case 'peso':
@@ -152,6 +153,25 @@ function api_ejecutar(PDO $pdo, array $p, ?array $archivo = null): array {
         case 'conexiones':
             return api_conexiones();
 
+        case 'hipoteca':
+            // El cuadro de amortización calculado: resumen, próxima revisión y, con "filas": true, cuota a cuota.
+            $el = elemento($pdo, (int)($datos['id'] ?? 0));
+            if (!$el || $el['tipo'] !== 'hipoteca') throw new RuntimeException('Ese elemento no es una hipoteca.');
+            $c = cuadro_de($pdo, $el, cargos_hipoteca());
+            if (!$c) throw new RuntimeException('A la ficha le faltan términos para calcular el cuadro: capital, número de cuotas, primera cuota y, si es variable, diferencial, revisión y tipo inicial.');
+            $r = $c['resumen'];
+            $out = ['resumen' => array_diff_key($r, array_flip(['ultima', 'proxima'])) + ['ultima' => $r['ultima'], 'proxima' => $r['proxima']],
+                    'euribor' => array_diff_key(euribor_estado($pdo), ['serie' => 1]), 'cargos_sin_cuota' => $c['cargos_sin_cuota']];
+            if (!empty($datos['filas'])) $out['filas'] = $c['filas'];
+            return $out;
+
+        case 'euribor':
+            // Consulta el Euríbor ya (sin esperar a las 6 h) y pone al día las hipotecas.
+            $m = mantenimiento($pdo, true);
+            $e = euribor_estado($pdo);
+            $e['serie'] = array_slice($e['serie'], -24, null, true);
+            return ['consulta' => $m['euribor'], 'hipotecas' => $m['hipotecas'], 'euribor' => $e];
+
         case 'fichas':
             // Para finanzas (origen único de los datos): varias fichas de una vez,
             // con su historial y, si tienen titular, su fecha de nacimiento.
@@ -162,10 +182,12 @@ function api_ejecutar(PDO $pdo, array $p, ?array $archivo = null): array {
                 $p = $el['persona_id'] ? persona($pdo, (int)$el['persona_id']) : null;
                 $out[(string)$fid] = $el + ['registros' => registros_de($pdo, $fid, 50),
                                             'persona_nacimiento' => $p['fecha_nacimiento'] ?? null];
+                // La hipoteca, con lo pagado y lo que queda calculados aquí (finanzas ya no lo apunta a mano).
+                if ($el['tipo'] === 'hipoteca' && ($c = cuadro_de($pdo, $el))) $out[(string)$fid]['amortizacion'] = amortizacion_para_finanzas($c);
             }
             return ['fichas' => $out];
     }
-    throw new RuntimeException("Acción desconocida «{$accion}». Las que hay: estado, esquema, personas, buscar, ficha, elemento, vencimiento, hecho, registro, partidas, comunidad, peso, documento, actividad, conexiones, fichas.");
+    throw new RuntimeException("Acción desconocida «{$accion}». Las que hay: estado, esquema, personas, buscar, ficha, elemento, vencimiento, hecho, registro, partidas, comunidad, peso, documento, actividad, conexiones, fichas, hipoteca, euribor, precio, plan, formacion, gastos.");
 }
 
 /**
@@ -204,6 +226,7 @@ function api_estado(PDO $pdo): array {
         'elementos_por_seccion' => contar_elementos($pdo),
         'gasto_fijo_mensual' => coste_mensual_total($pdo),
         'vigilancia' => estado_vigilancia($pdo)['texto'],
+        'euribor' => array_diff_key(euribor_estado($pdo), ['serie' => 1]),
     ];
 }
 

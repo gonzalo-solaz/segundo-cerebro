@@ -144,7 +144,7 @@ function historial_de_gastos(PDO $pdo, string $hoy): array {
                 $o['max'] = max($o['max'] ?? $c, $c);
                 $o['min'] = min($o['min'] ?? $c, $c);
                 $o['fechas'][] = $f['fecha'];
-            } elseif ($f['tipo'] !== 'Compra o venta') {
+            } elseif (!in_array($f['tipo'], ['Compra o venta', HIPOTECA_TIPO_AMORTIZACION], true)) {
                 $o['otros'] += $c;
             }
         }
@@ -155,7 +155,8 @@ function historial_de_gastos(PDO $pdo, string $hoy): array {
 
 // Lo gastado en los últimos 12 meses (suma de costes del historial).
 function gasto_ultimo_ano(PDO $pdo, int $elemento_id): float {
-    $st = $pdo->prepare('SELECT COALESCE(SUM(coste), 0) FROM registros WHERE elemento_id = ? AND fecha > ?');
-    $st->execute([$elemento_id, sumar_meses(hoy(), -12)]);
+    // Una amortización anticipada no es gasto: es deuda que se devuelve antes.
+    $st = $pdo->prepare('SELECT COALESCE(SUM(coste), 0) FROM registros WHERE elemento_id = ? AND fecha > ? AND tipo <> ?');
+    $st->execute([$elemento_id, sumar_meses(hoy(), -12), HIPOTECA_TIPO_AMORTIZACION]);
     return (float)$st->fetchColumn();
 }

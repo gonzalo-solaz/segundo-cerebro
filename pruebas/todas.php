@@ -19,6 +19,7 @@ $pruebas = [
     'prueba-dominio'  => 'fechas, campos, avisos automáticos, repeticiones e historial',
     'prueba-avisos'   => 'el correo diario avisa una vez, no cada día',
     'prueba-api'      => 'la API graba igual que los formularios',
+    'prueba-hipoteca' => 'el Euríbor, el cuadro de amortización y la hipoteca que se pone al día sola',
     'prueba-paginas'  => 'cada página se pinta y los formularios guardan lo que deben',
 ];
 

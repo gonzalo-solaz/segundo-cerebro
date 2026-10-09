@@ -973,3 +973,35 @@ a.kpi-enlace:hover .kpi-mas { text-decoration: underline; text-underline-offset:
    sin los márgenes del desplegable, el enlace se estiraba hasta su altura (6/10/2026). */
 .botones-tarjeta { align-items: flex-start; }
 .botones-tarjeta > details.desplegable { margin: 0; }
+
+/* ----- Hipoteca: cuadro de amortización (hipoteca.php, 9/10/2026) ----- */
+.grafica-hipoteca { display: block; width: 100%; height: auto; }
+.gh-rejilla { stroke: var(--borde); stroke-width: 1; }
+.gh-eje { fill: var(--tenue); font-size: 11px; font-family: inherit; }
+.gh-linea { fill: none; stroke: var(--acento); stroke-width: 2.5; stroke-linejoin: round; }
+.gh-estimada { stroke-dasharray: 5 4; opacity: .65; }
+.gh-hoy { stroke: var(--tenue); stroke-width: 1; stroke-dasharray: 3 3; }
+.gh-hoy-txt { font-weight: 600; }
+.gh-punto { fill: var(--acento); }
+.gh-punto-futuro { fill: var(--panel); stroke: var(--acento); stroke-width: 1.5; }
+@media (max-width: 640px) {
+  .gh-eje { font-size: 21px; }
+  .gh-linea { stroke-width: 4.5; }
+  .gh-punto { r: 4; }
+}
+.progreso { height: 10px; border-radius: 999px; background: var(--borde); overflow: hidden; margin: 6px 0 4px; }
+.progreso > span { display: block; height: 100%; border-radius: 999px; background: var(--acento); }
+.estado-cuota { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; white-space: nowrap;
+  background: var(--neutro-hover); color: var(--texto-2); }
+.estado-cobrada { background: color-mix(in srgb, var(--verde) 16%, transparent); color: var(--verde); }
+.estado-sin_cargo, .estado-pendiente_extracto { background: color-mix(in srgb, var(--ambar) 16%, transparent); color: var(--ambar); }
+.estado-estimada { font-style: italic; }
+.cuadro-anio > summary { cursor: pointer; padding: 10px 0; display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; border-bottom: 1px solid var(--borde); }
+.cuadro-anio > summary strong { font-size: 16px; }
+.cuadro-anio[open] > summary { border-bottom: 0; }
+.cuadro-anio .tabla td, .cuadro-anio .tabla th { padding: 8px 8px; white-space: nowrap; }
+.cuadro-anio .tabla td.num, .cuadro-anio .tabla th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.cuadro-anio tr.fila-hoy td { background: color-mix(in srgb, var(--acento) 8%, transparent); }
+.cobro-dif { display: block; font-size: 12px; color: var(--tenue); }
+.lista-explica { margin: 0; padding-left: 1.1rem; color: var(--texto-2); font-size: 14.5px; }
+.lista-explica li { margin: 0 0 .5rem; }

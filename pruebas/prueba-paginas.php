@@ -552,6 +552,20 @@ $ids = implode(',', mediciones_peso($pdo, $id['peso'])['2026-10-03']['ids']);
 pedir('peso.php', ['id' => (string)$id['peso']], ['accion' => 'borrar-medicion', 'ids' => $ids]);
 comprueba('borrar lo de un día', !isset(mediciones_peso($pdo, $id['peso'])['2026-10-03']));
 
+// La hipoteca que se calcula sola: su ficha y su cuadro de amortización (al final: suma al gasto fijo).
+$hid = guardar_elemento($pdo, 'contratos', 'hipoteca', ['nombre' => 'Hipoteca de prueba', 'datos' => [
+    'compania' => 'Banco', 'coste' => '611,65', 'periodicidad' => 'Mensual', 'capital_inicial' => '124000', 'cuotas_totales' => '300',
+    'revision_interes' => 'Trimestral', 'diferencial' => '1,05', 'tipo_inicial' => '1,6', 'meses_tipo_inicial' => '12', 'primera_cuota' => '2017-12-07']], null, $id['admin']);
+euribor_guardar($pdo, ['2026-09' => ['valor' => 3.247, 'dias' => 22, 'definitivo' => true], '2026-10' => ['valor' => 3.233, 'dias' => 6, 'definitivo' => false]]);
+guardar_precio($pdo, $hid, '2026-09-07', 611.65, null, 'cuadro del banco', null, 3.905);
+pinta_bien('la ficha de la hipoteca lleva su amortización y el botón del cuadro', pedir('elemento.php', ['id' => (string)$hid]), 'Cuadro de amortización');
+$r = pedir('hipoteca.php', ['id' => (string)$hid]);
+pinta_bien('el cuadro de amortización se pinta, con la próxima revisión', $r, 'Próxima revisión');
+comprueba('…con la cuota a cuota hasta el final y la gráfica', str_contains($r['html'], 'Cuota a cuota') && str_contains($r['html'], '7 nov 2042')
+    && str_contains($r['html'], 'grafica-hipoteca'));
+pinta_bien('un miembro también lo ve (sin los cobros del banco)', pedir('hipoteca.php', ['id' => (string)$hid], null, $id['miembro']), 'Cuota a cuota');
+pinta_bien('gastos fijos: la hipoteca se revisa sola', pedir('gastos-fijos.php'), 'cambia sola la cuota con el Euríbor');
+
 $pdo = null;   // en Windows, un archivo abierto no se puede borrar
 @unlink($bd);
 terminar();

@@ -10,8 +10,11 @@
 //  garaje que sale en finanzas…). Gonzalo, 4/10/2026.
 // =====================================================================
 
-/** Apunta (o sustituye, si ya hay uno ese día) el precio de un elemento desde una fecha. */
-function guardar_precio(PDO $pdo, int $elemento_id, string $desde, $coste, ?string $periodicidad = null, string $nota = '', ?int $usuario_id = null): int {
+/**
+ * Apunta (o sustituye, si ya hay uno ese día) el precio de un elemento desde una fecha. $tipo: el
+ * interés de esa cuota, solo en las hipotecas (su historial de precios es también el de tipos).
+ */
+function guardar_precio(PDO $pdo, int $elemento_id, string $desde, $coste, ?string $periodicidad = null, string $nota = '', ?int $usuario_id = null, $tipo = null): int {
     $el = elemento($pdo, $elemento_id);
     $errores = [];
     if (!$el) throw new ErrorValidacion(['Ese elemento no existe.']);
@@ -23,11 +26,13 @@ function guardar_precio(PDO $pdo, int $elemento_id, string $desde, $coste, ?stri
     $periodicidad ??= (string)($el['datos']['periodicidad'] ?? '');
     if (!isset(periodicidades()[$periodicidad])) $errores[] = 'La periodicidad tiene que ser una de estas: ' . implode(', ', array_keys(periodicidades())) . '.';
     if (longitud($nota) > 200) $errores[] = 'La nota es demasiado larga (200 caracteres como mucho).';
+    $t = $tipo === null || $tipo === '' ? null : (is_numeric($tipo) ? (float)$tipo : leer_numero($tipo));
+    if ($tipo !== null && $tipo !== '' && ($t === null || $t < -5 || $t > 30)) $errores[] = 'El tipo tiene que ser un porcentaje (ej.: 3,905).';
     if ($errores) throw new ErrorValidacion($errores);
 
     $pdo->prepare('DELETE FROM precios WHERE elemento_id = ? AND desde = ?')->execute([$elemento_id, $desde]);
-    $pdo->prepare('INSERT INTO precios (elemento_id, desde, coste, periodicidad, nota, creado_en) VALUES (?, ?, ?, ?, ?, ?)')
-        ->execute([$elemento_id, $desde, round($c, 2), $periodicidad, trim($nota), ahora()]);
+    $pdo->prepare('INSERT INTO precios (elemento_id, desde, coste, periodicidad, nota, tipo, creado_en) VALUES (?, ?, ?, ?, ?, ?, ?)')
+        ->execute([$elemento_id, $desde, round($c, 2), $periodicidad, trim($nota), $t !== null ? round($t, 3) : null, ahora()]);
     $id = (int)$pdo->lastInsertId();
     anotar($pdo, $usuario_id, 'apuntó el precio de «' . $el['nombre'] . '» desde el ' . fecha_es($desde) . ': ' . eur($c));
     return $id;
@@ -59,8 +64,9 @@ function registrar_cambio_precio(PDO $pdo, int $id, ?array $antes, array $datos)
 /** Todo el historial: [elemento_id => [['desde', 'coste', 'periodicidad', 'nota'], …]] de más viejo a más nuevo. */
 function precios_por_elemento(PDO $pdo): array {
     $out = [];
-    foreach ($pdo->query('SELECT elemento_id, desde, coste, periodicidad, nota FROM precios ORDER BY desde, id') as $f) {
-        $out[(int)$f['elemento_id']][] = ['desde' => $f['desde'], 'coste' => (float)$f['coste'], 'periodicidad' => $f['periodicidad'], 'nota' => $f['nota']];
+    foreach ($pdo->query('SELECT elemento_id, desde, coste, periodicidad, nota, tipo FROM precios ORDER BY desde, id') as $f) {
+        $out[(int)$f['elemento_id']][] = ['desde' => $f['desde'], 'coste' => (float)$f['coste'], 'periodicidad' => $f['periodicidad'], 'nota' => $f['nota'],
+                                          'tipo' => $f['tipo'] !== null ? (float)$f['tipo'] : null];
     }
     return $out;
 }
@@ -72,7 +78,7 @@ function precios_por_elemento(PDO $pdo): array {
  * Las cuotas de la hipoteca desde 2017 salen de aquí (Gonzalo, 9/10/2026).
  */
 function cambios_de_precio(PDO $pdo, int $elemento_id): array {
-    $st = $pdo->prepare('SELECT desde, coste, periodicidad, nota FROM precios WHERE elemento_id = ? ORDER BY desde, id');
+    $st = $pdo->prepare('SELECT desde, coste, periodicidad, nota, tipo FROM precios WHERE elemento_id = ? ORDER BY desde, id');
     $st->execute([$elemento_id]);
     $out = [];
     $ant = null;
@@ -80,7 +86,8 @@ function cambios_de_precio(PDO $pdo, int $elemento_id): array {
         $c = (float)$f['coste'];
         if ($ant && $ant['coste'] === $c && $ant['periodicidad'] === $f['periodicidad']) continue;
         $pct = $ant && $ant['coste'] > 0 && $ant['periodicidad'] === $f['periodicidad'] ? ($c / $ant['coste'] - 1) * 100 : null;
-        $ant = ['desde' => $f['desde'], 'coste' => $c, 'periodicidad' => $f['periodicidad'], 'nota' => (string)$f['nota'], 'pct' => $pct];
+        $ant = ['desde' => $f['desde'], 'coste' => $c, 'periodicidad' => $f['periodicidad'], 'nota' => (string)$f['nota'], 'pct' => $pct,
+                'tipo' => $f['tipo'] !== null ? (float)$f['tipo'] : null];
         $out[] = $ant;
     }
     return array_reverse($out);

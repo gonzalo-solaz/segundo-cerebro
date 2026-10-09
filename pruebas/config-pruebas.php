@@ -15,6 +15,8 @@ define('PASE_CLAVE', 'clave-de-pase-pruebas');
 // Con clave, la ficha del empleo lee las nóminas de la copia de SC_CACHE (sin red).
 define('FINANZAS_API_CLAVE', getenv('SC_FINANZAS_CLAVE') ?: '');
 define('IPC_URL', '');   // sin red: el IPC sale de la copia de DIR_CACHE (ipc.json)
+define('EURIBOR_URL', '');       // sin red: el Euríbor lo siembran las pruebas en su tabla
+define('EURIBOR_BCE_URL', '');
 define('DIR_CACHE', getenv('SC_CACHE') ?: sys_get_temp_dir() . '/sc-cache-pruebas');
 define('DIR_ARCHIVOS', getenv('SC_ARCHIVOS') ?: sys_get_temp_dir() . '/sc-archivos-pruebas');
 define('SC_HOY', getenv('SC_HOY') ?: '2026-10-03');

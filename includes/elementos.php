@@ -425,6 +425,12 @@ function elementos_con_coste(PDO $pdo): array {
     foreach ($pdo->query(SQL_ELEMENTO . ' WHERE e.activo = 1 ORDER BY e.seccion, e.tipo, e.nombre') as $f) {
         if (isset($con_coste[$f['seccion']][$f['tipo']])) $out[] = decodificar_elemento($f);
     }
+    // La hipoteca que se calcula sola lleva su próxima subida o bajada (para «Qué revisar» del gasto fijo).
+    foreach ($out as $i => $el) {
+        if ($el['tipo'] !== 'hipoteca' || !($c = cuadro_de($pdo, $el))) continue;
+        $out[$i]['hipoteca_auto'] = hipoteca_terminos($el)['variable'];
+        $out[$i]['hipoteca_cambio'] = $c['resumen']['cambio'];
+    }
     return $out;
 }
 

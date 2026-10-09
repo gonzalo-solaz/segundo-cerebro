@@ -130,6 +130,11 @@ $acciones = '<a class="btn btn-sutil" href="' . e(url('elemento-editar.php?id=' 
 if ($el['seccion'] === 'salud' && $el['tipo'] === 'peso') {
     $acciones = '<a class="btn btn-primario" href="' . e(url('peso.php?id=' . $id)) . '">' . icono('bascula') . 'Evolución y pautas</a>' . $acciones;
 }
+// La hipoteca con sus términos lleva su cuadro de amortización calculado (includes/hipoteca.php).
+$cuadro_hip = $el['seccion'] === 'contratos' && $el['tipo'] === 'hipoteca' ? cuadro_de($pdo, $el) : null;
+if ($cuadro_hip) {
+    $acciones = '<a class="btn btn-primario" href="' . e(url('hipoteca.php?id=' . $id)) . '">' . icono('historial') . 'Cuadro de amortización</a>' . $acciones;
+}
 if ($el['seccion'] === 'contratos' && $el['tipo'] === 'comunidad') {
     $acciones = '<a class="btn btn-sutil" href="' . e(url('gasto-comunidad.php?id=' . $id)) . '">' . icono('historial') . 'Gasto por partidas</a>' . $acciones;
 }
@@ -199,6 +204,27 @@ if ($el['seccion'] === 'trabajo') {
       <?php endif; ?>
     </section>
 
+    <?php if ($cuadro_hip): $rh = $cuadro_hip['resumen']; $ch = $rh['cambio']; ?>
+      <section class="tarjeta" id="amortizacion">
+        <div class="tarjeta-cabecera"><h2><?= icono('cartera') ?>Amortización</h2><span class="tenue">calculada sola</span></div>
+        <div class="progreso" aria-hidden="true"><span style="width:<?= e(number_format(min(100, $rh['porcentaje_amortizado']), 1, '.', '')) ?>%"></span></div>
+        <dl class="datos">
+          <div><dt>Capital pendiente</dt><dd><?= e(eur($rh['capital_pendiente'])) ?></dd></div>
+          <div><dt>Amortizado</dt><dd><?= e(numero_es($rh['porcentaje_amortizado'])) ?>&nbsp;% · <?= (int)$rh['cuotas_pagadas'] ?> de <?= (int)$rh['cuotas_pagadas'] + (int)$rh['cuotas_pendientes'] ?> cuotas</dd></div>
+          <?php if ($rh['proxima']): ?>
+            <div><dt>Próxima cuota</dt><dd><?= e(eur($rh['proxima']['cuota'])) ?> el <?= e(fecha_es($rh['proxima']['fecha'])) ?></dd></div>
+          <?php endif; ?>
+          <?php if ($ch): ?>
+            <div><dt>Próximo cambio</dt><dd><?= $ch['fila']['estado'] === 'estimada' ? '≈' : '' ?><?= e(eur($ch['fila']['cuota'])) ?> desde el <?= e(fecha_es($ch['fila']['fecha'])) ?>
+              (<?= $ch['diferencia'] > 0 ? '+' : '−' ?><?= e(eur(abs($ch['diferencia']))) ?>, al <?= e(tipo_es((float)$ch['fila']['tipo'])) ?>)</dd></div>
+          <?php endif; ?>
+          <div><dt>Intereses pagados</dt><dd><?= e(eur($rh['intereses_pagados'])) ?></dd></div>
+          <div><dt>Intereses que quedan</dt><dd>≈<?= e(eur($rh['intereses_pendientes'])) ?></dd></div>
+        </dl>
+        <p class="tenue">La cuota y el tipo de esta ficha se ponen solos con cada revisión del Euríbor.</p>
+      </section>
+    <?php endif; ?>
+
     <?php if (es_curso($el)) pintar_formacion($pdo, $el); ?>
     <?php if (lleva_plan($el)) pintar_plan($el, plan_de($pdo, $id), hoy()); ?>
     <?php if (hace_formacion($el)) pintar_formacion($pdo, $el); ?>
@@ -224,7 +250,8 @@ if ($el['seccion'] === 'trabajo') {
     <?php endforeach; ?>
 
     <?php // Cómo ha cambiado su precio (tabla precios): las cuotas de la hipoteca desde 2017, las primas del seguro… Plegado. ?>
-    <?php $precios_el = isset($def['campos']['coste']) ? cambios_de_precio($pdo, $id) : []; ?>
+    <?php // En la hipoteca con cuadro, la evolución está (mejor) en su página. ?>
+    <?php $precios_el = isset($def['campos']['coste']) && !$cuadro_hip ? cambios_de_precio($pdo, $id) : []; ?>
     <?php if (count($precios_el) > 1): ?>
       <details class="tarjeta tarjeta-plegable" id="precios">
         <summary>

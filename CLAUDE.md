@@ -5,7 +5,7 @@ Memoria viva del proyecto. Se actualiza **a la vez que el código**, con el
 deduce leyendo el código no se repite aquí.
 
 Última revisión: **6/10/2026**. Estado: **app base escrita y probada en local
-(5/5 pruebas), sin desplegar todavía** (ver «Estado»).
+(6/6 pruebas), sin desplegar todavía** (ver «Estado»).
 
 ## Comportamiento al iniciar
 
@@ -119,10 +119,10 @@ avisa por correo.
   app al estilo de finanzas. Si finanzas renombra clases o variables del panel, revisar
   `finanzas.css`. Antes (hasta 3/10/2026) se copiaban los tokens de
   finanzas con Poppins.
-- **Probar:** `php pruebas/todas.php` → tiene que dar **5/5** antes de decir que
+- **Probar:** `php pruebas/todas.php` → tiene que dar **6/6** antes de decir que
   algo está listo para subir. Van contra **SQLite** con el esquema real (no hay
   base simulada a mano como en finanzas) y no necesitan `private/` ni MySQL, así
-  que dan 5/5 en cualquier ordenador. El PHP de este equipo (winget, sin
+  que dan 6/6 en cualquier ordenador. El PHP de este equipo (winget, sin
   php.ini) no carga pdo_sqlite: `includes/cli.php` relanza el script con
   `-d extension=pdo_sqlite` solo. No tocar la instalación de PHP.
 - **PWA instalable (3/10/2026, petición de Gonzalo, copiada de van4ever).**
@@ -147,7 +147,7 @@ avisa por correo.
   SQLite del scratchpad y se sirven con otro `config` vía `SC_CONFIG` (ver «Revisión del móvil»).
   Con datos de juguete no salen los fallos (notas largas, números de factura, dos teléfonos).
 - **Desplegar — lo haces tú, por GitHub (corrección de Gonzalo, 3/10/2026).** No se
-  sube nada con FileZilla: tras editar y pasar las pruebas (5/5), haces commit y
+  sube nada con FileZilla: tras editar y pasar las pruebas (6/6), haces commit y
   `git push` a `main`; GitHub Actions pasa las pruebas y sube por FTP a Hostinger
   (ver «Despliegue real»). No empujes sin pruebas verdes ni cambios ajenos
   (revisa `git status`). El workflow decide qué se sube, no hace falta dar listas
@@ -771,6 +771,37 @@ el tipo, «cuadro de Mediolanum»), que la ficha enseña en la tarjeta plegada �
 genérica: en cualquier ficha con coste y dos precios o más sale «Historial de precios»). En la ficha 33, `interes` = «Variable:
 Euríbor + 1,05 (3,905 % desde el 7/9/2026)» y, en notas, el número del préstamo, el aplazamiento de cuotas que queda (1 este año,
 6 en el contrato) y el enlace al estudio. En finanzas, el capital pendiente y las cuotas a 9/10/2026. La web del banco da una TAE
-del 3,56 % que no cuadra con el tipo (3,905 % → TAE 3,98 %). **Con cada revisión:** cuota nueva en la ficha 33 (`coste`) y un
-`precio` con el tipo en la nota; el capital, en finanzas. **Por confirmar:** si el cargo de Generali de 135,23 € (6/7/2026, cuenta
-de Mediolanum de Gonzalo) es la prima del seguro que bonifica. No repetir.
+del 3,56 % que no cuadra con el tipo (3,905 % → TAE 3,98 %). El cargo de Generali de 135,23 € (6/7/2026, cuenta de Mediolanum de
+Gonzalo) es el seguro de vida que le hicieron firmar con la hipoteca (el que bonifica −0,10), confirmado por él. No repetir. Informe
+en HTML para mandar por WhatsApp (sin JS ni recursos externos, se ve en el móvil): `informes/hipoteca-mediolanum-2026-10.html`
+(carpeta gitignored: lleva datos personales).
+
+**La hipoteca se calcula sola (9/10/2026, Gonzalo: «quiero un segundo cerebro dinámico: que al entrar consulte el Euríbor, que la
+tabla de amortización se actualice con el dato real de finanzas y que esté todo conectado; nada de tareas manuales»).**
+- **Euríbor** (`includes/euribor.php`, tabla `euribor`, migración 009): del CSV diario del Banco de España (ti_1_7, serie D_DNBAF172;
+  sin clave) se saca la media de cada mes a 3 decimales (cuadra con el BOE y con las 25 revisiones del banco) y la del mes en curso,
+  provisional; reserva, la media mensual del BCE. Un mes se cierra 3 días después de acabar. Se consulta como mucho cada 6 h.
+- **Cuándo:** `includes/mantenimiento.php`. En cada visita, si hace más de una hora, DESPUÉS de mandar la página
+  (`litespeed_finish_request`, Hostinger es LiteSpeed; o `fastcgi_finish_request`): nadie espera. Sin ellas, la visita solo hace lo
+  que no sale a la red. También el cron diario y la acción `euribor` de la API. En CLI (pruebas) no se lanza.
+- **Cuadro** (`includes/hipoteca.php`): se calcula cada vez, no se guarda. Términos nuevos de la ficha: `primera_cuota`,
+  `diferencial`, `tipo_inicial`, `meses_tipo_inicial` (+ `revision_interes`, `capital_inicial`, `cuotas_totales`). Tipos conocidos =
+  `precios` con `tipo` (columna nueva): el cuadro del banco hacia atrás. Revisión = Euríbor de 2 meses antes de la cuota + diferencial
+  (`HIPOTECA_MESES_EURIBOR`); sin el mes cerrado, «estimado» con el último. Intereses = pendiente × tipo / 1200 redondeado; cuota
+  francesa redondeada; si el tipo no cambia, la cuota tampoco. **Reproduce el cuadro del banco al céntimo, con sus tipos y también
+  solo con el Euríbor** (87.556,90 € tras la cuota 107). Amortización anticipada = `registro` tipo «Amortización anticipada» (importe
+  en `coste`; «cuota» en el título o notas = reducir cuota, si no, plazo); no cuenta como gasto (`historial_de_gastos`,
+  `gasto_ultimo_ano`).
+- **Dato real:** cada cuota vencida se casa con su cargo de finanzas (acción `casa`, categoría Hipoteca, ±12 días, el más cercano):
+  Cobrada / Sin cargo en el extracto / Falta el extracto; las anteriores a los datos de finanzas, «Pagada». Solo admin (son movimientos
+  del banco).
+- **Al día sola** (`hipotecas_al_dia()`): en cuanto el banco revisa (un mes antes de la cuota) y el Euríbor del mes está cerrado, guarda
+  el tipo y la cuota en `precios` (nota «calculado: …»; solo si el tipo cambia) y lo anota; el día de la cuota pone `coste` e
+  `interes` de la ficha (y con ellos el gasto fijo, el panel, la cuenta de la casa y finanzas); aviso informativo `auto:hipoteca` en
+  la agenda con la próxima subida o bajada (≥ 0,50 €, 75 días antes, «≈» si es estimada), que se cierra solo al llegar. Los avisos
+  `auto:` no se borran ni pasan al historial al marcarlos hechos.
+- **Dónde se ve:** `hipoteca.php?id=` (botón «Cuadro de amortización» de la ficha): cifras, próxima revisión, gráfica, lo pagado y lo
+  que queda, cobros y cuota a cuota por años; tarjeta «Amortización» en la ficha; «Qué revisar» del gasto fijo. API: `hipoteca`
+  (`php remoto.php hipoteca 33 --filas`), `euribor`, `precio` con `tipo`, `estado` con el Euríbor, `fichas` con `amortizacion`.
+- **Finanzas** lee `amortizacion` en `fusionar_inmueble()` y ya no se apunta el capital pendiente a mano (ver su CLAUDE.md).
+

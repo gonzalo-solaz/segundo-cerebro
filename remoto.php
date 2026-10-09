@@ -26,8 +26,11 @@
 //      php remoto.php comunidad <id>                Números del análisis (por año, categoría y recibo)
 //      php remoto.php gastos [persona=<id>]        A dónde va el gasto fijo: partidas, cosas, mes a mes y qué revisar
 //            (con persona=1, por lo que paga Gonzalo: «tuyo»; sin ella, el total de la casa)
+//      php remoto.php hipoteca <id> [--filas]       Cuadro de amortización calculado: lo pagado, lo que queda, la próxima revisión
+//      php remoto.php euribor                       Consulta el Euríbor ya y pone al día las hipotecas (cuota, tipo y aviso)
 //      php remoto.php precio <archivo.json | JSON>  Lo que costaba un contrato desde una fecha (historial de precios)
 //            {"elemento_id":38,"desde":"2025-04-01","coste":111.08,"nota":"subida con el IPC"}   (periodicidad: la de la ficha si no se dice)
+//            {"elemento_id":33,"desde":"2026-12-07","coste":628.41,"tipo":4.283}   ← en la hipoteca, con el tipo de esa cuota
 //      php remoto.php plan <archivo.json | JSON>    Plan de desarrollo de un curso de una persona del equipo (o del empleo)
 //            {"elemento_id":44,"curso":"2025-26","objetivo":"...","descripcion":"...","niveles":"Nivel 0 = ...\nNivel 1 = ...","autoevaluacion":8.5,"nota":8.5}
 //            (si el curso ya existe, cambia solo lo que viene; notas sobre 10; «php remoto.php ficha <id>» trae su plan_desarrollo)
@@ -150,6 +153,10 @@ switch ($accion) {
     case 'comunidad':
     case 'peso':
         mostrar(llamar($accion, ['id' => (int)($pos[0] ?? 0)]));
+    case 'hipoteca':
+        mostrar(llamar('hipoteca', ['id' => (int)($pos[0] ?? 0), 'filas' => !empty($kv['filas'])]));
+    case 'euribor':
+        mostrar(llamar('euribor'));
     case 'hecho':
         mostrar(llamar('hecho', ['id' => (int)($pos[0] ?? 0)]));
     case 'elemento':

@@ -174,6 +174,7 @@ function analisis_gastos_fijos(array $elementos, array $historial, string $hoy, 
             'enlace_id' => $el['enlace_id'] ?? null, 'enlace_nombre' => $el['enlace_nombre'] ?? null,
             'persona_id' => $el['persona_id'] ?? null, 'persona_nombre' => $el['persona_nombre'] ?? null, 'datos' => $d,
             'proximo' => null, 'aprox' => false, 'real' => null,
+            'hipoteca_auto' => $el['hipoteca_auto'] ?? false, 'hipoteca_cambio' => $el['hipoteca_cambio'] ?? null,
         ];
 
         if ($n === 1) {
@@ -491,7 +492,15 @@ function revisar_gastos_fijos(array $an, string $hoy): array {
             $partes[] = 'Quedan ' . tiempo_hasta($hoy, $finh) . ' (la última cuota, en ' . MESES[(int)substr($finh, 5, 2) - 1] . ' de ' . substr($finh, 0, 4) . ').';
         }
         $rev = ['Mensual' => 'cada mes', 'Trimestral' => 'cada trimestre', 'Semestral' => 'cada seis meses', 'Anual' => 'cada año'][$d['revision_interes'] ?? ''] ?? null;
-        if ($rev) $partes[] = 'El interés se revisa ' . $rev . ': cuando cambie la cuota, cámbiala en su ficha y todo se recalcula.';
+        // Con sus términos, la app la revisa sola con el Euríbor (includes/hipoteca.php): se dice qué viene.
+        $cambio = !empty($i['hipoteca_cambio']) ? $i['hipoteca_cambio'] : null;
+        if ($cambio) {
+            $cf = $cambio['fila'];
+            $partes[] = 'La cuota ' . ($cambio['diferencia'] > 0 ? 'sube' : 'baja') . ' a ' . ($cf['estado'] === 'estimada' ? '≈' : '') . eur($cf['cuota'])
+                      . ' desde el ' . fecha_es($cf['fecha']) . ' (' . ($cambio['diferencia'] > 0 ? '+' : '−') . eur(abs($cambio['diferencia'])) . ', al ' . tipo_es((float)$cf['tipo']) . ').';
+        }
+        if ($rev && !empty($i['hipoteca_auto'])) $partes[] = 'El interés se revisa ' . $rev . ' y la app cambia sola la cuota con el Euríbor: no hay que tocar nada.';
+        elseif ($rev) $partes[] = 'El interés se revisa ' . $rev . ': cuando cambie la cuota, cámbiala en su ficha y todo se recalcula (o rellena en la ficha la primera cuota y el diferencial y lo hará sola).';
         $partes[] = 'Si un día amortizas, reducir plazo ahorra más intereses que reducir cuota.';
         $out[] = ['nivel' => 'dato', 'titulo' => 'La hipoteca es el ' . pct_es($i['tuyo'] / max($an['tuyo'], 0.01) * 100) . ' de tu gasto fijo',
             'texto' => implode(' ', $partes), 'enlaces' => [$ficha($i)]];

@@ -28,8 +28,12 @@ require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/app.php';
 
 esquema_al_dia($pdo, true);
+// Antes de vigilar: el Euríbor y las hipotecas al día (la subida de la cuota sale en el correo).
+$al_dia = mantenimiento($pdo);
 $informe = ejecutar_vigilancia($pdo);
-$linea = date('Y-m-d H:i:s') . ' · ' . $informe['resumen'];
+$linea = date('Y-m-d H:i:s') . ' · ' . $informe['resumen']
+       . ($al_dia['euribor']['error'] ? ' · Euríbor: ' . $al_dia['euribor']['error'] : '')
+       . ($al_dia['hipotecas'] ? ' · ' . implode(' · ', $al_dia['hipotecas']) : '');
 $log = dirname(__DIR__) . '/private/cron.log';
 if (is_dir(dirname($log))) @file_put_contents($log, $linea . "\n", FILE_APPEND | LOCK_EX);
 echo $linea, "\n";
