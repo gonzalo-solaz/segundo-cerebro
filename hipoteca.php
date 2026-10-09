@@ -201,7 +201,7 @@ $num = 'class="num"';
     <li>Con los términos de la ficha y, hacia atrás, los tipos del cuadro del banco: reproduce su cuadro al céntimo. Intereses = pendiente × tipo ÷ 1.200 (meses de 30 días); la cuota, la de un préstamo francés con lo que queda.</li>
     <?php if ($t['variable']): ?>
       <li>Cada revisión: media del Euríbor del mes anterior a la revisión + <?= e(numero_es($t['diferencial'], 3)) ?>. En cuanto el banco revisa y el mes ha cerrado, la app guarda el tipo y la cuota y, el día de la cuota, los pone en la ficha. Nadie tiene que tocar nada.</li>
-      <li>Euríbor: <?= e($eur['fuente'] ?: 'Banco de España') ?><?= $eur['consultado'] ? ', consultado el ' . e(fecha_es(substr($eur['consultado'], 0, 10))) . ' a las ' . e(substr($eur['consultado'], 11, 5)) : '' ?>. Se consulta solo cada pocas horas.<?= $eur['error'] ? ' ' . e($eur['error']) : '' ?></li>
+      <li>Euríbor: <?= e($eur['fuente'] ?: 'Banco de España') ?><?= $eur['consultado'] ? ', consultado el ' . e(fecha_es(substr($eur['consultado'], 0, 10))) . ' a las ' . e(substr($eur['consultado'], 11, 5)) : '' ?>. Se consulta solo cada pocas horas.<?= $eur['error'] ? ' ' . e($eur['error']) : ($eur['fallos'] ? ' Aviso: ' . e($eur['fallos']) . '.' : '') ?></li>
     <?php endif; ?>
     <li>Una amortización anticipada se apunta en el historial de la ficha (tipo «<?= e(HIPOTECA_TIPO_AMORTIZACION) ?>», con el importe; escribe «cuota» en el título si reduce la cuota; si no, reduce el plazo) y el cuadro se rehace solo.</li>
     <?php if (es_admin()): ?><li>Los cobros salen de los movimientos de la cuenta de la casa en finanzas (categoría «Hipoteca»), que se leen cada hora.</li><?php endif; ?>

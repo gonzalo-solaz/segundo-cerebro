@@ -41,9 +41,9 @@ if (!defined('SC_CONFIG_CARGADA')) {
         'PASE_CLAVE'         => '',
         // La variación anual del IPC (INE, serie IPC251856, últimos 36 meses). Vacía = sin red (pruebas).
         'IPC_URL'            => 'https://servicios.ine.es/wstempus/js/ES/DATOS_SERIE/IPC251856?nult=36',
-        // El Euríbor a un año: diario del Banco de España (se calcula la media de cada mes) y, si no
-        // contesta, la media mensual del BCE. Vacías = sin red (pruebas). Ver includes/euribor.php.
-        'EURIBOR_URL'        => 'https://www.bde.es/webbe/es/estadisticas/compartido/datos/csv/ti_1_7.csv',
+        // El Euríbor a un año: diario del Banco de España (API REST, 36 meses; también vale el CSV de la
+        // tabla ti_1_7) y, si no contesta, la media mensual del BCE. Vacías = sin red (pruebas). Ver includes/euribor.php.
+        'EURIBOR_URL'        => 'https://app.bde.es/bierest/resources/srdatosapp/listaSeries?idioma=es&series=D_DNBAF172&rango=36M',
         'EURIBOR_BCE_URL'    => 'https://data-api.ecb.europa.eu/service/data/FM/M.U2.EUR.RT.MM.EURIBOR1YD_.HSTA?format=csvdata&detail=dataonly&startPeriod=2015-01',
         'DIR_ARCHIVOS'       => dirname(__DIR__) . '/private/archivos',
         'DIR_CACHE'          => dirname(__DIR__) . '/private/cache',

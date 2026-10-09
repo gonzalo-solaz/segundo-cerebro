@@ -778,9 +778,13 @@ en HTML para mandar por WhatsApp (sin JS ni recursos externos, se ve en el móvi
 
 **La hipoteca se calcula sola (9/10/2026, Gonzalo: «quiero un segundo cerebro dinámico: que al entrar consulte el Euríbor, que la
 tabla de amortización se actualice con el dato real de finanzas y que esté todo conectado; nada de tareas manuales»).**
-- **Euríbor** (`includes/euribor.php`, tabla `euribor`, migración 009): del CSV diario del Banco de España (ti_1_7, serie D_DNBAF172;
-  sin clave) se saca la media de cada mes a 3 decimales (cuadra con el BOE y con las 25 revisiones del banco) y la del mes en curso,
-  provisional; reserva, la media mensual del BCE. Un mes se cierra 3 días después de acabar. Se consulta como mucho cada 6 h.
+- **Euríbor** (`includes/euribor.php`, tabla `euribor`, migración 009): de los valores diarios del Banco de España (serie
+  D_DNBAF172, sin clave) se saca la media de cada mes a 3 decimales (cuadra con el BOE y con las 25 revisiones del banco) y la del mes
+  en curso, provisional. Fuente: su API REST (`app.bde.es/bierest/…listaSeries…rango=36M`, JSON de 5 KB que llega SIEMPRE comprimido:
+  `CURLOPT_ENCODING`; el primer mes del rango llega a medias y se descarta); también entiende el CSV ti_1_7 (1,3 MB), que el
+  9/10/2026 falló desde Hostinger. Reserva: la media mensual del BCE (sin el mes en curso). Por qué falló una fuente queda en
+  `euribor_fallos` y sale en la página. Un mes se cierra 3 días después de acabar. Se consulta como mucho cada 6 h. El PHP de este
+  equipo no tiene curl ni openssl: para probar la descarga, bájala con el curl del sistema.
 - **Cuándo:** `includes/mantenimiento.php`. En cada visita, si hace más de una hora, DESPUÉS de mandar la página
   (`litespeed_finish_request`, Hostinger es LiteSpeed; o `fastcgi_finish_request`): nadie espera. Sin ellas, la visita solo hace lo
   que no sale a la red. También el cron diario y la acción `euribor` de la API. En CLI (pruebas) no se lanza.

@@ -4,12 +4,14 @@
 //  para revisar las hipotecas variables (Gonzalo, 9/10/2026: «que al entrar
 //  en cerebro se consulte el Euríbor y se actualice solo»).
 //
-//  Fuente: el CSV del Banco de España con los valores DIARIOS (tabla
-//  ti_1_7, serie D_DNBAF172; pública y sin clave). Con él sale la media de
-//  cada mes redondeada a 3 decimales, como la publica el BOE (cuadra con las
-//  25 revisiones del cuadro de Mediolanum desde 2018), y la del mes en curso,
-//  provisional. Si el Banco de España no contesta, la media mensual del BCE
-//  (solo meses cerrados).
+//  Fuente: los valores DIARIOS del Banco de España (serie D_DNBAF172; sin
+//  clave), por su API REST (JSON de los últimos 36 meses, unos 5 KB; siempre
+//  llega comprimido) o por el CSV de la tabla ti_1_7 (1,3 MB, toda la serie):
+//  vale cualquiera de los dos. Con ellos sale la media de cada mes redondeada
+//  a 3 decimales, como la publica el BOE (cuadra con las 25 revisiones del
+//  cuadro de Mediolanum desde 2018), y la del mes en curso, provisional. Si el
+//  Banco de España no contesta, la media mensual del BCE (solo meses
+//  cerrados), y queda anotado por qué falló el primero.
 //
 //  Se guarda en la tabla euribor (migración 009) y se consulta como mucho
 //  cada 6 horas: lo lanza el cron diario y, sin hacer esperar a nadie, cada
@@ -57,6 +59,35 @@ function euribor_leer_bde(string $csv, string $hoy): array {
     return $out;
 }
 
+/** La API REST del Banco de España (listaSeries: JSON con fechas y valores diarios) → lo mismo que el CSV. */
+function euribor_leer_bde_json(string $json, string $hoy): array {
+    $d = json_decode($json, true);
+    $s = is_array($d) ? ($d[0] ?? $d) : [];
+    $fechas = (array)($s['fechas'] ?? []);
+    $valores = (array)($s['valores'] ?? []);
+    $dias = [];
+    foreach ($fechas as $i => $f) {
+        $v = $valores[$i] ?? null;
+        $mes = substr((string)$f, 0, 7);
+        if (!is_numeric($v) || !preg_match('/^[0-9]{4}-[0-9]{2}$/', $mes) || $mes < EURIBOR_DESDE) continue;
+        $dias[$mes][] = (float)$v;
+    }
+    // El primer mes del rango (36 meses hacia atrás desde hoy) llega a medias: su media no vale.
+    ksort($dias);
+    array_shift($dias);
+    $out = [];
+    foreach ($dias as $mes => $vs) {
+        $out[$mes] = ['valor' => round(array_sum($vs) / count($vs), 3), 'dias' => count($vs), 'definitivo' => euribor_mes_cerrado($mes, $hoy)];
+    }
+    return $out;
+}
+
+/** El texto del Banco de España, venga en JSON (API REST) o en CSV (tabla ti_1_7). */
+function euribor_leer_bde_cualquiera(string $txt, string $hoy): array {
+    $t = ltrim($txt);
+    return str_starts_with($t, '[') || str_starts_with($t, '{') ? euribor_leer_bde_json($t, $hoy) : euribor_leer_bde($txt, $hoy);
+}
+
 /** El CSV mensual del BCE (format=csvdata) → lo mismo, todos cerrados. */
 function euribor_leer_bce(string $csv): array {
     $cab = null;
@@ -74,18 +105,22 @@ function euribor_leer_bce(string $csv): array {
     return $out;
 }
 
-function euribor_descargar(string $url, int $segundos): ?string {
-    if (function_exists('curl_init')) {
-        $c = curl_init($url);
-        curl_setopt_array($c, [CURLOPT_RETURNTRANSFER => true, CURLOPT_FOLLOWLOCATION => true, CURLOPT_CONNECTTIMEOUT => 5,
-                               CURLOPT_TIMEOUT => $segundos, CURLOPT_USERAGENT => 'segundo-cerebro (gonzalosolaz.tech)']);
-        $txt = curl_exec($c);
-        $ok = (int)curl_getinfo($c, CURLINFO_HTTP_CODE) === 200;
-    } else {
+/** [texto o null, motivo del fallo o null]. Acepta respuestas comprimidas (la API del Banco de España lo está siempre). */
+function euribor_descargar(string $url, int $segundos): array {
+    if (!function_exists('curl_init')) {
         $txt = @file_get_contents($url, false, stream_context_create(['http' => ['timeout' => $segundos]]));
-        $ok = $txt !== false;
+        if ($txt === false) return [null, 'sin respuesta'];
+        if (str_starts_with($txt, "\x1f\x8b") && function_exists('gzdecode')) $txt = (string)gzdecode($txt);
+        return $txt !== '' ? [$txt, null] : [null, 'respuesta vacía'];
     }
-    return $ok && is_string($txt) && $txt !== '' ? $txt : null;
+    $c = curl_init($url);
+    curl_setopt_array($c, [CURLOPT_RETURNTRANSFER => true, CURLOPT_FOLLOWLOCATION => true, CURLOPT_CONNECTTIMEOUT => 8,
+                           CURLOPT_TIMEOUT => $segundos, CURLOPT_ENCODING => '', CURLOPT_USERAGENT => 'Mozilla/5.0 (segundo-cerebro)']);
+    $txt = curl_exec($c);
+    $codigo = (int)curl_getinfo($c, CURLINFO_HTTP_CODE);
+    if ($txt === false) return [null, 'sin respuesta (' . curl_error($c) . ')'];
+    if ($codigo !== 200) return [null, "código HTTP {$codigo}"];
+    return is_string($txt) && $txt !== '' ? [$txt, null] : [null, 'respuesta vacía'];
 }
 
 /** Guarda los meses que cambian. Devuelve cuántos. Un mes cerrado no vuelve a provisional. */
@@ -128,18 +163,24 @@ function euribor_actualizar(PDO $pdo, bool $forzar = false): array {
     }
     guardar_ajuste($pdo, 'euribor_intento', ahora());
     $serie = [];
-    if (EURIBOR_URL !== '' && ($txt = euribor_descargar(EURIBOR_URL, 25)) !== null) {
-        $serie = euribor_leer_bde($txt, hoy());
-        $r['fuente'] = 'Banco de España';
+    $fallos = [];
+    if (EURIBOR_URL !== '') {
+        [$txt, $por] = euribor_descargar(EURIBOR_URL, 25);
+        if ($txt !== null) $serie = euribor_leer_bde_cualquiera($txt, hoy());
+        if ($serie) $r['fuente'] = 'Banco de España';
+        else $fallos[] = 'Banco de España: ' . ($por ?? 'no trae la serie del Euríbor');
     }
-    if (!$serie && EURIBOR_BCE_URL !== '' && ($txt = euribor_descargar(EURIBOR_BCE_URL, 15)) !== null) {
-        $serie = euribor_leer_bce($txt);
-        $r['fuente'] = 'BCE';
+    if (!$serie && EURIBOR_BCE_URL !== '') {
+        [$txt, $por] = euribor_descargar(EURIBOR_BCE_URL, 15);
+        if ($txt !== null) $serie = euribor_leer_bce($txt);
+        if ($serie) $r['fuente'] = 'BCE (sin el mes en curso)';
+        else $fallos[] = 'BCE: ' . ($por ?? 'no trae la serie del Euríbor');
     }
     $r['consultado'] = true;
+    $r['fallos'] = $fallos;
+    guardar_ajuste($pdo, 'euribor_fallos', implode(' · ', $fallos));
     if (!$serie) {
-        $r['fuente'] = null;
-        $r['error'] = 'Ni el Banco de España ni el BCE han contestado; sigue el último Euríbor guardado.';
+        $r['error'] = 'No se ha podido consultar el Euríbor (' . implode(' · ', $fallos) . '); sigue el último guardado.';
         guardar_ajuste($pdo, 'euribor_error', $r['error']);
         return $r;
     }
@@ -173,7 +214,8 @@ function euribor_estado(PDO $pdo): array {
     }
     if ($provisional && $cerrado && $provisional['mes'] < $cerrado['mes']) $provisional = null;
     return ['cerrado' => $cerrado, 'provisional' => $provisional, 'consultado' => ajuste($pdo, 'euribor_consultado'),
-            'fuente' => ajuste($pdo, 'euribor_fuente'), 'error' => ajuste($pdo, 'euribor_error') ?: null, 'serie' => $serie];
+            'fuente' => ajuste($pdo, 'euribor_fuente'), 'error' => ajuste($pdo, 'euribor_error') ?: null,
+            'fallos' => ajuste($pdo, 'euribor_fallos') ?: null, 'serie' => $serie];
 }
 
 // «3,233 %» (los tipos y el Euríbor, con sus decimales tal cual: 1,6 · 5,21 · 3,905).

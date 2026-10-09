@@ -16,6 +16,12 @@ comprueba('Euríbor del Banco de España: la media de cada mes con su serie, sin
 $s5 = euribor_leer_bde($csv, '2026-10-05');
 comprueba('…el mes en curso es provisional y el anterior se cierra pasados 3 días', !$s5['2026-10']['definitivo'] && $s5['2026-09']['definitivo']
     && !$s['2026-09']['definitivo']);
+$json = json_encode([['serie' => 'D_DNBAF172', 'fechas' => ['2026-10-02T08:15:00Z', '2026-10-01T08:15:00Z', '2026-09-30T08:15:00Z', '2026-09-29T08:15:00Z', '2026-08-31T08:15:00Z'],
+                       'valores' => [3.250, 3.200, 3.300, 3.194, 2.9]]]);
+$j = euribor_leer_bde_cualquiera($json, '2026-10-05');
+comprueba('Euríbor de la API REST del Banco de España (JSON): igual que el CSV', $j['2026-10']['valor'] === 3.225 && $j['2026-09']['valor'] === 3.247
+    && $j['2026-09']['definitivo'], json_encode($j));
+comprueba('…sin el primer mes del rango, que llega a medias', !isset($j['2026-08']));
 $bce = euribor_leer_bce("KEY,FREQ,TIME_PERIOD,OBS_VALUE\nFM.M,M,2018-10,-0.1538261\nFM.M,M,2026-09,3.247\n");
 comprueba('Euríbor del BCE: redondeado como el BOE (−0,154)', $bce['2018-10']['valor'] === -0.154 && $bce['2026-09']['definitivo']);
 
