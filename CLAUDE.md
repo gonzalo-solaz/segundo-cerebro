@@ -706,12 +706,25 @@ enseña quién pone qué frente a lo acordado, a dónde va el dinero (gasto neto
 mes, la última cuota frente a la ficha de la hipoteca y los cargos de comunidad, suministros, seguros e impuestos que no
 tienen su factura o recibo en ninguna ficha (`cargos_sin_apuntar()`: mismo importe a ≤45 días, o dos cargos del mismo
 concepto que suman un apunte, como el recibo 2T26 de la comunidad, cobrado en dos veces). Con el extracto de 2026 (1/1 a
-8/10): Gonzalo puso 13.725,87 € (3.647 para la hipoteca) y Pilar 11.937,26 € (2.947,08); cuotas pagadas 5.961,34 €. Sus
+8/10), ya categorizado entero: Gonzalo puso 13.725,87 € (3.647 para la hipoteca) y Pilar 12.623,26 € (2.947,08); cuotas pagadas
+5.961,34 €; con lo acordado, Pilar lleva unos 45 € más que Gonzalo (casi a la par). Gasto 27.616 € (2.983 €/mes). Sus
 cuotas de 2026 se cargaron en `precios` de la ficha 33 (581,98 desde 7/2, 584,56 desde 7/3, 584,51 desde 7/4, 606,85 desde
 7/6, 611,65 desde 7/9). **Moncada TNA** era el baloncesto de Gonza (ya no va); **«Gonzalo Solaz - primer trimestre»**, los
 scouts de Gonza (recién apuntado, 141 € al trimestre). **Pendiente:** si Pilar debe verla (hoy solo admin); por qué Pilar
-pone 295,54 € para la hipoteca (con el 40 % serían unos 245 €); qué son los dos cargos de la Diputación (227,71 € el 3/8 y
-227,70 € el 1/10: Gonzalo cree que uno es el IBI y el otro una tasa nueva de residuos; con importes casi iguales, pueden
-ser los dos plazos del IBI); y los 98 movimientos sin categorizar de la común (`php remoto.php pendientes ambito=casa` en
-finanzas). **Cada mes:** el extracto de la común se importa en finanzas como cualquier otro de Mediolanum (mejor en CSV;
+pone 295,54 € para la hipoteca (con el 40 % serían unos 245 €); y qué son los dos cargos de la Diputación (227,71 € el 3/8 y
+227,70 € el 1/10: Gonzalo cree que uno es el IBI y el otro una tasa nueva; con importes casi iguales, pueden ser los dos
+plazos del IBI). **Criterios para categorizar la común (Gonzalo, 8-9/10/2026; no volver a preguntarlos):** *(1)* lo que entra
+y sale por la cuenta sin ser de ninguno (ventas de Syncronizados o de Wallapop a través de la cuenta de Pilar que Gonzalo
+retira luego: rejilla, panel T4, ganchos, «walla», el «Traspaso» de 43 € del 17/2…) va a **Reembolso**, que es neutro: ni gasto
+ni aportación de nadie. *(2)* La diferencia entre los dos solo depende de lo que cada uno aporta (categorías «Aportación
+Gonzalo/Pilar», una retirada es una aportación negativa) y de las cuotas de la hipoteca; el resto del gasto va a medias, así que
+cómo se categorice un gasto NO la mueve. *(3)* Una venta que es de la casa (sillas, «pago w» de 293 €, que se vendió por la
+cuenta de Wallapop de Pilar) es **Ingresos extra**, no aportación. *(4)* Retiradas de verdad: Luisa (30 € y 20 €, Pilar metió el
+dinero y Gonzalo lo sacó) y los 14 € de «ingreso» (Pilar). *(5)* Gasolineras: todo lo de la furgo en los viajes, el Audi y el
+Astra (incluye Fycasa, Transportes Rodolfo, Teraxon, Es Los Arcos, Torrente, Jérica, VCC Carlet). *(6)* Niños: El Corte Inglés y
+Ademuz H. (ropa y, en agosto-septiembre, libros del cole), Pelu Candy, Deportes Virso y el dragón barbudo (regalo de Gonza); no se
+usa «Mascotas» en la común. Moncada TNA y Cluber son el baloncesto de Gonza (ya no va); los scouts, «Gonzalo Solaz - primer
+trimestre». P Amuri es una heladería (Restaurantes), Fulitu un bazar (Hogar), «Bizum Celebración España», la revisión de la caldera
+de gas (Hogar; no hay ficha de la caldera). Lo que no se sabe de momento va a Varios (Revolut 4099, Novocentro…). Las reglas
+están en `CASA_REGLAS` de finanzas. **Cada mes:** el extracto de la común se importa en finanzas como cualquier otro de Mediolanum (mejor en CSV;
 el `.xls` hay que convertirlo, ver el CLAUDE.md de finanzas): el número de cuenta decide que va a la común.
