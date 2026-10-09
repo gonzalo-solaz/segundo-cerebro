@@ -223,6 +223,32 @@ if ($el['seccion'] === 'trabajo') {
       </details>
     <?php endforeach; ?>
 
+    <?php // Cómo ha cambiado su precio (tabla precios): las cuotas de la hipoteca desde 2017, las primas del seguro… Plegado. ?>
+    <?php $precios_el = isset($def['campos']['coste']) ? cambios_de_precio($pdo, $id) : []; ?>
+    <?php if (count($precios_el) > 1): ?>
+      <details class="tarjeta tarjeta-plegable" id="precios">
+        <summary>
+          <div class="titulo-plegable">
+            <h2><?= icono('historial') ?><?= $el['tipo'] === 'hipoteca' ? 'Evolución de la cuota' : 'Historial de precios' ?></h2>
+            <span class="tenue"><?= count($precios_el) ?> precios desde <?= e(fecha_es($precios_el[count($precios_el) - 1]['desde'])) ?></span>
+          </div>
+        </summary>
+        <div class="tabla-scroll"><table class="tabla">
+          <thead><tr><th>Desde</th><th class="num">Importe</th><th class="num">Cambio</th><th>Nota</th></tr></thead>
+          <tbody>
+            <?php foreach ($precios_el as $p): ?>
+              <tr>
+                <td><?= e(fecha_es($p['desde'])) ?></td>
+                <td class="num"><?= e(eur($p['coste'])) ?><?= $p['periodicidad'] !== 'Mensual' ? ' <span class="tenue">' . e(minusculas($p['periodicidad'])) . '</span>' : '' ?></td>
+                <td class="num"><?= $p['pct'] !== null ? e(variacion_es($p['pct'])) : '' ?></td>
+                <td class="tenue"><?= e($p['nota']) ?></td>
+              </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table></div>
+      </details>
+    <?php endif; ?>
+
     <?php // Nóminas: plegadas (Gonzalo, 6/10/2026), con el bruto a la vista en la línea de resumen. ?>
     <?php if ($nominas !== null):
         $rn = $nominas['resumen'];

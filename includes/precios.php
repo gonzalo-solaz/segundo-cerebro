@@ -65,6 +65,27 @@ function precios_por_elemento(PDO $pdo): array {
     return $out;
 }
 
+/**
+ * Lo que ha ido costando un elemento, para su ficha: solo los cambios (un
+ * precio igual al anterior no se repite), del más nuevo al más viejo, con lo
+ * que subió o bajó frente al anterior ('pct', null si cambió la periodicidad).
+ * Las cuotas de la hipoteca desde 2017 salen de aquí (Gonzalo, 9/10/2026).
+ */
+function cambios_de_precio(PDO $pdo, int $elemento_id): array {
+    $st = $pdo->prepare('SELECT desde, coste, periodicidad, nota FROM precios WHERE elemento_id = ? ORDER BY desde, id');
+    $st->execute([$elemento_id]);
+    $out = [];
+    $ant = null;
+    foreach ($st as $f) {
+        $c = (float)$f['coste'];
+        if ($ant && $ant['coste'] === $c && $ant['periodicidad'] === $f['periodicidad']) continue;
+        $pct = $ant && $ant['coste'] > 0 && $ant['periodicidad'] === $f['periodicidad'] ? ($c / $ant['coste'] - 1) * 100 : null;
+        $ant = ['desde' => $f['desde'], 'coste' => $c, 'periodicidad' => $f['periodicidad'], 'nota' => (string)$f['nota'], 'pct' => $pct];
+        $out[] = $ant;
+    }
+    return array_reverse($out);
+}
+
 /** El precio que regía en una fecha (el último que empezó antes o ese día), o null si no se sabe. */
 function precio_en(array $historial, string $fecha): ?array {
     $r = null;

@@ -132,6 +132,11 @@ $pdo->prepare('UPDATE elementos SET enlace_id = ? WHERE id IN (?, ?)')->execute(
 pinta_bien('la ficha de la casa lista sus contratos', pedir('elemento.php', ['id' => (string)$id['casa']]), 'Contratos y seguros');
 pinta_bien('y los nombra', pedir('elemento.php', ['id' => (string)$id['casa']]), 'Seguro de hogar');
 pinta_bien('la ficha del contrato enlaza a su casa', pedir('elemento.php', ['id' => (string)$id['luz']]), 'Casa de prueba');
+guardar_precio($pdo, $id['luz'], '2025-01-01', 55, null, 'tarifa de 2025');
+guardar_precio($pdo, $id['luz'], '2026-01-01', 60, null, 'subida de enero');
+$r = pedir('elemento.php', ['id' => (string)$id['luz']]);
+pinta_bien('la ficha del contrato enseña cómo ha cambiado su precio', $r, 'Historial de precios');
+comprueba('…con lo que subió frente al anterior', str_contains(str_replace(NBSP, ' ', $r['html']), '+9,1 %'));
 $r = pedir('seccion.php', ['s' => 'vivienda']);
 comprueba('con una sola vivienda, la sección lleva directa a su ficha', $r['redireccion'] === '/segundo-cerebro/elemento.php?id=' . $id['casa'], (string)$r['redireccion']);
 pinta_bien('el listado de Vivienda (lista=1) resume los contratos de la casa', pedir('seccion.php', ['s' => 'vivienda', 'lista' => '1']), 'Contratos y seguros');

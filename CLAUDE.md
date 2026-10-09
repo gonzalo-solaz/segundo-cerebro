@@ -544,8 +544,8 @@ las obras inflaban la subida. Ahora `interanual_item()` compara lo NORMAL con lo
 (2T25 fue el más barato, así que probablemente no llevaban obras). **Hipoteca (ficha 33):** cuotas
 de 2025 en `precios` (cuota entera, la del cuadro del banco: 605,71 € desde 7/1/2025, 597,78 desde 7/3, 579,98 desde 7/6,
 577,07 desde 7/9, 581,93 desde 7/12; el tipo, en la nota de cada precio), así que sale 577,07 → 611,65 € (+6,0 %).
-**Hueco:** no hay cuotas de antes de 2025. Las de 2026 se cargaron el 8/10/2026 desde la cuenta de la casa (ver abajo).
-No repetir.
+Ya no hay hueco: el 9/10/2026 se cargaron todas las cuotas desde 2017 con el cuadro de amortización del banco (ver «Hipoteca:
+cuadro del banco y estudio»). No repetir.
 
 **Suministros de 2025 para comparar con 2026 (4/10/2026, Gonzalo pasó el extracto del banco y las capturas de
 Pepeenergy, Aguas de Valencia y Naturgy).** Grabados en producción 37 apuntes `Factura` SIN PDF (registros 223-259):
@@ -708,8 +708,8 @@ tienen su factura o recibo en ninguna ficha (`cargos_sin_apuntar()`: mismo impor
 concepto que suman un apunte, como el recibo 2T26 de la comunidad, cobrado en dos veces). Con el extracto de 2026 (1/1 a
 8/10), ya categorizado entero: Gonzalo puso 13.725,87 € (3.647 para la hipoteca) y Pilar 12.623,26 € (2.947,08); cuotas pagadas
 5.961,34 €; con lo acordado, Pilar lleva unos 20 € más que Gonzalo (a la par). Gasto 27.666 € (2.988 €/mes). Sus
-cuotas de 2026 se cargaron en `precios` de la ficha 33 (581,98 desde 7/2, 584,56 desde 7/3, 584,51 desde 7/4, 606,85 desde
-7/6, 611,65 desde 7/9). **Moncada TNA** era el baloncesto de Gonza (ya no va); **«Gonzalo Solaz - primer trimestre»**, los
+cuotas de 2026 se cargaron en `precios` de la ficha 33 (606,85 desde 7/6 y 611,65 desde 7/9; las de febrero y marzo, corregidas
+el 9/10 con el cuadro del banco a 581,93 y 584,51: los cargos fueron 5 céntimos más). **Moncada TNA** era el baloncesto de Gonza (ya no va); **«Gonzalo Solaz - primer trimestre»**, los
 scouts de Gonza (recién apuntado, 141 € al trimestre). **Pendiente:** si Pilar debe verla (hoy solo admin); por qué Pilar
 pone 295,54 € para la hipoteca (con el 40 % serían unos 245 €); y qué son los dos cargos de la Diputación (227,71 € el 3/8 y
 227,70 € el 1/10: Gonzalo cree que uno es el IBI y el otro una tasa nueva; con importes casi iguales, pueden ser los dos
@@ -756,3 +756,21 @@ recibos anuales de los seguros de la T4 (Generali, registro 295) y del hogar (Tu
 apuntar» ya casa hasta 60 días (la factura del gas de diciembre está fechada el 31/12 y se cobró el 16/2) y por el par MÁS
 CERCANO, no el primero libre (con importes repetidos, Pepephone, uno se quedaba el apunte del vecino). CoverGrup (5 €) es una app de
 viajes, no un seguro. No repetir.
+
+**Hipoteca: cuadro del banco y estudio (9/10/2026, Gonzalo: «un estudio de si es un buen préstamo o si hoy se consiguen
+condiciones más ventajosas»; después pasó capturas del préstamo en la web de Mediolanum).** Estudio en Claude Docs:
+https://claude.ai/code/artifact/7e7ee34e-1ded-42eb-a07c-08c74fa87a3e (escritura leída entera, mercado de octubre de 2026 y
+escenarios hasta 2042). Conclusión: el diferencial (E + 1,05) está caro; una fija al 2,75 % ahorraría unos 11.800 € si el Euríbor
+se queda en el 3,15 %, y pasar a fija no tiene comisión (art. 23.6 de la Ley 5/2019; a variable, el 0,25 % de la escritura).
+**Comprobado:** el diferencial ha sido 1,05 en TODAS las revisiones desde el 7/11/2018 (la bonificación del seguro de Generali no
+ha faltado nunca) y la nómina del CEU entra en Mediolanum (no hay +0,65). Revisión trimestral el 7/11, 7/2, 7/5 y 7/8 con la media
+del Euríbor del mes anterior; vale desde la cuota siguiente (diciembre, marzo, junio, septiembre). A 7/10/2026: 87.556,90 €
+pendientes, 107 cuotas pagadas y 193 por pagar; 57.317,24 € pagados, 20.874,14 € de ellos intereses (el cuadro reconstruido con
+los tipos cuadra al céntimo). **Cargado en producción:** en `precios` de la ficha 33, todas las cuotas desde el 7/12/2017 (nota =
+el tipo, «cuadro de Mediolanum»), que la ficha enseña en la tarjeta plegada «Evolución de la cuota» (`cambios_de_precio()`;
+genérica: en cualquier ficha con coste y dos precios o más sale «Historial de precios»). En la ficha 33, `interes` = «Variable:
+Euríbor + 1,05 (3,905 % desde el 7/9/2026)» y, en notas, el número del préstamo, el aplazamiento de cuotas que queda (1 este año,
+6 en el contrato) y el enlace al estudio. En finanzas, el capital pendiente y las cuotas a 9/10/2026. La web del banco da una TAE
+del 3,56 % que no cuadra con el tipo (3,905 % → TAE 3,98 %). **Con cada revisión:** cuota nueva en la ficha 33 (`coste`) y un
+`precio` con el tipo en la nota; el capital, en finanzas. **Por confirmar:** si el cargo de Generali de 135,23 € (6/7/2026, cuenta
+de Mediolanum de Gonzalo) es la prima del seguro que bonifica. No repetir.
