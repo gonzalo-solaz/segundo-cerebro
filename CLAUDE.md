@@ -707,7 +707,7 @@ mes, la última cuota frente a la ficha de la hipoteca y los cargos de comunidad
 tienen su factura o recibo en ninguna ficha (`cargos_sin_apuntar()`: mismo importe a ≤45 días, o dos cargos del mismo
 concepto que suman un apunte, como el recibo 2T26 de la comunidad, cobrado en dos veces). Con el extracto de 2026 (1/1 a
 8/10), ya categorizado entero: Gonzalo puso 13.725,87 € (3.647 para la hipoteca) y Pilar 12.623,26 € (2.947,08); cuotas pagadas
-5.961,34 €; con lo acordado, Pilar lleva unos 45 € más que Gonzalo (casi a la par). Gasto 27.616 € (2.983 €/mes). Sus
+5.961,34 €; con lo acordado, Pilar lleva unos 20 € más que Gonzalo (a la par). Gasto 27.666 € (2.988 €/mes). Sus
 cuotas de 2026 se cargaron en `precios` de la ficha 33 (581,98 desde 7/2, 584,56 desde 7/3, 584,51 desde 7/4, 606,85 desde
 7/6, 611,65 desde 7/9). **Moncada TNA** era el baloncesto de Gonza (ya no va); **«Gonzalo Solaz - primer trimestre»**, los
 scouts de Gonza (recién apuntado, 141 € al trimestre). **Pendiente:** si Pilar debe verla (hoy solo admin); por qué Pilar
@@ -719,8 +719,9 @@ retira luego: rejilla, panel T4, ganchos, «walla», el «Traspaso» de 43 € d
 ni aportación de nadie. *(2)* La diferencia entre los dos solo depende de lo que cada uno aporta (categorías «Aportación
 Gonzalo/Pilar», una retirada es una aportación negativa) y de las cuotas de la hipoteca; el resto del gasto va a medias, así que
 cómo se categorice un gasto NO la mueve. *(3)* Una venta que es de la casa (sillas, «pago w» de 293 €, que se vendió por la
-cuenta de Wallapop de Pilar) es **Ingresos extra**, no aportación. *(4)* Retiradas de verdad: Luisa (30 € y 20 €, Pilar metió el
-dinero y Gonzalo lo sacó) y los 14 € de «ingreso» (Pilar). *(5)* Gasolineras: todo lo de la furgo en los viajes, el Audi y el
+cuenta de Wallapop de Pilar) es **Ingresos extra**, no aportación. *(4)* Retiradas de verdad: solo los 14 € de «ingreso» (Pilar, 29/6).
+«Luisa» (30 € y 20 €) es efectivo que Gonzalo sacó de la cuenta para pagar un gasto de hogar de la casa: va a **Hogar**, no es una
+retirada. *(5)* Gasolineras: todo lo de la furgo en los viajes, el Audi y el
 Astra (incluye Fycasa, Transportes Rodolfo, Teraxon, Es Los Arcos, Torrente, Jérica, VCC Carlet). *(6)* Niños: El Corte Inglés y
 Ademuz H. (ropa y, en agosto-septiembre, libros del cole), Pelu Candy, Deportes Virso y el dragón barbudo (regalo de Gonza); no se
 usa «Mascotas» en la común. Moncada TNA y Cluber son el baloncesto de Gonza (ya no va); los scouts, «Gonzalo Solaz - primer
