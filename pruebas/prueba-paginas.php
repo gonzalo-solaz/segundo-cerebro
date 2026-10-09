@@ -453,6 +453,16 @@ $casa = analisis_cuenta_casa(json_decode((string)file_get_contents($cache . '/fi
     reparto_hipoteca(elemento($pdo, $id['hipoteca']), 'Gonzalo Prueba', ['Ana', 'Gonzalo']));
 comprueba('cuenta de la casa: le toca su parte de la cuota y la mitad del resto', abs($casa['personas']['Gonzalo']['toca'] - 560) < 0.005
     && abs($casa['personas']['Ana']['toca'] - 440) < 0.005 && abs($casa['resto'] - 400) < 0.005, json_encode($casa['personas']));
+pinta_bien('…a dónde va, por bloques: Vivienda con la hipoteca y la comunidad', $r, '<strong>Vivienda</strong>');
+$g = analisis_cuenta_casa([$mov('2026-03-12', 'GENERALI ESPANA', -356.08, 'Seguros'), $mov('2026-03-12', 'GC RE TUIO', -162.42, 'Seguros'),
+    $mov('2026-01-27', 'wallapop', 135.5, 'Ingresos extra'), $mov('2026-01-28', 'walla', -35.5, 'Reembolso'),
+    $mov('2026-02-01', 'Disposición en cajero', -100, 'Cajero'), $mov('2026-02-02', 'DRUNI', -10, 'Cuidado personal')], 2026, '2026-10-03', []);
+$bloque = static fn(string $n) => array_values(array_filter($g['grupos'], static fn($x) => $x['nombre'] === $n))[0] ?? null;
+comprueba('cuenta de la casa: el seguro del T4 va a Vehículos y el de hogar a Vivienda',
+    abs(($bloque('Vehículos')['gasto'] ?? 0) - 356.08) < 0.005 && abs(($bloque('Vivienda')['gasto'] ?? 0) - 262.42) < 0.005, json_encode($g['grupos']));
+comprueba('…el cajero (la limpieza) es Vivienda y lo que no tiene bloque, Otros', ($bloque('Otros')['subs'][0]['nombre'] ?? '') === 'Cuidado personal');
+comprueba('…y lo que entra y sale no es gasto: se descuenta de la venta', !array_filter($g['categorias'], static fn($c) => $c['nombre'] === 'Reembolso')
+    && abs($g['entradas'][0]['importe'] - 100) < 0.005, json_encode($g['entradas']));
 $dos = cargos_sin_apuntar([$mov('2026-07-17', 'CP X', -355.78, 'Comunidad'), $mov('2026-08-05', 'CP X', -355.78, 'Comunidad')],
     [['id' => 1, 'fecha' => '2026-06-30', 'coste' => 711.56, 'elemento_id' => 9, 'nombre' => 'Comunidad']], 2026);
 comprueba('un recibo cobrado en dos cargos casa con su apunte', !$dos['sin_ficha'] && $dos['casados'] === 2, json_encode($dos));

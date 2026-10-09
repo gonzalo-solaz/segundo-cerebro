@@ -112,12 +112,18 @@ cabecera_pagina('Cuenta de la casa', 'La común con lo que pone cada uno · de f
   <div class="tarjeta-cabecera"><h2><?= icono('historial') ?>A dónde va</h2><span class="tenue"><?= (int)$anio ?> · gasto neto: las devoluciones restan</span></div>
   <div class="tabla-scroll">
     <table class="tabla">
-      <thead><tr><th>Categoría</th><th class="num">Al mes</th><th class="num">En el año</th><th class="num">%</th></tr></thead>
-      <tbody>
-        <?php foreach ($an['categorias'] as $c): ?>
-          <tr><td><?= e($c['nombre']) ?></td><td class="num"><?= e(eur($c['mes'])) ?></td><td class="num"><?= e(eur($c['gasto'])) ?></td><td class="num"><?= e(pct_es($c['pct'])) ?></td></tr>
-        <?php endforeach; ?>
-      </tbody>
+      <thead><tr><th>Bloque</th><th class="num">Al mes</th><th class="num">En el año</th><th class="num">%</th></tr></thead>
+      <?php foreach ($an['grupos'] as $g): ?>
+        <tbody class="grupo-gasto">
+          <tr><td><strong><?= e($g['nombre']) ?></strong></td><td class="num"><strong><?= e(eur($g['mes'])) ?></strong></td>
+            <td class="num"><strong><?= e(eur($g['gasto'])) ?></strong></td><td class="num"><strong><?= e(pct_es($g['pct'])) ?></strong></td></tr>
+          <?php if (count($g['subs']) > 1 || $g['subs'][0]['nombre'] !== $g['nombre']): ?>
+            <?php foreach ($g['subs'] as $c): ?>
+              <tr class="sub-gasto"><td><?= e($c['nombre']) ?></td><td class="num"><?= e(eur($c['mes'])) ?></td><td class="num"><?= e(eur($c['gasto'])) ?></td><td class="num"><?= e(pct_es($c['pct'])) ?></td></tr>
+            <?php endforeach; ?>
+          <?php endif; ?>
+        </tbody>
+      <?php endforeach; ?>
       <tfoot><tr><td>Total</td><td class="num"><?= e(eur($an['gasto_mes'])) ?></td><td class="num"><?= e(eur($an['gasto_total'])) ?></td><td></td></tr></tfoot>
     </table>
   </div>

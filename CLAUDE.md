@@ -729,3 +729,21 @@ trimestre». P Amuri es una heladería (Restaurantes), Fulitu un bazar (Hogar), 
 de gas (Hogar; no hay ficha de la caldera). Lo que no se sabe de momento va a Varios (Revolut 4099, Novocentro…). Las reglas
 están en `CASA_REGLAS` de finanzas. **Cada mes:** el extracto de la común se importa en finanzas como cualquier otro de Mediolanum (mejor en CSV;
 el `.xls` hay que convertirlo, ver el CLAUDE.md de finanzas): el número de cuenta decide que va a la común.
+
+**Cuenta de la casa: «A dónde va» por bloques y los viajes (9/10/2026, Gonzalo: «¿no hay categorías que deberían ser
+subcategorías?… igualarlas al menú»).** Las categorías de finanzas siguen planas (las comparte con las cuentas de Gonzalo y su
+panel depende de ellas); `cuenta-casa.php` las agrupa al pintar con `CASA_GRUPOS` (`includes/cuenta-casa.php`): **Vivienda**
+(hipoteca, suministros, comunidad, IBI, hogar, seguro de hogar y el **cajero, que es para pagar a la chica de la limpieza**),
+**Alimentación** (súper y restaurantes; no es del menú, pero es un cuarto del gasto), **Familia** (colegio, niños, extraescolares,
+**ropa, casi toda de los niños**, regalos), **Vehículos** (combustible y seguros de vehículos), **Viajes** (bloque propio), Salud y
+**Otros** (varios y cuidado personal). Los seguros se parten por la compañía (`CASA_SEGUROS_VEHICULO`: Generali → Vehículos; Tuio
+→ Vivienda). «Contratos», Documentos y Trabajo del menú no son bloques: los contratos cuelgan de la casa o del vehículo. El
+Reembolso que no suma cero (la parte de una venta que Gonzalo se lleva) se descuenta de Ingresos extra, no sale como gasto.
+**Viajes (regla de Gonzalo):** el súper, los restaurantes y la gasolina de los días de un viaje van a Viajes. Las fechas las da
+van4ever («Mis viajes» de su furgoneta); NO buscarlas en la carpeta `registro-exclusives` (Gonzalo, 9/10/2026): pedírselas. Con
+las de 2026 (17-21/3 Bot-Montrebei-Baqueira-Espot; 11-13/4 Paridera; 27-28/6 Grao de Castellón; 24-26/7 Teruel-San Blas;
+5-16/8 Canfranc-Irati-Ochagavía-Hecho; 11-13/9 Teruel-Baja Aragón) se pasaron en finanzas 33 movimientos (1.473,55 €) a Viajes:
+todo lo de esas fechas, y en los dos días siguientes (el banco apunta tarde algunos pagos con tarjeta) solo lo que no es de su
+zona (Rocafort, Godella, Moncada, Alfara, Paterna, Alfafar, Valencia, Carlet…). No repetir. **Al importar un extracto nuevo,
+preguntar si ha habido viajes** y hacer lo mismo (las reglas no pueden saberlo). Con todo, 2026: Vivienda 44 %, Alimentación
+21 %, Familia 20 %, Viajes 7 %, Vehículos 6 %; Pilar lleva unos 20 € más que Gonzalo.

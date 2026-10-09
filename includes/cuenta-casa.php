@@ -19,6 +19,26 @@
 const CASA_CATEGORIAS_FICHA = ['Comunidad', 'Suministros', 'Seguros', 'Impuestos'];
 const CASA_PREFIJO_APORTACION = 'Aportación ';
 
+// «A dónde va», por bloques con los nombres del menú donde encajan (Gonzalo,
+// 9/10/2026): la categoría de finanzas queda dentro de su bloque. Finanzas
+// no cambia (sus categorías son planas y las comparte con las cuentas de
+// Gonzalo); esto solo agrupa al pintar. Lo que no está en ninguno va a Otros.
+// El cajero es para pagar a la chica de la limpieza: Vivienda.
+const CASA_GRUPOS = [
+    'Vivienda'     => ['Hipoteca', 'Suministros', 'Comunidad', 'Impuestos', 'Seguro de hogar', 'Hogar', 'Cajero'],
+    'Alimentación' => ['Supermercado', 'Restaurantes'],
+    'Familia'      => ['Educación', 'Niños', 'Extraescolares', 'Ropa', 'Regalos'],
+    'Vehículos'    => ['Combustible', 'Seguros de vehículos', 'Vehículos'],
+    'Viajes'       => ['Viajes'],
+    'Salud'        => ['Salud/Farmacia'],
+    'Otros'        => [],
+];
+// Cómo se llama dentro del bloque lo que en finanzas tiene otro nombre.
+const CASA_NOMBRES = ['Educación' => 'Colegio', 'Cajero' => 'Limpieza (efectivo)', 'Impuestos' => 'IBI e impuestos',
+                      'Salud/Farmacia' => 'Farmacia y salud', 'Niños' => 'Otros de los niños'];
+// Los seguros se parten por la compañía: el del T4 es de Generali; el de hogar, de Tuio.
+const CASA_SEGUROS_VEHICULO = ['generali', 'qualitas', 'allianz', 'axa'];
+
 // 'Aportación Pilar' → 'Pilar'; null si no es una aportación.
 function aportante(string $categoria): ?string {
     return str_starts_with($categoria, CASA_PREFIJO_APORTACION) ? substr($categoria, strlen(CASA_PREFIJO_APORTACION)) : null;
@@ -83,6 +103,13 @@ function analisis_cuenta_casa(array $movs, int $anio, string $hoy, array $pct_hi
             $meses[$mes]['puesto'][$quien] = ($meses[$mes]['puesto'][$quien] ?? 0.0) + $imp;
             continue;
         }
+        // Lo que entra y sale (Reembolso) es neutro; si no suma cero es porque su
+        // entrada está dentro de una venta (Ingresos extra), y ahí se descuenta.
+        if ($cat === 'Reembolso') $cat = 'Ingresos extra';
+        if ($cat === 'Seguros') {
+            $c = minusculas((string)$m['concepto']);
+            $cat = array_filter(CASA_SEGUROS_VEHICULO, static fn($k) => str_contains($c, $k)) ? 'Seguros de vehículos' : 'Seguro de hogar';
+        }
         $meses[$mes]['gasto'] -= $imp;
         if ($cat === 'Hipoteca') { $cuotas -= $imp; continue; }
         $neto[$cat] = ($neto[$cat] ?? 0.0) - $imp;
@@ -120,9 +147,24 @@ function analisis_cuenta_casa(array $movs, int $anio, string $hoy, array $pct_hi
     usort($categorias, static fn($x, $y) => $y['gasto'] <=> $x['gasto']);
     usort($entradas, static fn($x, $y) => $y['importe'] <=> $x['importe']);
 
+    // Los bloques: cada categoría a su bloque (o a Otros), de más a menos.
+    $de_bloque = [];
+    foreach (CASA_GRUPOS as $g => $cats) foreach ($cats as $c) $de_bloque[$c] = $g;
+    $grupos = [];
+    foreach ($categorias as $c) {
+        $g = $de_bloque[$c['nombre']] ?? 'Otros';
+        $grupos[$g] ??= ['nombre' => $g, 'gasto' => 0.0, 'mes' => 0.0, 'pct' => 0.0, 'subs' => []];
+        $grupos[$g]['gasto'] += $c['gasto'];
+        $grupos[$g]['mes'] += $c['mes'];
+        $grupos[$g]['pct'] += $c['pct'];
+        $grupos[$g]['subs'][] = ['nombre' => CASA_NOMBRES[$c['nombre']] ?? $c['nombre']] + $c;
+    }
+    $grupos = array_values($grupos);
+    usort($grupos, static fn($x, $y) => $y['gasto'] <=> $x['gasto']);
+
     return ['anio' => $anio, 'personas' => $personas, 'desfase' => $desfase, 'cuotas' => $cuotas, 'resto' => $resto,
             'gasto_total' => $gasto_total, 'meses_transcurridos' => $meses_trans, 'gasto_mes' => $gasto_total / $meses_trans,
-            'categorias' => $categorias, 'entradas' => $entradas, 'meses' => $meses, 'sin_categorizar' => $sin];
+            'categorias' => $categorias, 'grupos' => $grupos, 'entradas' => $entradas, 'meses' => $meses, 'sin_categorizar' => $sin];
 }
 
 /**
