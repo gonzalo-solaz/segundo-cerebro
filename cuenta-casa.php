@@ -69,7 +69,8 @@ cabecera_pagina('Cuenta de la casa', 'La común con lo que pone cada uno · de f
       <table class="tabla">
         <thead><tr><th></th><?php foreach ($an['personas'] as $quien => $p): ?><th class="num"><?= e($quien) ?></th><?php endforeach; ?></tr></thead>
         <tbody>
-          <tr><td>Para la hipoteca</td><?php foreach ($an['personas'] as $p): ?><td class="num"><?= e(eur($p['hipoteca'])) ?></td><?php endforeach; ?></tr>
+          <tr><td>Para la hipoteca</td><?php foreach ($an['personas'] as $p): ?><td class="num"><?= e(eur($p['hipoteca'])) ?>
+              <?php if ($p['pct_puesto_hipoteca'] !== null): ?><span class="partida-meta"><?= e(numero_es($p['pct_puesto_hipoteca'], 1) . NBSP . '%') ?> del total puesto</span><?php endif; ?></td><?php endforeach; ?></tr>
           <tr><td>Para gastos</td><?php foreach ($an['personas'] as $p): ?><td class="num"><?= e(eur($p['gastos'])) ?></td><?php endforeach; ?></tr>
           <tr><td><strong>Ha puesto</strong></td><?php foreach ($an['personas'] as $p): ?><td class="num"><strong><?= e(eur($p['total'])) ?></strong></td><?php endforeach; ?></tr>
           <tr><td>Le toca<span class="partida-meta">su parte de las cuotas y la mitad del resto</span></td>

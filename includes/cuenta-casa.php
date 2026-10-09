@@ -119,7 +119,9 @@ function analisis_cuenta_casa(array $movs, int $anio, string $hoy, array $pct_hi
     $resto = array_sum($neto);
 
     $n = max(1, count($personas));
+    $puesto_hipoteca = array_sum(array_column($personas, 'hipoteca'));
     foreach ($personas as $quien => &$p) {
+        $p['pct_puesto_hipoteca'] = $puesto_hipoteca > 0 ? $p['hipoteca'] / $puesto_hipoteca * 100 : null;
         $p['total'] = $p['hipoteca'] + $p['gastos'];
         $p['toca'] = $cuotas * ($pct_hipoteca[$quien] ?? 0) / 100 + $resto / $n;
         $p['dif'] = $p['total'] - $p['toca'];
