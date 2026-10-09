@@ -1,0 +1,49 @@
+# =====================================================================
+#  El aviso diario por correo (9/10/2026).
+#
+#  El cron de hPanel no se ha ejecutado nunca, así que lo lanza GitHub:
+#  llama a cron/diario.php con la clave (secreto CRON_CLAVE, el mismo que
+#  el despliegue mete en config.php). La app pone al día el Euríbor y las
+#  hipotecas, y manda el correo a EMAIL_AVISOS solo si algo ha cambiado
+#  desde el último o ha pasado una semana (no repite lo mismo cada día).
+#
+#  Corre cada día a las 6:10 UTC (8:10 en verano, 7:10 en invierno), cuando
+#  se cambia este archivo y a mano desde Actions.
+# =====================================================================
+name: Aviso diario
+
+on:
+  schedule:
+    - cron: '10 6 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/aviso-diario.yml']
+
+concurrency:
+  group: aviso-diario
+  cancel-in-progress: false
+
+jobs:
+  aviso:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Esperar al despliegue (solo cuando se cambia este archivo)
+        if: github.event_name == 'push'
+        run: sleep 240
+
+      - name: Lanzar la vigilancia
+        env:
+          CRON_CLAVE: ${{ secrets.CRON_CLAVE }}
+        run: |
+          if [ -z "$CRON_CLAVE" ]; then echo "::error::Falta el secreto CRON_CLAVE (y relanzar el despliegue para que llegue a config.php)"; exit 1; fi
+          printf '%s' "$CRON_CLAVE" > clave.txt
+          codigo=$(curl -sS -m 180 --retry 2 --retry-delay 30 -X POST 'https://gonzalosolaz.tech/admin/cron/diario.php' \
+            -F 'clave=<clave.txt' -o respuesta.txt -w '%{http_code}')
+          rm -f clave.txt
+          cat respuesta.txt
+          if [ "$codigo" = "404" ]; then echo "::error::404: la clave no coincide con la de config.php (¿se relanzó el despliegue tras crear el secreto?)"; exit 1; fi
+          if [ "$codigo" != "200" ]; then echo "::error::La app ha respondido $codigo"; exit 1; fi
+          if grep -q 'sin EMAIL_AVISOS' respuesta.txt; then echo "::warning::Falta el secreto EMAIL_AVISOS: la vigilancia corre pero no manda correo"; fi
+          if grep -q 'mail() ha fallado' respuesta.txt; then echo "::error::El servidor no ha podido mandar el correo"; exit 1; fi

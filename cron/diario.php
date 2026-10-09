@@ -10,14 +10,19 @@
 //  «domains/gonzalosolaz.tech/» en medio el cron no corre nunca (pasó en
 //  finanzas): /home/USUARIO/public_html es OTRO dominio de la cuenta.
 //
-//  Por URL solo responde con ?clave=CRON_CLAVE; sin ella, 404 con 0 bytes.
+//  El cron de hPanel no se ha ejecutado nunca (9/10/2026): lo lanza cada
+//  mañana .github/workflows/aviso-diario.yml, por POST con la clave (así no
+//  queda en los registros de acceso del servidor).
+//
+//  Por URL solo responde con la clave CRON_CLAVE (POST o ?clave=); sin ella,
+//  404 con 0 bytes.
 //  (Así, sin SSH, se puede comprobar que el archivo está subido: 404 con
 //  0 bytes = está; 404 con una página de error de varios KB = no está.)
 // =====================================================================
 require_once __DIR__ . '/../includes/config-carga.php';
 
 if (PHP_SAPI !== 'cli') {
-    if (CRON_CLAVE === '' || !hash_equals((string)CRON_CLAVE, (string)($_GET['clave'] ?? ''))) {
+    if (CRON_CLAVE === '' || !hash_equals((string)CRON_CLAVE, (string)($_POST['clave'] ?? $_GET['clave'] ?? ''))) {
         http_response_code(404);
         exit;
     }

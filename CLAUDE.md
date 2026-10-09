@@ -791,8 +791,10 @@ tabla de amortización se actualice con el dato real de finanzas y que esté tod
   servidor sigue intentándolo solo y, si no llega, usa el BCE (meses cerrados). No toques la URL de la API en el workflow sin
   cambiar también `URL_APP`.
 - **El cron diario de hPanel no se ha ejecutado nunca** (9/10/2026: «El aviso diario por correo no se ha ejecutado nunca»). El
-  Euríbor y la hipoteca ya no dependen de él; el correo de avisos, sí. Se le ha ofrecido a Gonzalo lanzarlo desde GitHub (con el
-  secreto CRON_CLAVE); manda correos, así que no se activa sin su sí.
+  Euríbor y la hipoteca ya no dependen de él. **El correo lo lanza GitHub desde el 9/10/2026** (Gonzalo: «activa esto»):
+  `.github/workflows/aviso-diario.yml`, cada día a las 6:10 UTC, POST a `cron/diario.php` con el secreto `CRON_CLAVE` (que el
+  despliegue mete en `config.php`; sin él, la tarea falla y lo dice). El correo va a `EMAIL_AVISOS` y solo sale si los avisos
+  cambian o ha pasado una semana. No programar también el cron de hPanel (correría dos veces; no mandaría doble, pero sobra).
 - **Cuándo:** `includes/mantenimiento.php`. En cada visita, si hace más de una hora, DESPUÉS de mandar la página
   (`litespeed_finish_request`, Hostinger es LiteSpeed; o `fastcgi_finish_request`): nadie espera. Sin ellas, la visita solo hace lo
   que no sale a la red. También el cron diario y la acción `euribor` de la API. En CLI (pruebas) no se lanza.
