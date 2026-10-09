@@ -747,3 +747,12 @@ todo lo de esas fechas, y en los dos días siguientes (el banco apunta tarde alg
 zona (Rocafort, Godella, Moncada, Alfara, Paterna, Alfafar, Valencia, Carlet…). No repetir. **Al importar un extracto nuevo,
 preguntar si ha habido viajes** y hacer lo mismo (las reglas no pueden saberlo). Con todo, 2026: Vivienda 44 %, Alimentación
 21 %, Familia 20 %, Viajes 7 %, Vehículos 6 %; Pilar lleva unos 20 € más que Gonzalo.
+
+**IBI y cargos sin apuntar de la cuenta de la casa (9/10/2026).** Creada la ficha **IBI · C/ Doctor José Vilella** (contratos/impuesto,
+id 112, enlazada a la casa, Gonzalo, 50 %, 455,41 €/año, domiciliado, sin «próximo pago» a propósito) con sus dos recibos de 2026
+(registros 297 y 298: 227,71 € el 3/8 y 227,70 € el 1/10, los dos plazos que cobra la Diputación; Gonzalo dijo «uno será IBI»
+y se supone que el otro es el segundo plazo, no una tasa: pendiente de confirmar con el detalle del banco). Apuntados también los
+recibos anuales de los seguros de la T4 (Generali, registro 295) y del hogar (Tuio, 296), 356,08 € y 162,42 € del 12/3. «Cargos sin
+apuntar» ya casa hasta 60 días (la factura del gas de diciembre está fechada el 31/12 y se cobró el 16/2) y por el par MÁS
+CERCANO, no el primero libre (con importes repetidos, Pepephone, uno se quedaba el apunte del vecino). CoverGrup (5 €) es una app de
+viajes, no un seguro. No repetir.

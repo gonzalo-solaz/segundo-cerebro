@@ -466,6 +466,10 @@ comprueba('…y lo que entra y sale no es gasto: se descuenta de la venta', !arr
 $dos = cargos_sin_apuntar([$mov('2026-07-17', 'CP X', -355.78, 'Comunidad'), $mov('2026-08-05', 'CP X', -355.78, 'Comunidad')],
     [['id' => 1, 'fecha' => '2026-06-30', 'coste' => 711.56, 'elemento_id' => 9, 'nombre' => 'Comunidad']], 2026);
 comprueba('un recibo cobrado en dos cargos casa con su apunte', !$dos['sin_ficha'] && $dos['casados'] === 2, json_encode($dos));
+$rep = cargos_sin_apuntar([$mov('2026-05-05', 'Pepe Mobile', -42.90, 'Suministros'), $mov('2026-07-06', 'Pepe Mobile', -42.90, 'Suministros')],
+    [['id' => 1, 'fecha' => '2026-05-01', 'coste' => 42.90, 'elemento_id' => 3, 'nombre' => 'Internet'],
+     ['id' => 2, 'fecha' => '2026-07-01', 'coste' => 42.90, 'elemento_id' => 3, 'nombre' => 'Internet']], 2026);
+comprueba('con importes repetidos, cada cargo casa con su apunte más cercano (no el primero libre)', !$rep['sin_ficha'] && $rep['casados'] === 2, json_encode($rep));
 @unlink($cache . '/finanzas-casa.json');
 @unlink($cache . '/ipc.json');
 @unlink($cache . '/finanzas-resumen.json');

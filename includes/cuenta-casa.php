@@ -186,13 +186,19 @@ function cargos_sin_apuntar(array $movs, array $apuntes, int $anio): array {
     $libres = $apuntes;
     $casado = array_fill(0, count($cargos), false);
     $cerca = static fn(string $a, string $b): bool => abs(dias_entre($a, $b)) <= 60;
-    // 1) Uno a uno.
-    foreach ($cargos as $i => $c) {
-        foreach ($libres as $k => $a) {
-            if ($cent($a['coste']) === $cent($c['importe']) && $cerca($a['fecha'], $c['fecha'])) {
-                $casado[$i] = true; unset($libres[$k]); break;
-            }
+    // 1) Uno a uno, los pares más cercanos en fechas primero: con importes repetidos
+    //    (Pepephone, 42,90 € varios meses) quedarse con el primer apunte libre le roba
+    //    el suyo al cargo siguiente.
+    $pares = [];
+    foreach ($cargos as $i => $c) foreach ($libres as $k => $a) {
+        if ($cent($a['coste']) === $cent($c['importe']) && $cerca($a['fecha'], $c['fecha'])) {
+            $pares[] = [abs(dias_entre($a['fecha'], $c['fecha'])), $i, $k];
         }
+    }
+    usort($pares, static fn($x, $y) => $x <=> $y);
+    foreach ($pares as [, $i, $k]) {
+        if ($casado[$i] || !isset($libres[$k])) continue;
+        $casado[$i] = true; unset($libres[$k]);
     }
     // 2) Dos cargos del mismo concepto que juntos son un apunte.
     foreach ($cargos as $i => $c) {
