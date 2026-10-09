@@ -170,7 +170,8 @@ function analisis_cuenta_casa(array $movs, int $anio, string $hoy, array $pct_hi
 /**
  * Los cargos de la cuenta con ficha detrás (comunidad, suministros, seguros,
  * impuestos) que no están apuntados en el historial de ninguna ficha. Un
- * cargo casa con un apunte del mismo importe (al céntimo) a 45 días o menos;
+ * cargo casa con un apunte del mismo importe (al céntimo) a 60 días o menos (la
+ * factura del gas de diciembre de 2025 está fechada el 31/12 y se cobró el 16/2);
  * o dos cargos del mismo concepto que juntos suman un apunte (la comunidad
  * cobró el recibo del 2T26 en dos veces). $apuntes: [[id, fecha, coste,
  * elemento_id, nombre], ...] de cargos_apuntados().
@@ -182,7 +183,7 @@ function cargos_sin_apuntar(array $movs, array $apuntes, int $anio): array {
         && (float)$m['importe'] < 0 && in_array($m['categoria'] ?? '', CASA_CATEGORIAS_FICHA, true)));
     $libres = $apuntes;
     $casado = array_fill(0, count($cargos), false);
-    $cerca = static fn(string $a, string $b): bool => abs(dias_entre($a, $b)) <= 45;
+    $cerca = static fn(string $a, string $b): bool => abs(dias_entre($a, $b)) <= 60;
     // 1) Uno a uno.
     foreach ($cargos as $i => $c) {
         foreach ($libres as $k => $a) {
