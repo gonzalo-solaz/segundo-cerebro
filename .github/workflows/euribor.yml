@@ -1,0 +1,63 @@
+# =====================================================================
+#  El Euríbor del día, a la app (9/10/2026).
+#
+#  El servidor de Hostinger no llega al Banco de España (la conexión se
+#  queda colgada: comprobado el 9/10/2026, también con su API REST), así que
+#  lo baja GitHub y se lo pasa a la API de la app (acción «euribor», campo
+#  «bde»). La app saca la media de cada mes y la provisional del mes en
+#  curso, revisa las hipotecas (cuota, tipo, aviso de la próxima subida) y
+#  finanzas lo lee de ella. Si esto no corre, la app sigue sola con la media
+#  mensual del BCE (sin el mes en curso).
+#
+#  Corre tres veces cada día laborable (el Banco de España publica el valor
+#  del día por la mañana), cuando se cambia este archivo y a mano desde
+#  Actions. Secreto: API_CLAVE (la de la app; ya está para el despliegue).
+# =====================================================================
+name: Euríbor del día
+
+on:
+  schedule:
+    - cron: '20 7,12,17 * * 1-5'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/euribor.yml']
+
+concurrency:
+  group: euribor
+  cancel-in-progress: true
+
+jobs:
+  euribor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Esperar al despliegue (solo cuando se cambia este archivo)
+        if: github.event_name == 'push'
+        run: sleep 240
+
+      - name: Bajar el Euríbor diario del Banco de España (36 meses)
+        run: |
+          curl -fsS --compressed --retry 3 --retry-delay 15 -m 60 \
+            'https://app.bde.es/bierest/resources/srdatosapp/listaSeries?idioma=es&series=D_DNBAF172&rango=36M' -o bde.json
+          python3 -c "import json; d=json.load(open('bde.json'))[0]; print('Último valor:', d['fechas'][0][:10], d['valores'][0], '·', len(d['valores']), 'días')"
+
+      - name: Pasárselo a la app
+        env:
+          API_CLAVE: ${{ secrets.API_CLAVE }}
+        run: |
+          if [ -z "$API_CLAVE" ]; then echo "::error::Falta el secreto API_CLAVE"; exit 1; fi
+          printf '%s' "$API_CLAVE" > clave.txt
+          curl -fsS -m 120 --retry 2 --retry-delay 20 -X POST 'https://gonzalosolaz.tech/admin/api.php' \
+            -F 'clave=<clave.txt' -F 'accion=euribor' -F 'bde=<bde.json' -o respuesta.json
+          rm -f clave.txt
+          python3 - <<'PY'
+          import json
+          r = json.load(open('respuesta.json'))
+          if not r.get('ok'):
+              raise SystemExit('La app dice: ' + str(r.get('error')))
+          e = r['euribor']
+          print('Cerrado:', e.get('cerrado'), '· provisional:', e.get('provisional'), '· fuente:', e.get('fuente'))
+          for h in r.get('hipotecas') or []:
+              print('Hipoteca:', h)
+          PY

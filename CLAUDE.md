@@ -785,6 +785,14 @@ tabla de amortización se actualice con el dato real de finanzas y que esté tod
   9/10/2026 falló desde Hostinger. Reserva: la media mensual del BCE (sin el mes en curso). Por qué falló una fuente queda en
   `euribor_fallos` y sale en la página. Un mes se cierra 3 días después de acabar. Se consulta como mucho cada 6 h. El PHP de este
   equipo no tiene curl ni openssl: para probar la descarga, bájala con el curl del sistema.
+- **El servidor de Hostinger NO llega al Banco de España** (ni la web ni la API: «Connection timed out», 9/10/2026; desde casa y
+  desde GitHub sí). Por eso `.github/workflows/euribor.yml` lo baja tres veces cada día laborable (7:20, 12:20 y 17:20 UTC) y se lo
+  pasa a la API (`euribor` con el campo `bde`: el JSON tal cual; `euribor_recibir()`), que además pone al día las hipotecas. El
+  servidor sigue intentándolo solo y, si no llega, usa el BCE (meses cerrados). No toques la URL de la API en el workflow sin
+  cambiar también `URL_APP`.
+- **El cron diario de hPanel no se ha ejecutado nunca** (9/10/2026: «El aviso diario por correo no se ha ejecutado nunca»). El
+  Euríbor y la hipoteca ya no dependen de él; el correo de avisos, sí. Se le ha ofrecido a Gonzalo lanzarlo desde GitHub (con el
+  secreto CRON_CLAVE); manda correos, así que no se activa sin su sí.
 - **Cuándo:** `includes/mantenimiento.php`. En cada visita, si hace más de una hora, DESPUÉS de mandar la página
   (`litespeed_finish_request`, Hostinger es LiteSpeed; o `fastcgi_finish_request`): nadie espera. Sin ellas, la visita solo hace lo
   que no sale a la red. También el cron diario y la acción `euribor` de la API. En CLI (pruebas) no se lanza.

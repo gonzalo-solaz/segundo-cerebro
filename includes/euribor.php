@@ -191,6 +191,18 @@ function euribor_actualizar(PDO $pdo, bool $forzar = false): array {
     return $r;
 }
 
+/** Guarda el Euríbor que trae otro (la tarea de GitHub): el texto del Banco de España tal cual. */
+function euribor_recibir(PDO $pdo, string $txt, string $fuente): array {
+    $serie = euribor_leer_bde_cualquiera($txt, hoy());
+    if (!$serie) throw new RuntimeException('Eso no trae la serie del Euríbor del Banco de España.');
+    $n = euribor_guardar($pdo, $serie);
+    guardar_ajuste($pdo, 'euribor_consultado', ahora());
+    guardar_ajuste($pdo, 'euribor_fuente', $fuente);
+    guardar_ajuste($pdo, 'euribor_error', '');
+    guardar_ajuste($pdo, 'euribor_fallos', '');
+    return ['consultado' => true, 'cambiados' => $n, 'fuente' => $fuente, 'error' => null, 'fallos' => []];
+}
+
 /** ['AAAA-MM' => ['valor' => float, 'dias' => int, 'definitivo' => bool]], de más viejo a más nuevo. */
 function euribor_serie(PDO $pdo): array {
     $out = [];

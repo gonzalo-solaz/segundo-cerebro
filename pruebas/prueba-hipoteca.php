@@ -122,6 +122,11 @@ $p = $api('precio', ['elemento_id' => $hid, 'desde' => '2017-12-07', 'coste' => 
 comprueba('API precio con el tipo de la cuota', end($p['precios'])['tipo'] !== null && $p['precios'][0]['tipo'] === 1.6);
 comprueba('API precio rechaza un tipo que no es un porcentaje', lanza(static fn() => $api('precio', ['elemento_id' => $hid, 'desde' => '2018-01-07', 'coste' => 1, 'tipo' => 'mucho'])) instanceof Throwable);
 comprueba('API euribor: sin red en las pruebas, dice que no ha consultado', $api('euribor')['consulta']['consultado'] === false);
+$rb = api_ejecutar($pdo, ['accion' => 'euribor', 'bde' => $json]);
+comprueba('API euribor con el JSON del Banco de España (lo que manda la tarea de GitHub): lo guarda y dice de dónde viene',
+    $rb['consulta']['fuente'] === 'Banco de España (vía GitHub)' && $rb['euribor']['fuente'] === 'Banco de España (vía GitHub)'
+    && $rb['euribor']['cerrado']['mes'] === '2026-10', json_encode($rb['euribor']['cerrado']));
+comprueba('…y algo que no es el Euríbor se rechaza', lanza(static fn() => api_ejecutar($pdo, ['accion' => 'euribor', 'bde' => '{"x":1}'])) instanceof RuntimeException);
 comprueba('API hipoteca: un elemento que no es hipoteca se rechaza', lanza(static fn() => $api('hipoteca', ['id' => $id['luz']])) instanceof RuntimeException);
 comprueba('API estado lleva el Euríbor', isset($api('estado')['euribor']['cerrado']));
 terminar();

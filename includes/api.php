@@ -166,8 +166,12 @@ function api_ejecutar(PDO $pdo, array $p, ?array $archivo = null): array {
             return $out;
 
         case 'euribor':
-            // Consulta el Euríbor ya (sin esperar a las 6 h) y pone al día las hipotecas.
-            $m = mantenimiento($pdo, true);
+            // Consulta el Euríbor ya (sin esperar a las 6 h) y pone al día las hipotecas. Con «bde» (el JSON o el
+            // CSV del Banco de España tal cual) no sale a la red: lo trae la tarea de GitHub, porque el servidor
+            // no llega al Banco de España (.github/workflows/euribor.yml).
+            $m = isset($p['bde']) && trim((string)$p['bde']) !== ''
+                ? ['euribor' => euribor_recibir($pdo, (string)$p['bde'], 'Banco de España (vía GitHub)'), 'hipotecas' => hipotecas_al_dia($pdo)]
+                : mantenimiento($pdo, true);
             $e = euribor_estado($pdo);
             $e['serie'] = array_slice($e['serie'], -24, null, true);
             return ['consulta' => $m['euribor'], 'hipotecas' => $m['hipotecas'], 'euribor' => $e];
